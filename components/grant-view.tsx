@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Lightbulb } from "@phosphor-icons/react";
+import { FilePdf, FileXls, Lightbulb } from "@phosphor-icons/react";
+import { buildClaims, claimCsv } from "@/lib/claim";
 import { GRANT } from "@/data/trip";
 import { Panel, PanelTitle } from "@/components/bits";
 import { ChecklistPanel } from "@/components/checklist-panel";
@@ -108,10 +109,49 @@ export function GrantView() {
         </Panel>
       )}
 
+      <ExportPanel />
+
       <ChecklistPanel owner="grant" title="Documents for the claim" />
 
       <p className="px-1 pb-2 text-xs leading-relaxed text-subtle">{GRANT.policy}</p>
     </div>
+  );
+}
+
+/** Claim report (print/PDF) and spreadsheet for the SSIP committee. */
+function ExportPanel() {
+  const { items } = useExpenses();
+  function download() {
+    if (!items) return;
+    const blob = new Blob([claimCsv(buildClaims(items))], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "guwahati-run-grant-claim.csv";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+  return (
+    <Panel>
+      <PanelTitle>Claim for the college</PanelTitle>
+      <p className="text-[0.95rem] leading-relaxed text-muted-foreground">
+        Every ticket and bill per student, under both fare rules, with the limit applied. Built from tickets and the Money tab.
+      </p>
+      <div className="mt-4 grid grid-cols-2 gap-2">
+        <a href="/claim" className="flex h-12 items-center justify-center gap-2 rounded-lg bg-primary text-[0.95rem] font-medium text-primary-foreground active:scale-[0.98]">
+          <FilePdf className="size-5" />
+          PDF report
+        </a>
+        <button
+          type="button"
+          onClick={download}
+          disabled={!items}
+          className="flex h-12 items-center justify-center gap-2 rounded-lg bg-secondary text-[0.95rem] font-medium active:scale-[0.98] disabled:opacity-50"
+        >
+          <FileXls className="size-5" />
+          Excel file
+        </button>
+      </div>
+    </Panel>
   );
 }
 
