@@ -424,7 +424,8 @@ export const CONNECTIONS: Connection[] = [
 
 /* ------------------------------------------------------------ transfers */
 // Used by the transfer planner to pick metro or cab from the live arrival time.
-// Metro hours and fares are approximate: check them once before the trip.
+// Metro hours: Ahmedabad Phase 1 runs 06:20 to 22:00; Delhi Yellow Line from
+// Chandni Chowk starts about 05:57. Confirm in the DMRC / GMRC apps before the trip.
 
 export const TRANSFERS: Partial<Record<LegId, TransferOption>> = {
   L0b: {
@@ -452,8 +453,9 @@ export const TRANSFERS: Partial<Record<LegId, TransferOption>> = {
       ],
       interchange: "Rajiv Chowk",
       minutes: 50,
-      firstTrain: "05:30",
-      lastTrain: "23:00",
+      // First Yellow Line train from Chandni Chowk is about 05:57 (aggregators, Oct 2026).
+      firstTrain: "06:00",
+      lastTrain: "23:30",
       farePerPerson: 45,
     },
     cab: { minutes: 40, fareTotal: 450, label: "Cab" },
