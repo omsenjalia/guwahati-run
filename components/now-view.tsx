@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowSquareOut, CaretRight, CloudSun, Warning } from "@phosphor-icons/react";
-import { LEGS, PLACES, REMINDERS, TATKAL_BOOKER, type PlaceId } from "@/data/trip";
+import { ArrowSquareOut, CaretRight, CloudSun } from "@phosphor-icons/react";
+import { PLACES, TATKAL_BOOKER, type PlaceId } from "@/data/trip";
 import { CopyChip, LiveStamp, Panel, PanelTitle, Skeleton, StatusPill, healthText } from "@/components/bits";
 import { Countdown, Route, TimeRange, personName, statusSummary } from "@/components/leg-bits";
 import { useNow } from "@/lib/clock";
@@ -39,7 +39,6 @@ export function NowView() {
       <HealthPanel health={health} live={live} />
       <DeadlinePanel now={now} />
       <WeatherPanel focus={state.focus} mode={state.focusMode} />
-      <RemindersPanel now={now} />
     </div>
   );
 }
@@ -262,23 +261,6 @@ function WeatherCell({ id }: { id?: PlaceId }) {
         <Skeleton className="mt-1 h-14 rounded-lg" />
       )}
     </div>
-  );
-}
-
-/* ----------------------------------------------------------- reminders */
-
-function RemindersPanel({ now }: { now: number }) {
-  // Show while the trip hasn't ended.
-  if (now > ms(LEGS[LEGS.length - 1].arrive)) return null;
-  return (
-    <Panel>
-      <PanelTitle aside={<Warning className="size-5 text-subtle" />}>Don&apos;t forget</PanelTitle>
-      <ul className="flex flex-col gap-2.5 text-[0.95rem] leading-snug">
-        {REMINDERS.map((r) => (
-          <li key={r}>{r}</li>
-        ))}
-      </ul>
-    </Panel>
   );
 }
 
