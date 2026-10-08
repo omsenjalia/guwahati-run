@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { ArrowSquareOut, CaretRight, CloudSun } from "@phosphor-icons/react";
-import { PLACES, TATKAL_BOOKER, type PlaceId } from "@/data/trip";
+import { CONNECTIONS, LEGS, PLACES, TATKAL_BOOKER, type PlaceId } from "@/data/trip";
+import { TransferPlanCard } from "@/components/transfer-plan";
+import { planTransfers } from "@/lib/transfer-planner";
+import { evaluate } from "@/lib/deadline-rules";
 import { CopyChip, LiveStamp, Panel, PanelTitle, Skeleton, StatusPill, healthText } from "@/components/bits";
 import { Countdown, Route, TimeRange, personName, statusSummary } from "@/components/leg-bits";
 import { useNow } from "@/lib/clock";
@@ -36,8 +39,9 @@ export function NowView() {
   return (
     <div className="flex flex-col gap-3">
       <Hero state={state} now={now} live={live} />
+      <PlanBPanel health={health} now={now} />
       <HealthPanel health={health} live={live} />
-      <DeadlinePanel now={now} />
+      <DeadlinePanel now={now} live={live} />
       <WeatherPanel focus={state.focus} mode={state.focusMode} />
     </div>
   );
@@ -60,6 +64,14 @@ function Hero({ state, now, live }: { state: ReturnType<typeof computeNow>; now:
   const label =
     state.phase === "pre-trip" ? "Trip starts in" : state.focusMode === "active" ? "Right now" : "Next up";
   const legLive = leg ? live.legs[leg.id] : undefined;
+  // Show the transfer plan for a transfer, or while on the train before one.
+  const plans = planTransfers(live);
+  const nextLeg = leg ? LEGS[LEGS.findIndex((l) => l.id === leg.id) + 1] : undefined;
+  const plan =
+    plans.find((p) => p.legId === leg?.id) ??
+    (state.focusMode === "active" && nextLeg?.kind === "transfer" && step.end - now < 3 * 3600_000
+      ? plans.find((p) => p.legId === nextLeg.id)
+      : undefined);
   const hasStatus = leg?.passengers?.length;
 
   return (
@@ -90,6 +102,8 @@ function Hero({ state, now, live }: { state: ReturnType<typeof computeNow>; now:
       </div>
 
       <p className="mt-4 text-[1.05rem] font-medium leading-snug text-primary">{state.instruction}</p>
+
+      {plan && <TransferPlanCard plan={plan} now={now} className="mt-4" />}
 
       {leg && (leg.kind === "train" || leg.kind === "local-train") && (
         <dl className="mt-4 grid grid-cols-[4.25rem_5.25rem_1fr] gap-2">
@@ -183,13 +197,22 @@ function HealthPanel({ health, live }: { health: ReturnType<typeof tripHealth>; 
 
 /* ------------------------------------------------------------ deadline */
 
-function DeadlinePanel({ now }: { now: number }) {
+const VERDICT_PILL = {
+  action: { health: "red", label: "Action needed" },
+  upcoming: { health: "amber", label: "Watching" },
+  ok: { health: "green", label: "No action" },
+  passed: { health: "green", label: "Passed" },
+} as const;
+
+function DeadlinePanel({ now, live }: { now: number; live: LiveState }) {
   const d = nextDeadline(now);
   if (!d) return null;
   const at = ms(d.at);
   const soon = at - now < 2 * 3600_000;
+  const verdict = evaluate(d, live, now);
+  const pill = VERDICT_PILL[verdict.status];
   return (
-    <Panel className={cn(soon && "border-warn/40")}>
+    <Panel className={cn(verdict.status === "action" && "border-bad/50", soon && verdict.status !== "action" && "border-warn/40")}>
       <PanelTitle aside={<Countdown to={at} now={now} className={cn("text-[0.95rem]", soon && "text-warn")} />}>
         Next deadline
       </PanelTitle>
@@ -197,12 +220,16 @@ function DeadlinePanel({ now }: { now: number }) {
       <p className="mt-1 text-sm text-muted-foreground">
         {weekdayDate(at)}, <span className="font-mono tabular">{hhmm(at)}</span>
       </p>
-      <dl className="mt-3 grid grid-cols-[3.5rem_1fr] gap-x-2 gap-y-1.5 text-[0.95rem] leading-snug">
-        <dt className="text-muted-foreground">Check</dt>
-        <dd>{d.condition}</dd>
-        <dt className="text-muted-foreground">Then</dt>
-        <dd>{d.action}</dd>
-      </dl>
+      <div className="mt-3 flex flex-col gap-2 rounded-lg bg-secondary px-3 py-2.5">
+        <StatusPill health={pill.health} className="self-start">
+          {pill.label}
+        </StatusPill>
+        <p className="text-[0.95rem] leading-snug">{verdict.message || d.condition}</p>
+      </div>
+      <p className="mt-3 text-sm leading-snug text-muted-foreground">
+        Rule: if {d.condition.charAt(0).toLowerCase()}
+        {d.condition.slice(1)} {d.action}
+      </p>
       <div className="mt-4 flex items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
           Owner: <span className="font-medium text-foreground">{personName(d.owner)}</span>
@@ -224,12 +251,55 @@ function DeadlinePanel({ now }: { now: number }) {
   );
 }
 
+/* --------------------------------------------------------------- plan B */
+
+/** Appears automatically when a Delhi connection turns amber or red. */
+function PlanBPanel({ health, now }: { health: ReturnType<typeof tripHealth>; now: number }) {
+  const risky = health.conns.filter((c) => c.health !== "green" && c.outboundDepart > now);
+  if (!risky.length) return null;
+  return (
+    <>
+      {risky.map((c) => {
+        const cfg = CONNECTIONS.find((x) => x.id === c.id)!;
+        return (
+          <Panel key={c.id} className={cn(c.health === "red" ? "border-bad/50 bg-bad-soft" : "border-warn/40 bg-warn-soft")}>
+            <PanelTitle aside={<StatusPill health={c.health}>{duration(Math.max(0, c.bufferMin) * 60000)} spare</StatusPill>}>
+              Plan B: {c.label}
+            </PanelTitle>
+            <p className="text-[0.95rem] leading-snug">{cfg.planB.text}</p>
+            <div className="mt-4 flex items-center justify-between gap-3">
+              <p className="text-sm text-muted-foreground">
+                Who acts: <span className="font-medium text-foreground">{personName(cfg.planB.owner)}</span>
+              </p>
+              {cfg.planB.link && (
+                <a
+                  href={cfg.planB.link.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex h-11 items-center gap-1.5 rounded-lg bg-primary px-4 text-[0.95rem] font-medium text-primary-foreground active:scale-[0.98]"
+                >
+                  {cfg.planB.link.label}
+                  <ArrowSquareOut className="size-4" />
+                </a>
+              )}
+            </div>
+          </Panel>
+        );
+      })}
+    </>
+  );
+}
+
 /* ------------------------------------------------------------- weather */
 
 function WeatherPanel({ focus, mode }: { focus?: Step; mode: "upcoming" | "active" }) {
   // Where we are (or will be next) and where we're heading.
-  const here: PlaceId | undefined =
-    focus?.from && mode === "upcoming" ? focus.from : focus?.place ?? focus?.from;
+  const onTrain = mode === "active" && (focus?.kind === "train" || focus?.kind === "local-train");
+  const here: PlaceId | undefined = onTrain
+    ? focus?.to
+    : focus?.from && mode === "upcoming"
+      ? focus.from
+      : focus?.place ?? focus?.from;
   const there: PlaceId | undefined = focus?.to && focus.to !== here ? focus.to : undefined;
   return (
     <Panel>

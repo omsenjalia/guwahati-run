@@ -95,6 +95,24 @@ export type Connection = {
   /** Planned buffer as stated when booking, minutes. */
   plannedBufferMin: number;
   note: string;
+  /** Shown automatically when the connection turns amber or red. */
+  planB: { text: string; owner: PersonId; link?: { label: string; href: string } };
+};
+
+export type TransferOption = {
+  metro?: {
+    route: string;
+    lines: { name: string; color: string }[];
+    interchange?: string;
+    minutes: number;
+    /** First and last train from our boarding metro station (IST, approx.). */
+    firstTrain: string;
+    lastTrain: string;
+    farePerPerson: number;
+  };
+  cab: { minutes: number; fareTotal: number; label: string };
+  /** Station exit to metro/cab stand, minutes. */
+  walkMin: number;
 };
 
 export type DeadlineId = "D1" | "D2" | "D3" | "D4" | "D5" | "D6";
@@ -342,6 +360,11 @@ export const CONNECTIONS: Connection[] = [
     outbound: "L2",
     plannedBufferMin: 170,
     note: "Delhi Jn 04:50 to Anand Vihar 07:40, cross-city.",
+    planB: {
+      text: "Go straight to Anand Vihar by cab. If 12506 will still be missed, book the next train to Guwahati on IRCTC (AC Tatkal for tomorrow opens 10:00).",
+      owner: "oms",
+      link: { label: "Open IRCTC", href: "https://www.irctc.co.in/nget/train-search" },
+    },
   },
   {
     id: "C2",
@@ -351,8 +374,54 @@ export const CONNECTIONS: Connection[] = [
     outbound: "L4",
     plannedBufferMin: 245,
     note: "Delhi Jn 04:50 to Sarai Rohilla 08:55. Brahmaputra is often late.",
+    planB: {
+      text: "Tatkal 12918 Gujarat Sampark Kranti (Nizamuddin 13:25 to Anand 01:58) and cancel the Garib Rath before its chart.",
+      owner: "oms",
+      link: { label: "Open IRCTC", href: "https://www.irctc.co.in/nget/train-search" },
+    },
   },
 ];
+
+/* ------------------------------------------------------------ transfers */
+// Used by the transfer planner to pick metro or cab from the live arrival time.
+// Metro hours and fares are approximate: check them once before the trip.
+
+export const TRANSFERS: Partial<Record<LegId, TransferOption>> = {
+  L0b: {
+    metro: {
+      route: "Kalupur Railway Station to Old High Court (Blue Line), then Red Line to Sabarmati",
+      lines: [
+        { name: "Blue Line", color: "#2563eb" },
+        { name: "Red Line", color: "#dc2626" },
+      ],
+      interchange: "Old High Court",
+      minutes: 40,
+      firstTrain: "06:20",
+      lastTrain: "22:00",
+      farePerPerson: 30,
+    },
+    cab: { minutes: 30, fareTotal: 250, label: "Cab or auto" },
+    walkMin: 10,
+  },
+  L1b: {
+    metro: {
+      route: "Chandni Chowk to Rajiv Chowk (Yellow Line), then Blue Line to Anand Vihar",
+      lines: [
+        { name: "Yellow Line", color: "#eab308" },
+        { name: "Blue Line", color: "#2563eb" },
+      ],
+      interchange: "Rajiv Chowk",
+      minutes: 50,
+      firstTrain: "05:30",
+      lastTrain: "23:00",
+      farePerPerson: 45,
+    },
+    cab: { minutes: 40, fareTotal: 450, label: "Cab" },
+    walkMin: 15,
+  },
+  L2b: { cab: { minutes: 50, fareTotal: 600, label: "Cab" }, walkMin: 10 },
+  L3b: { cab: { minutes: 25, fareTotal: 150, label: "Auto or cab" }, walkMin: 10 },
+};
 
 /* ------------------------------------------------------------- backups */
 

@@ -1,9 +1,10 @@
+import { sendPush } from "@/lib/push";
 import { serverDb } from "@/lib/supabase/server";
 
 /**
  * The single place every alert goes through. Channels are pluggable:
  * - "log": always; stored in the notifications table (and visible in-app).
- * - "push": Web Push to all phones (added with push notifications).
+ * - "push": Web Push to every subscribed phone (lib/push.ts).
  * - "webhook": POSTs the alert to NOTIFY_WEBHOOK_URL if set (for the future
  *   WhatsApp bridge via n8n / WAHA).
  */
@@ -31,6 +32,7 @@ export type Alert = {
 type Channel = (alert: Alert) => Promise<{ delivered: number; failed: number }>;
 
 const channels: Record<string, Channel> = {
+  push: sendPush,
   webhook: async (alert) => {
     const url = process.env.NOTIFY_WEBHOOK_URL;
     if (!url) return { delivered: 0, failed: 0 };
@@ -48,7 +50,7 @@ const channels: Record<string, Channel> = {
   },
 };
 
-/** Register an extra channel (push registers itself in lib/push.ts). */
+/** Register an extra channel (e.g. a WhatsApp bridge later). */
 export function addChannel(name: string, channel: Channel) {
   channels[name] = channel;
 }

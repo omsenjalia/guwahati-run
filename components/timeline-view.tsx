@@ -15,6 +15,8 @@ import {
 } from "@phosphor-icons/react";
 import { PLACES } from "@/data/trip";
 import { Panel, Skeleton } from "@/components/bits";
+import { TransferPlanCard } from "@/components/transfer-plan";
+import { planTransfers } from "@/lib/transfer-planner";
 import { Route, statusSummary } from "@/components/leg-bits";
 import { useNow } from "@/lib/clock";
 import { useLive } from "@/lib/live-store";
@@ -107,6 +109,7 @@ function StepRow({
   const past = step.end <= now;
   const shifted = Math.abs(step.start - step.plannedStart) >= 5 * 60000;
   const leg = step.leg;
+  const plan = leg?.kind === "transfer" ? planTransfers(live).find((p) => p.legId === leg.id) : undefined;
 
   if (step.minor) {
     return (
@@ -146,7 +149,8 @@ function StepRow({
             ))}
           </div>
         </div>
-        {leg?.kind === "transfer" && <TransferLinks from={leg.from} to={leg.to} road={leg.id === "L2b" || leg.id === "L3b"} />}
+        {leg?.kind === "transfer" && plan && !past && <TransferPlanCard plan={plan} now={now} className="mt-3" />}
+        {leg?.kind === "transfer" && <TransferLinks from={leg.from} to={leg.to} road={plan?.mode !== "metro"} />}
       </Panel>
     </div>
   );

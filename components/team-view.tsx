@@ -5,6 +5,7 @@ import { useState, useSyncExternalStore } from "react";
 import { Check, Phone, Moon, Sun, DeviceMobile } from "@phosphor-icons/react";
 import { PACKING_TEAM, PICKUP, TEAM, USEFUL_NUMBERS } from "@/data/trip";
 import { Panel, PanelTitle, Skeleton } from "@/components/bits";
+import { AlertsPanel } from "@/components/alerts-panel";
 import { useNow } from "@/lib/clock";
 import { setMe, useMe } from "@/lib/me";
 import { telLink } from "@/lib/links";
@@ -40,6 +41,8 @@ export function TeamView() {
         </div>
         <p className="mt-2 text-xs text-subtle">Used to highlight your own berth and alerts.</p>
       </Panel>
+
+      <AlertsPanel />
 
       <Panel>
         <PanelTitle>Members</PanelTitle>

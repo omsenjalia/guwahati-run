@@ -8,12 +8,14 @@
  * - Push notifications (phase 4) are handled here too.
  */
 
-const VERSION = "gr-v1";
+const VERSION = "gr-v2";
+// Registered as /sw.js?dev=1 during development: push only, no caching.
+const DEV = new URL(self.location.href).searchParams.has("dev");
 const PAGES = ["/", "/timeline", "/tickets", "/money", "/team", "/hackathon", "/admin", "/print"];
 const NETWORK_TIMEOUT_MS = 4000;
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(precache().then(() => self.skipWaiting()));
+  event.waitUntil(DEV ? self.skipWaiting() : precache().then(() => self.skipWaiting()));
 });
 
 self.addEventListener("activate", (event) => {
@@ -54,12 +56,12 @@ async function precache() {
 
 self.addEventListener("message", (event) => {
   // The app asks for a refresh of the offline copy after sign-in or an update.
-  if (event.data === "precache") event.waitUntil(precache());
+  if (event.data === "precache" && !DEV) event.waitUntil(precache());
 });
 
 self.addEventListener("fetch", (event) => {
   const req = event.request;
-  if (req.method !== "GET") return;
+  if (DEV || req.method !== "GET") return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith("/api/")) return;

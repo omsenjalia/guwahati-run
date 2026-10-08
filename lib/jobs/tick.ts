@@ -14,12 +14,13 @@ import { LEGS, PLACES, TEAM, type Berth, type Leg, type PersonId } from "@/data/
 import { AllProvidersFailed, getLiveRunningStatus, getPnrStatus } from "@/lib/providers/index.ts";
 import type { LegLive, PassengerLive } from "@/lib/live-types";
 import { notify } from "@/lib/notify";
+import { runWatchers } from "@/lib/jobs/watchers";
 import { serverDb } from "@/lib/supabase/server";
 import { HOUR, MIN, istDateKey, ms } from "@/lib/time";
 import { chartTime, parseStatus } from "@/lib/trip-engine";
 import { fetchWeatherMany } from "@/lib/weather";
 
-export type JobName = "seed" | "pnr-sync" | "live-status" | "weather";
+export type JobName = "seed" | "pnr-sync" | "live-status" | "weather" | "watchers";
 type JobResult = { job: JobName; ok: boolean; message: string; source?: string; details?: unknown };
 
 const ORDER: PersonId[] = TEAM.map((p) => p.id);
@@ -83,6 +84,9 @@ export async function runTick(opts: { force?: JobName[]; now?: number } = {}) {
   if (force.has("weather") || isDue(w ? Date.parse(w.updated_at) : undefined, 3 * HOUR, now)) {
     results.push(await logged("weather", syncWeather));
   }
+
+  // Decisions and alerts from the freshest data (every tick).
+  results.push(await logged("watchers", () => runWatchers(live, now)));
 
   // Heartbeat: phones show a warning if this goes quiet for 20+ minutes.
   const prevBeat = await db.from("app_state").select("value").eq("key", "heartbeat").maybeSingle();

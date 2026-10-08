@@ -99,6 +99,7 @@ const JOBS = [
   { id: "pnr-sync", label: "PNR sync" },
   { id: "live-status", label: "Live running status" },
   { id: "weather", label: "Weather" },
+  { id: "watchers", label: "Connections, deadlines and alerts" },
   { id: "seed", label: "Trip data seed" },
 ];
 
