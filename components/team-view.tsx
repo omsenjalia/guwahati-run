@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useSyncExternalStore } from "react";
 import { Check, Phone, Moon, Sun, DeviceMobile } from "@phosphor-icons/react";
 import { PACKING_TEAM, PICKUP, TEAM, USEFUL_NUMBERS } from "@/data/trip";
@@ -96,6 +97,9 @@ export function TeamView() {
 
       <PackingPanel />
       <ThemePanel />
+      <Link href="/admin" className="py-3 text-center text-sm text-subtle underline-offset-4 hover:underline">
+        System status and data self-test
+      </Link>
     </div>
   );
 }

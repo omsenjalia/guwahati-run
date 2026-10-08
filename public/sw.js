@@ -9,7 +9,7 @@
  */
 
 const VERSION = "gr-v1";
-const PAGES = ["/", "/timeline", "/tickets", "/money", "/team", "/hackathon"];
+const PAGES = ["/", "/timeline", "/tickets", "/money", "/team", "/hackathon", "/admin"];
 const NETWORK_TIMEOUT_MS = 4000;
 
 self.addEventListener("install", (event) => {
