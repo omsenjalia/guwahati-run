@@ -122,8 +122,8 @@ function BalancesPanel({ items, onSettle }: { items: Expense[]; onSettle: (s: { 
               <td className="py-1.5 text-right">{rupees(paid[p.id])}</td>
               <td className="py-1.5 text-right">{rupees(spend[p.id].total)}</td>
               <td className={cn("py-1.5 text-right", net[p.id] > 0.5 ? "text-ok" : net[p.id] < -0.5 ? "text-warn" : "")}>
-                {net[p.id] > 0.5 ? "+" : ""}
-                {rupees(net[p.id])}
+                {net[p.id] > 0.5 ? "+" : net[p.id] < -0.5 ? "-" : ""}
+                {rupees(Math.abs(net[p.id]))}
               </td>
             </tr>
           ))}
