@@ -18,6 +18,11 @@ async function hmac(message: string) {
   return Array.from(new Uint8Array(sig), (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+/** Deterministic secret derived from AUTH_SECRET (e.g. the shared Supabase user's password). */
+export async function deriveSecret(purpose: string) {
+  return hmac(`gr:derive:${purpose}`);
+}
+
 export async function signRole(role: Role) {
   return `${role}.${await hmac(`gr:${role}`)}`;
 }

@@ -17,11 +17,13 @@ import { Toaster } from "@/components/ui/sonner";
 import { useOnline } from "@/components/bits";
 import { useIsSimulated, useNow } from "@/lib/clock";
 import { isHackathonMode } from "@/lib/trip-engine";
+import { startSync } from "@/lib/sync";
 import { stamp } from "@/lib/time";
 import { cn } from "@/lib/utils";
 
 export function AppShell({ children }: { children: ReactNode }) {
   useServiceWorker();
+  useEffect(() => startSync(), []);
   return (
     <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col">
       <StatusBar />

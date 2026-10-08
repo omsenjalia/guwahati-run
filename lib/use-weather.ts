@@ -4,10 +4,12 @@ import { useEffect, useSyncExternalStore } from "react";
 import { PLACES, type PlaceId } from "@/data/trip";
 import { fetchWeather, type Weather } from "@/lib/weather";
 import { HOUR } from "@/lib/time";
+import { useLive } from "@/lib/live-store";
 
 /**
  * Weather per place, cached on the phone for 3 hours and shown offline.
- * Phase 3 moves fetching into the background job; this then just reads.
+ * The background job keeps a synced copy; the phone only fetches itself
+ * when that copy is missing or older than 3 hours.
  */
 
 const KEY = (id: string) => `gr-weather-${id}`;
@@ -45,7 +47,9 @@ function refresh(id: PlaceId) {
 }
 
 export function useWeather(id: PlaceId | undefined) {
-  const data = useSyncExternalStore(
+  // Prefer the background job's copy (synced to every phone).
+  const synced = useLive().state.weather?.[id ?? ""];
+  const local = useSyncExternalStore(
     (cb) => {
       listeners.add(cb);
       return () => listeners.delete(cb);
@@ -53,8 +57,10 @@ export function useWeather(id: PlaceId | undefined) {
     () => (id ? read(id) : null),
     () => null,
   );
+  const syncedAt = synced?.fetchedAt;
   useEffect(() => {
-    if (id) refresh(id);
-  }, [id]);
-  return data;
+    if (id && !(syncedAt && Date.now() - syncedAt < TTL)) refresh(id);
+  }, [id, syncedAt]);
+  if (synced && (!local || synced.fetchedAt >= local.fetchedAt)) return synced;
+  return local;
 }

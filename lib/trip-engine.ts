@@ -86,7 +86,7 @@ export function legPassengers(leg: Leg, live: LiveState) {
     const lp = l?.passengers?.find((x) => x.person === p.person);
     return {
       person: p.person,
-      booked: p.booked,
+      booked: lp?.booked ?? p.booked,
       current: lp?.current ?? p.booked,
       confirmChance: lp?.confirmChance,
     };
