@@ -15,12 +15,13 @@ import { AllProvidersFailed, getLiveRunningStatus, getPnrStatus } from "@/lib/pr
 import type { LegLive, PassengerLive } from "@/lib/live-types";
 import { notify } from "@/lib/notify";
 import { runWatchers } from "@/lib/jobs/watchers";
+import type { StopTime } from "@/lib/meal-planner";
 import { serverDb } from "@/lib/supabase/server";
 import { HOUR, MIN, istDateKey, ms } from "@/lib/time";
 import { chartTime, parseStatus } from "@/lib/trip-engine";
 import { fetchWeatherMany } from "@/lib/weather";
 
-export type JobName = "seed" | "pnr-sync" | "live-status" | "weather" | "watchers";
+export type JobName = "seed" | "pnr-sync" | "live-status" | "weather" | "watchers" | "schedules";
 type JobResult = { job: JobName; ok: boolean; message: string; source?: string; details?: unknown };
 
 const ORDER: PersonId[] = TEAM.map((p) => p.id);
@@ -78,6 +79,12 @@ export async function runTick(opts: { force?: JobName[]; now?: number } = {}) {
     (l) => l.train && (force.has("live-status") || liveDue(l, now, live.get(l.id))),
   );
   if (liveLegs.length) results.push(await logged("live-status", () => syncLive(liveLegs, live)));
+
+  // Timetables for the meal planner (once a day)
+  const { data: sch } = await db.from("app_state").select("updated_at").eq("key", "schedules").maybeSingle();
+  if (force.has("schedules") || isDue(sch ? Date.parse(sch.updated_at) : undefined, 24 * HOUR, now)) {
+    results.push(await logged("schedules", syncSchedules));
+  }
 
   // Weather
   const { data: w } = await db.from("app_state").select("updated_at").eq("key", "weather").maybeSingle();
@@ -295,6 +302,37 @@ async function syncLive(legs: Leg[], live: Map<string, LegLive>) {
     }
   }
   return { ok: failures === 0, message: lines.join(" | "), source };
+}
+
+/* ----------------------------------------------------------- schedules */
+
+/** Each train's stops on our travel date, between our boarding and alighting stations. */
+async function syncSchedules() {
+  const value: Record<string, StopTime[]> = {};
+  const lines: string[] = [];
+  let source: string | undefined;
+  for (const leg of LEGS.filter((l) => l.kind === "train")) {
+    const board = PLACES[leg.from].code!;
+    const dest = PLACES[leg.to].code!;
+    try {
+      const r = await getLiveRunningStatus(leg.train!.number, istDateKey(leg.depart), board);
+      source = r.source;
+      const st = r.data.stations;
+      const a = st.findIndex((s) => s.code === board);
+      const b = st.findIndex((s) => s.code === dest);
+      if (a < 0 || b < 0) {
+        lines.push(`${leg.train!.number}: stops not found`);
+        continue;
+      }
+      value[leg.id] = st.slice(a, b + 1).map((s) => ({ code: s.code, name: s.name, arr: s.schArr, dep: s.schDep }));
+      lines.push(`${leg.train!.number}: ${b - a + 1} stops`);
+    } catch (e) {
+      lines.push(`${leg.train!.number}: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+  const { error } = await serverDb().from("app_state").upsert({ key: "schedules", value, updated_at: new Date().toISOString() });
+  if (error) throw new Error(error.message);
+  return { ok: Object.keys(value).length > 0, message: lines.join(" | "), source };
 }
 
 /* ------------------------------------------------------------- weather */

@@ -100,6 +100,7 @@ const JOBS = [
   { id: "live-status", label: "Live running status" },
   { id: "weather", label: "Weather" },
   { id: "watchers", label: "Connections, deadlines and alerts" },
+  { id: "schedules", label: "Train timetables (meal planner)" },
   { id: "seed", label: "Trip data seed" },
 ];
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import Link from "next/link";
 import {
   Train,
   Subway,
@@ -69,7 +70,12 @@ export function TimelineView({ calendarPath }: { calendarPath?: string }) {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-end justify-between gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight">Timeline</h1>
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Timeline</h1>
+          <Link href="/guide" className="text-sm font-medium text-primary">
+            Station guides, meals, explore
+          </Link>
+        </div>
         {calendarPath && <CalendarButton path={calendarPath} />}
       </div>
 
