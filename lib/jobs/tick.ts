@@ -121,7 +121,7 @@ async function seedTrip() {
   const db = serverDb();
   const snapshot = JSON.parse(JSON.stringify({ ...trip }));
   const { data } = await db.from("trip_snapshot").select("data").eq("id", 1).maybeSingle();
-  if (data && JSON.stringify(data.data) === JSON.stringify(snapshot)) return { ok: true, message: "unchanged" };
+  if (data && stableJson(data.data) === stableJson(snapshot)) return { ok: true, message: "unchanged" };
   const { error } = await db.from("trip_snapshot").upsert({ id: 1, data: snapshot, updated_at: new Date().toISOString() });
   if (error) throw new Error(error.message);
 
@@ -172,6 +172,7 @@ async function syncPnrs(legs: Leg[], live: Map<string, LegLive>) {
         source: r.source,
       };
       await save(leg.id, next, r.source);
+      live.set(leg.id, next); // later jobs in this tick build on this
       await recordPnrChange(leg, prev, next, r.source);
       lines.push(`${leg.train?.number}: ${summarize(passengers)}`);
     } catch (e) {
@@ -261,6 +262,7 @@ async function syncLive(legs: Leg[], live: Map<string, LegLive>) {
         source: r.source,
       };
       await save(leg.id, next, r.source);
+      live.set(leg.id, next); // later jobs in this tick build on this
       lines.push(`${leg.train!.number}: ${next.delayMin ? `${next.delayMin} min late` : "on time"}${next.lastStation ? ` near ${next.lastStation}` : ""}`);
     } catch (e) {
       failures++;
@@ -284,6 +286,18 @@ async function syncWeather() {
 }
 
 /* ------------------------------------------------------------- helpers */
+
+/** JSON with sorted keys (Postgres jsonb reorders keys, so plain stringify differs). */
+function stableJson(v: unknown): string {
+  if (Array.isArray(v)) return `[${v.map(stableJson).join(",")}]`;
+  if (v && typeof v === "object") {
+    return `{${Object.keys(v)
+      .sort()
+      .map((k) => `${JSON.stringify(k)}:${stableJson((v as Record<string, unknown>)[k])}`)
+      .join(",")}}`;
+  }
+  return JSON.stringify(v);
+}
 
 async function save(legId: string, data: LegLive, source: string) {
   const { error } = await serverDb()
