@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { Expense } from "@/lib/expenses";
 import { idbGet, idbSet } from "@/lib/offline/idb";
-import { browserDb } from "@/lib/supabase/browser";
+import { browserDb, channelName } from "@/lib/supabase/browser";
 import { ensureSession } from "@/lib/sync";
 
 const KEY = "expenses";
@@ -38,7 +38,7 @@ export function useExpenses() {
     };
     void load();
     const channel = sb
-      .channel("expenses")
+      .channel(channelName("expenses"))
       .on("postgres_changes", { event: "*", schema: "public", table: "expenses" }, () => void load())
       .subscribe();
     const onFocus = () => document.visibilityState === "visible" && void load();

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { idbGet, idbSet } from "@/lib/offline/idb";
-import { browserDb } from "@/lib/supabase/browser";
+import { browserDb, channelName } from "@/lib/supabase/browser";
 import { ensureSession } from "@/lib/sync";
 
 /** Hackathon kanban, shared live across phones (board_cards table). */
@@ -28,7 +28,7 @@ export function useBoard() {
     };
     void load();
     const ch = sb
-      .channel("board")
+      .channel(channelName("board"))
       .on("postgres_changes", { event: "*", schema: "public", table: "board_cards" }, () => void load())
       .subscribe();
     return () => {

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { idbGet, idbSet } from "@/lib/offline/idb";
-import { browserDb } from "@/lib/supabase/browser";
+import { browserDb, channelName } from "@/lib/supabase/browser";
 import { ensureSession } from "@/lib/sync";
 
 /** Shared trip journal: notes and photos per day (journal_entries + private bucket). */
@@ -35,7 +35,7 @@ export function useJournal() {
     };
     void load();
     const ch = sb
-      .channel("journal")
+      .channel(channelName("journal"))
       .on("postgres_changes", { event: "*", schema: "public", table: "journal_entries" }, () => void load())
       .subscribe();
     return () => {

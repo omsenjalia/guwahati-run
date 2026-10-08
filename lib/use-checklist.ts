@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { browserDb } from "@/lib/supabase/browser";
+import { browserDb, channelName } from "@/lib/supabase/browser";
 import { ensureSession } from "@/lib/sync";
 import { idbGet, idbSet } from "@/lib/offline/idb";
 
@@ -34,7 +34,7 @@ export function useChecklist(owner: string) {
     };
     void load();
     const channel = sb
-      .channel(`checklist-${owner}`)
+      .channel(channelName(`checklist-${owner}`))
       .on("postgres_changes", { event: "*", schema: "public", table: "packing_items", filter: `owner=eq.${owner}` }, () => void load())
       .subscribe();
     return () => {

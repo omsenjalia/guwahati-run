@@ -13,3 +13,12 @@ export function browserDb() {
   });
   return client;
 }
+
+/**
+ * Unique Realtime channel name. supabase-js reuses a channel with the same
+ * name, so two components listening to one table would otherwise share an
+ * already-subscribed channel and crash.
+ */
+export function channelName(base: string) {
+  return `${base}-${Math.random().toString(36).slice(2, 10)}`;
+}

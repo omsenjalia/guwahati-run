@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { PLACES, TEAM, type PersonId } from "@/data/trip";
 import { idbGet, idbSet } from "@/lib/offline/idb";
-import { browserDb } from "@/lib/supabase/browser";
+import { browserDb, channelName } from "@/lib/supabase/browser";
 import { ensureSession } from "@/lib/sync";
 import type { NowState } from "@/lib/trip-engine";
 
@@ -50,7 +50,7 @@ export function useCheckins() {
     };
     void load();
     const ch = sb
-      .channel("checkins")
+      .channel(channelName("checkins"))
       .on("postgres_changes", { event: "*", schema: "public", table: "checkins" }, () => void load())
       .subscribe();
     return () => {
