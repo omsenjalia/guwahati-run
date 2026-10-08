@@ -48,4 +48,12 @@ export function rapidoLink(isAndroid: boolean) {
     : site;
 }
 
+/**
+ * Pre-filled SMS. Works with basic signal and no mobile data, e.g. PNR
+ * status from 139: body "PNR 1234567890". iOS uses "&body=", Android "?body=".
+ */
+export function smsLink(to: string, body: string, isIOS: boolean) {
+  return `sms:${to}${isIOS ? "&" : "?"}body=${encodeURIComponent(body)}`;
+}
+
 export const telLink = (n: string) => `tel:${n.replace(/\s+/g, "")}`;

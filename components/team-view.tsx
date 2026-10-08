@@ -97,6 +97,12 @@ export function TeamView() {
 
       <PackingPanel />
       <ThemePanel />
+      <Link
+        href="/print"
+        className="flex h-12 items-center justify-center rounded-2xl border bg-card text-[0.95rem] font-medium active:scale-[0.98]"
+      >
+        Paper backup (print or PDF)
+      </Link>
       <Link href="/admin" className="py-3 text-center text-sm text-subtle underline-offset-4 hover:underline">
         System status and data self-test
       </Link>

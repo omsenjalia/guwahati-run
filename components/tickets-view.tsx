@@ -1,14 +1,15 @@
 "use client";
 
-import { IdentificationCard } from "@phosphor-icons/react";
+import { ChatText, IdentificationCard, Info, Warning } from "@phosphor-icons/react";
 import { LEGS, TEAM, type Leg } from "@/data/trip";
 import { CopyChip, LiveStamp, Panel, Skeleton, StatusPill, healthText } from "@/components/bits";
-import { Route, TimeRange, personName } from "@/components/leg-bits";
+import { CoachStrip, Route, TimeRange, personName } from "@/components/leg-bits";
+import { smsLink } from "@/lib/links";
 import { useNow } from "@/lib/clock";
 import { useLive } from "@/lib/live-store";
 import { useMe } from "@/lib/me";
 import { ms, stamp } from "@/lib/time";
-import { chartTime, legBerths, legHealth, legPassengers, parseStatus } from "@/lib/trip-engine";
+import { chartTime, legBerths, legHealth, legPassengers, legSituation, parseStatus } from "@/lib/trip-engine";
 import type { LiveState } from "@/lib/live-types";
 import { cn } from "@/lib/utils";
 
@@ -94,9 +95,20 @@ function TicketCard({ leg, live, now }: { leg: Leg; live: LiveState; now: number
       )}
 
       <div className="flex flex-col gap-3 border-t p-4">
+        {!done && <SituationNote leg={leg} live={live} />}
+        {l?.coachPosition && !done && <CoachStrip order={l.coachPosition} mine={berths.map((b) => b.coach)} />}
         {leg.pnr ? (
           <div className="flex items-center justify-between gap-3">
-            <CopyChip value={leg.pnr} label="PNR" />
+            <div className="flex gap-2">
+              <CopyChip value={leg.pnr} label="PNR" />
+              <a
+                href={smsLink("139", `PNR ${leg.pnr}`, /iphone|ipad/i.test(navigator.userAgent))}
+                aria-label={`Text 139 for PNR ${leg.pnr} status`}
+                className="inline-flex size-11 items-center justify-center rounded-lg bg-secondary active:scale-[0.98]"
+              >
+                <ChatText className="size-5" />
+              </a>
+            </div>
             <div className="text-right">
               {chartAt && !done && (
                 <p className="text-xs text-muted-foreground">
@@ -132,5 +144,22 @@ function TicketNotes({ leg }: { leg: Leg }) {
         </li>
       ))}
     </ul>
+  );
+}
+
+/** What this ticket's state means and what to do. */
+function SituationNote({ leg, live }: { leg: Leg; live: LiveState }) {
+  const s = legSituation(leg, live);
+  if (!s.advice) return null;
+  const tone = s.health === "red" ? "bg-bad-soft" : "bg-warn-soft";
+  const Icon = s.health === "red" ? Warning : Info;
+  return (
+    <div className={cn("rounded-lg px-3 py-2.5", tone)}>
+      <p className={cn("flex items-center gap-2 text-sm font-semibold", healthText[s.health])}>
+        <Icon className="size-4 shrink-0" weight="bold" />
+        {s.title}
+      </p>
+      <p className="mt-1 text-sm leading-snug">{s.advice}</p>
+    </div>
   );
 }

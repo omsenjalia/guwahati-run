@@ -173,3 +173,15 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Paper backup page always prints light, on A4. */
+@media print {
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+  body {
+    background: white !important;
+    color: black !important;
+  }
+}

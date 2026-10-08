@@ -12,13 +12,15 @@ import {
   CodeBlock,
   WifiSlash,
   ClockCounterClockwise,
+  Warning,
 } from "@phosphor-icons/react";
 import { Toaster } from "@/components/ui/sonner";
 import { useOnline } from "@/components/bits";
 import { useIsSimulated, useNow } from "@/lib/clock";
 import { isHackathonMode } from "@/lib/trip-engine";
 import { startSync } from "@/lib/sync";
-import { stamp } from "@/lib/time";
+import { ago, stamp } from "@/lib/time";
+import { useLive } from "@/lib/live-store";
 import { cn } from "@/lib/utils";
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -40,6 +42,11 @@ function StatusBar() {
   const online = useOnline();
   const simulated = useIsSimulated();
   const now = useNow();
+  const live = useLive();
+  const beat = live.state.heartbeat as { at: number; lastOkAt: number | null; failing: string[] } | undefined;
+  // Real time on purpose: a simulated clock must not fake an outage.
+  const stalled = online && beat && !simulated && now && now - Math.max(beat.at, beat.lastOkAt ?? 0) > 20 * 60_000;
+  const failing = online && beat && !stalled && beat.failing.length > 0 && now && now - (beat.lastOkAt ?? 0) > 30 * 60_000;
   return (
     <header className="sticky top-0 z-20 bg-background/85 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2 backdrop-blur-md">
       <div className="flex h-8 items-center justify-between gap-3">
@@ -62,6 +69,17 @@ function StatusBar() {
           )}
         </div>
       </div>
+      {(stalled || failing) && beat && (
+        <Link
+          href="/admin"
+          className="mt-2 flex items-center gap-2 rounded-lg bg-bad-soft px-3 py-2 text-sm font-medium text-bad"
+        >
+          <Warning className="size-4 shrink-0" weight="bold" />
+          {stalled
+            ? `Automatic updates stopped ${ago(beat.at, now!)}. Data may be old.`
+            : `Live updates failing (${beat.failing.join(", ")}). Showing last known data.`}
+        </Link>
+      )}
     </header>
   );
 }

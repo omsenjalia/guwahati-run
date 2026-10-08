@@ -2,8 +2,7 @@
  * The background brain. Supabase's scheduler calls /api/jobs/tick every
  * 5 minutes; this decides which jobs are due and runs them:
  *
- *   PNR sync      every 6h; hourly in the last 48h before departure;
- *                 every 15 min within 90 min of chart time
+ *   PNR sync      every 30 min; every 15 min within 90 min of chart time
  *   Live status   every tick (5 min) from 3h before departure to 1h after arrival
  *   Weather       every 3h
  *
@@ -38,8 +37,7 @@ export function pnrInterval(leg: Leg, now: number): number | null {
   const depart = ms(leg.depart);
   if (now > depart + 30 * MIN) return null; // already on board
   if (Math.abs(now - chartTime(leg.depart)) <= 90 * MIN) return 15 * MIN;
-  if (depart - now <= 48 * HOUR) return HOUR;
-  return 6 * HOUR;
+  return 30 * MIN;
 }
 
 export function liveDue(leg: Leg, now: number, live?: LegLive) {
@@ -85,6 +83,16 @@ export async function runTick(opts: { force?: JobName[]; now?: number } = {}) {
   if (force.has("weather") || isDue(w ? Date.parse(w.updated_at) : undefined, 3 * HOUR, now)) {
     results.push(await logged("weather", syncWeather));
   }
+
+  // Heartbeat: phones show a warning if this goes quiet for 20+ minutes.
+  const prevBeat = await db.from("app_state").select("value").eq("key", "heartbeat").maybeSingle();
+  const failing = results.filter((r) => !r.ok).map((r) => r.job);
+  const beat = {
+    at: now,
+    lastOkAt: failing.length ? ((prevBeat.data?.value as { lastOkAt?: number } | undefined)?.lastOkAt ?? null) : now,
+    failing,
+  };
+  await db.from("app_state").upsert({ key: "heartbeat", value: beat, updated_at: new Date(now).toISOString() });
 
   return results;
 }

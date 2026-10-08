@@ -19,7 +19,7 @@ import {
   type PlaceId,
 } from "@/data/trip";
 import type { LiveState } from "@/lib/live-types";
-import { HOUR, MIN, hhmm, ms } from "@/lib/time";
+import { HOUR, MIN, dayMonth, hhmm, ms } from "@/lib/time";
 
 export type Health = "green" | "amber" | "red";
 
@@ -99,14 +99,68 @@ export function legBerths(leg: Leg, live: LiveState) {
 
 /** Health of one reserved leg from its passengers' current statuses. */
 export function legHealth(leg: Leg, live: LiveState): Health {
+  return legSituation(leg, live).health;
+}
+
+export type Situation = {
+  kind: "confirmed" | "partial" | "rac" | "waitlisted" | "cancelled" | "unreserved";
+  health: Health;
+  title: string;
+  advice: string;
+};
+
+/** Plain-English read of a ticket's state, including what to do about it. */
+export function legSituation(leg: Leg, live: LiveState): Situation {
   const pax = legPassengers(leg, live);
-  if (!pax.length) return "green";
+  if (!pax.length) return { kind: "unreserved", health: "green", title: "Unreserved", advice: "" };
   const kinds = pax.map((p) => parseStatus(p.current).kind);
   const charted = live.legs[leg.id]?.chartPrepared ?? false;
-  if (kinds.some((k) => k === "CAN")) return "red";
-  if (kinds.some((k) => k === "WL")) return charted ? "red" : "amber";
-  if (kinds.some((k) => k === "RAC" || k === "UNKNOWN")) return "amber";
-  return "green";
+  const chartAt = `${dayMonth(chartTime(leg.depart))} ${hhmm(chartTime(leg.depart))}`;
+  const n = (k: string) => kinds.filter((x) => x === k).length;
+  const chances = pax.map((p) => p.confirmChance).filter((c): c is number => c !== undefined);
+  const odds = chances.length
+    ? ` ConfirmTkt gives ${Math.min(...chances) === Math.max(...chances) ? Math.min(...chances) : `${Math.min(...chances)}-${Math.max(...chances)}`}% chance of confirming.`
+    : "";
+  const seated = n("CNF") + n("RAC");
+
+  if (n("CAN")) {
+    return { kind: "cancelled", health: "red", title: "Ticket cancelled", advice: "Check IRCTC for the refund and switch to plan B now." };
+  }
+  if (n("WL") === pax.length) {
+    return charted
+      ? {
+          kind: "waitlisted",
+          health: "red",
+          title: "Still waitlisted after the chart",
+          advice: "A fully waitlisted e-ticket is cancelled automatically and refunded. Use the Tatkal ticket or plan B.",
+        }
+      : {
+          kind: "waitlisted",
+          health: "amber",
+          title: "Waitlisted",
+          advice: `The chart comes out around ${chartAt}.${odds} Keep the Tatkal deadline in mind in case it doesn't clear.`,
+        };
+  }
+  if (n("WL")) {
+    return {
+      kind: "partial",
+      health: charted ? "red" : "amber",
+      title: `${seated} of ${pax.length} have a seat`,
+      advice: charted
+        ? "Partly confirmed after the chart. Check the current IRCTC rule for waitlisted names on a partly confirmed e-ticket before boarding, and book Tatkal or plan B for the rest."
+        : `Partly confirmed so far. The chart around ${chartAt} decides the rest.${odds}`,
+    };
+  }
+  if (n("RAC")) {
+    return {
+      kind: "rac",
+      health: "amber",
+      title: `RAC for ${n("RAC")} of ${pax.length}`,
+      advice:
+        "RAC means two people share one side-lower berth: sit by day, take turns lying down at night. You can board. After the train leaves, ask the TTE for any vacant berth; RAC gets upgraded first.",
+    };
+  }
+  return { kind: "confirmed", health: "green", title: "All confirmed", advice: "" };
 }
 
 export const worst = (hs: Health[]): Health =>

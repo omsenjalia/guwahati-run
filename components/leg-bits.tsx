@@ -67,3 +67,36 @@ export function Countdown({ to, now, className }: { to: number; now: number; cla
     </span>
   );
 }
+
+/**
+ * Coach order on the platform, engine end first (from the PNR provider),
+ * with our coaches highlighted. Scrolls sideways on narrow phones.
+ */
+export function CoachStrip({ order, mine }: { order: string; mine: string[] }) {
+  const coaches = order.split(/\s+/).filter(Boolean);
+  const ours = new Set(mine);
+  const label = (c: string) => (c === "L" ? "Engine" : c);
+  const idx = coaches.findIndex((c) => ours.has(c));
+  const where =
+    idx < 0 ? "" : idx < coaches.length / 3 ? "near the engine end" : idx > (coaches.length * 2) / 3 ? "at the far end, away from the engine" : "in the middle";
+  return (
+    <div>
+      <p className="text-xs text-muted-foreground">
+        Coach order on the platform{where && <span className="text-foreground">. Ours are {where}</span>}
+      </p>
+      <ol className="-mx-4 mt-1.5 flex gap-1 overflow-x-auto px-4 pb-1" aria-label="Coach order, engine first">
+        {coaches.map((c, i) => (
+          <li
+            key={`${c}-${i}`}
+            className={cn(
+              "flex h-8 min-w-9 shrink-0 items-center justify-center rounded-md px-1.5 font-mono text-xs tabular",
+              ours.has(c) ? "bg-primary font-semibold text-primary-foreground" : c === "L" ? "bg-foreground/80 text-background" : "bg-secondary text-muted-foreground",
+            )}
+          >
+            {label(c)}
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
