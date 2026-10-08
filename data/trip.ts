@@ -628,6 +628,15 @@ export const GRANT = {
   ],
 };
 
+/* ------------------------------------------------------------- expenses */
+// Added to the shared expenses list on first run. After that, add and edit
+// expenses in the app (Money tab), not here.
+
+export const INITIAL_EXPENSES = [
+  { title: "Hackathon registration fee", amount: 3600, paid_by: "oms", category: "registration", spent_on: "2026-10-07" },
+  { title: "Train tickets (all 4 PNRs)", amount: 23191.11, paid_by: "heet", category: "tickets", spent_on: "2026-10-07" },
+] as const;
+
 /* -------------------------------------------------------------- packing */
 
 export const PACKING_TEAM = [

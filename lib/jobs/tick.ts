@@ -131,6 +131,12 @@ async function logged(job: JobName, fn: () => Promise<Omit<JobResult, "job">>): 
 /** Copies data/trip.ts into the database (first run, and whenever it changes). */
 async function seedTrip() {
   const db = serverDb();
+  // Payments made before the app existed (once, when the expenses table is empty).
+  const exp = await db.from("expenses").select("id", { count: "exact", head: true });
+  if (!exp.error && !exp.count) {
+    await db.from("expenses").insert(trip.INITIAL_EXPENSES.map((e) => ({ ...e, created_by: "setup" })));
+  }
+
   const snapshot = JSON.parse(JSON.stringify({ ...trip }));
   const { data } = await db.from("trip_snapshot").select("data").eq("id", 1).maybeSingle();
   if (data && stableJson(data.data) === stableJson(snapshot)) return { ok: true, message: "unchanged" };

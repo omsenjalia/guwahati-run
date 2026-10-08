@@ -8,6 +8,8 @@ import { personName } from "@/components/leg-bits";
 import { grantEstimate, type GrantScenario } from "@/lib/grant";
 import { useMe } from "@/lib/me";
 import { useChecklist } from "@/lib/use-checklist";
+import { useExpenses } from "@/lib/use-expenses";
+import { CATEGORIES, spendingPerPerson } from "@/lib/expenses";
 import { cn } from "@/lib/utils";
 
 const rupees = (n: number) => `₹${Math.round(n).toLocaleString("en-IN")}`;
@@ -93,6 +95,8 @@ export function GrantView() {
         </p>
       </Panel>
 
+      <RecordedPanel />
+
       {g.capped && (
         <Panel className="border-primary/30">
           <PanelTitle aside={<Lightbulb className="size-5 text-primary" />}>Worth asking</PanelTitle>
@@ -108,6 +112,29 @@ export function GrantView() {
 
       <p className="px-1 pb-2 text-xs leading-relaxed text-subtle">{GRANT.policy}</p>
     </div>
+  );
+}
+
+/** Real spending entered in Money that counts for the grant, per person. */
+function RecordedPanel() {
+  const me = useMe();
+  const { items } = useExpenses();
+  if (!items) return null;
+  const spend = spendingPerPerson(items);
+  const grantable = items.filter((e) => CATEGORIES.find((c) => c.id === e.category)?.grant);
+  const withBill = grantable.filter((e) => e.receipt_path).length;
+  const person = me ?? "oms";
+  return (
+    <Panel>
+      <PanelTitle>Recorded in Money so far</PanelTitle>
+      <dl className="grid grid-cols-2 gap-3">
+        <Stat label={`${personName(person)}'s grant-eligible share`} value={rupees(spend[person].grantable)} />
+        <Stat label="Bills attached" value={`${withBill} of ${grantable.length}`} tone={withBill < grantable.length ? "text-warn" : "text-ok"} />
+      </dl>
+      <p className="mt-2 text-xs leading-relaxed text-subtle">
+        Tickets, registration and local travel count. Attach a bill photo to each so the claim has proof.
+      </p>
+    </Panel>
   );
 }
 
