@@ -1,5 +1,6 @@
 import { PLACES } from "@/data/trip";
-import { EMPTY_LIVE } from "@/lib/live-types";
+import { EMPTY_LIVE, type LegLive, type LiveState } from "@/lib/live-types";
+import { serverDb } from "@/lib/supabase/server";
 import { buildSteps } from "@/lib/trip-engine";
 
 /**
@@ -12,7 +13,13 @@ export async function GET(_req: Request, ctx: RouteContext<"/api/calendar/[token
   if (!process.env.CALENDAR_TOKEN || token !== process.env.CALENDAR_TOKEN) {
     return new Response("Not found", { status: 404 });
   }
-  const steps = buildSteps(EMPTY_LIVE).filter((s) => !s.minor);
+  // Live-adjusted times; falls back to the plan if the database is unreachable.
+  let live: LiveState = EMPTY_LIVE;
+  try {
+    const { data } = await serverDb().from("leg_live").select("leg_id, data");
+    live = { legs: Object.fromEntries((data ?? []).map((r) => [r.leg_id, r.data as LegLive])), state: {} };
+  } catch {}
+  const steps = buildSteps(live).filter((s) => !s.minor);
   const utc = (t: number) => new Date(t).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
   const esc = (s: string) =>
     s.replace(/\\/g, "\\\\").replace(/[,;]/g, (m) => "\\" + m).replace(/\n/g, "\\n");
