@@ -10,7 +10,7 @@
  *   briefing      07:00 IST daily summary during the trip
  *   settle        Splitwise reminder after the trip
  */
-import { CONNECTIONS, DEADLINES, EVENT, LEGS, PLACES, TATKAL_BOOKER, TEAM } from "@/data/trip";
+import { CONNECTIONS, DEADLINES, EVENT, LEGS, PLACES, REST_PLAN, TATKAL_BOOKER, TEAM } from "@/data/trip";
 import type { LegLive, LiveState } from "@/lib/live-types";
 import { notify, type Alert } from "@/lib/notify";
 import { serverDb } from "@/lib/supabase/server";
@@ -112,6 +112,20 @@ export async function runWatchers(legs: Map<string, LegLive>, now: number) {
         title: `Wake up: ${PLACES[s.leg.to].short} in ${duration(s.end - now)}`,
         body: `Arriving ${hhmm(s.end)}.${coach} Pack up and check under the berths.`,
         url: "/",
+      });
+    }
+  }
+
+  /* ---- hackathon rest rotation ---------------------------------------- */
+  for (const slot of REST_PLAN) {
+    const start = ms(slot.start);
+    if (now >= start - 5 * MIN && now < start + 15 * MIN) {
+      const awake = TEAM.filter((p) => !slot.resting.includes(p.id)).map((p) => p.short);
+      once(`rest-${slot.start}`, {
+        kind: "rest",
+        title: `Rest time: ${slot.resting.map(name).join(" and ")}`,
+        body: `Sleep until ${hhmm(ms(slot.end))}. ${awake.join(" and ")} keep building.`,
+        url: "/hackathon",
       });
     }
   }

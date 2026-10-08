@@ -147,6 +147,7 @@ async function seedTrip() {
   const lists: [string, readonly string[]][] = [
     ["team", trip.PACKING_TEAM],
     ["grant", trip.GRANT.documents],
+    ["demo", trip.DEMO_CHECKLIST],
     ...trip.TEAM.map((p): [string, readonly string[]] => [p.id, trip.PACKING_PERSONAL]),
   ];
   for (const [owner, labels] of lists) {

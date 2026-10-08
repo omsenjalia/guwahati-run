@@ -219,6 +219,46 @@ export const EVENT = {
   modeEnd: "2026-11-01T11:00:00+05:30",
 };
 
+/**
+ * Hackathon schedule. Times marked tbc are guesses: update them from the
+ * official schedule when it arrives (everything else adjusts automatically).
+ */
+export const EVENT_SCHEDULE: { at: string; title: string; tbc?: boolean }[] = [
+  { at: "2026-10-31T09:00:00+05:30", title: "Reporting and registration desk", tbc: true },
+  { at: "2026-10-31T10:00:00+05:30", title: "Hacking starts" },
+  { at: "2026-10-31T13:00:00+05:30", title: "Lunch", tbc: true },
+  { at: "2026-10-31T20:00:00+05:30", title: "Dinner", tbc: true },
+  { at: "2026-11-01T08:00:00+05:30", title: "Breakfast", tbc: true },
+  { at: "2026-11-01T09:00:00+05:30", title: "Submission deadline", tbc: true },
+  { at: "2026-11-01T09:30:00+05:30", title: "Judging and demos", tbc: true },
+  { at: "2026-11-01T11:00:00+05:30", title: "Results and closing" },
+];
+
+/** Fill in at the venue. */
+export const VENUE_NOTES = {
+  wifi: "Ask at the registration desk",
+  power: "Bring the extension board; claim a table near a socket early",
+  food: "See schedule. Keep water and snacks at the table",
+  help: "",
+};
+
+/** Overnight rest rotation: two rest while two keep building. */
+export const REST_PLAN: { start: string; end: string; resting: PersonId[] }[] = [
+  { start: "2026-10-31T23:00:00+05:30", end: "2026-11-01T01:00:00+05:30", resting: ["heet", "omk"] },
+  { start: "2026-11-01T01:00:00+05:30", end: "2026-11-01T03:00:00+05:30", resting: ["oms", "sujal"] },
+  { start: "2026-11-01T03:00:00+05:30", end: "2026-11-01T05:00:00+05:30", resting: ["heet", "omk"] },
+  { start: "2026-11-01T05:00:00+05:30", end: "2026-11-01T07:00:00+05:30", resting: ["oms", "sujal"] },
+];
+
+export const DEMO_CHECKLIST = [
+  "Slides final (PDF copy too)",
+  "Backup demo video recorded",
+  "Repo public, README updated",
+  "Deployed URL works on mobile data",
+  "Pitch rehearsed under time",
+  "Laptops charged, chargers packed",
+];
+
 /* ----------------------------------------------------------------- legs */
 // Passenger order is assumed to follow the team order above (the same order as
 // the Garib Rath berths). The PNR sync replaces these with the real per-passenger data.

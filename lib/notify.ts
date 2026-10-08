@@ -17,6 +17,7 @@ export type AlertKind =
   | "wake"
   | "briefing"
   | "settle"
+  | "rest"
   | "system";
 
 export type Alert = {

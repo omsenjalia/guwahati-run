@@ -9,6 +9,7 @@ export const ALERT_KINDS = [
   { id: "deadline", label: "Deadlines and actions" },
   { id: "wake", label: "Wake-up before arrival" },
   { id: "briefing", label: "07:00 morning briefing" },
+  { id: "rest", label: "Hackathon rest rotation" },
   { id: "settle", label: "Settle up reminder" },
 ] as const;
 
