@@ -11,7 +11,7 @@
 const VERSION = "gr-v2";
 // Registered as /sw.js?dev=1 during development: push only, no caching.
 const DEV = new URL(self.location.href).searchParams.has("dev");
-const PAGES = ["/", "/timeline", "/tickets", "/money", "/team", "/hackathon", "/grant", "/admin", "/print", "/claim", "/sos", "/guide"];
+const PAGES = ["/", "/timeline", "/tickets", "/money", "/team", "/hackathon", "/grant", "/admin", "/print", "/claim", "/sos", "/guide", "/journal"];
 const NETWORK_TIMEOUT_MS = 4000;
 
 self.addEventListener("install", (event) => {

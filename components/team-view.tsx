@@ -103,6 +103,12 @@ export function TeamView() {
       {me && <ChecklistPanel owner={me} title={`${TEAM.find((p) => p.id === me)?.short}'s packing`} />}
       <ThemePanel />
       <Link
+        href="/journal"
+        className="flex h-12 items-center justify-center rounded-2xl border bg-card text-[0.95rem] font-medium active:scale-[0.98]"
+      >
+        Trip journal and post
+      </Link>
+      <Link
         href="/guide"
         className="flex h-12 items-center justify-center rounded-2xl border bg-card text-[0.95rem] font-medium active:scale-[0.98]"
       >
