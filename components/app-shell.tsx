@@ -62,6 +62,13 @@ function StatusBar() {
               {stamp(now)}
             </a>
           )}
+          <Link
+            href="/sos"
+            aria-label="SOS and emergency help"
+            className="inline-flex h-7 items-center rounded-full bg-bad px-2.5 text-xs font-bold tracking-wide text-background"
+          >
+            SOS
+          </Link>
           {!online && (
             <span className="inline-flex h-7 items-center gap-1.5 rounded-full bg-warn-soft px-2.5 text-xs font-medium text-warn">
               <WifiSlash className="size-3.5" />
