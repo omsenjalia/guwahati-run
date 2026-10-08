@@ -4,6 +4,8 @@ import Link from "next/link";
 import { ArrowSquareOut, CaretRight, CloudSun } from "@phosphor-icons/react";
 import { CONNECTIONS, LEGS, PLACES, TATKAL_BOOKER, type PlaceId } from "@/data/trip";
 import { TransferPlanCard } from "@/components/transfer-plan";
+import { CheckinPanel } from "@/components/checkin-panel";
+import { checkpointLabel } from "@/lib/checkins";
 import { planTransfers } from "@/lib/transfer-planner";
 import { evaluate } from "@/lib/deadline-rules";
 import { CopyChip, LiveStamp, Panel, PanelTitle, Skeleton, StatusPill, healthText } from "@/components/bits";
@@ -40,6 +42,7 @@ export function NowView() {
     <div className="flex flex-col gap-3">
       <Hero state={state} now={now} live={live} />
       <PlanBPanel health={health} now={now} />
+      {state.phase !== "pre-trip" && <CheckinPanel place={checkpointLabel(state)} now={now} />}
       <HealthPanel health={health} live={live} />
       <DeadlinePanel now={now} live={live} />
       <WeatherPanel focus={state.focus} mode={state.focusMode} />
