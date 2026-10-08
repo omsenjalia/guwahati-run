@@ -91,10 +91,10 @@ export function HackathonView() {
           )}
         </dl>
         <ul className="mt-3 flex flex-col gap-1 border-t pt-3 text-sm">
-          {TEAM.map((p) => (
+          {TEAM.filter((p) => p.role).map((p) => (
             <li key={p.id} className="flex justify-between gap-3">
               <span className="font-medium">{p.name}</span>
-              <span className="text-muted-foreground">{p.role || "Role not set"}</span>
+              <span className="text-muted-foreground">{p.role}</span>
             </li>
           ))}
         </ul>

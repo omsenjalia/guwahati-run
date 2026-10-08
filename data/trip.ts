@@ -384,7 +384,7 @@ export const LEGS: Leg[] = [
     fareTotal: 3995.4,
     notes: [
       "Garib Rath usually has no bedding. Carry a bedsheet each.",
-      "Arrives Anand at 01:42. Pickup must be arranged.",
+      "Arrives Anand at 01:42. Rapido or auto home, stay together.",
     ],
   },
 ];
@@ -574,21 +574,18 @@ export const BLOCKS: Block[] = [
     start: "2026-11-01T11:00:00+05:30",
     end: "2026-11-01T16:00:00+05:30",
     place: "KYQ",
-    notes: ["Kamakhya Temple is right next to Kamakhya station. A natural last stop."],
+    notes: ["Kamakhya Temple is about 5 km from the station (15 to 20 min by cab). Guides has leave-by times."],
   },
   {
     id: "pickup",
     kind: "pickup",
-    title: "Pickup at Anand station",
+    title: "Rapido or auto home from Anand",
     start: "2026-11-04T01:42:00+05:30",
     end: "2026-11-04T02:30:00+05:30",
     place: "ANND",
-    notes: ["Who is picking us up? Fill in below."],
+    notes: ["Book the Rapido from the platform before walking out, or take an auto from the stand. Stay together and share ride details in the group."],
   },
 ];
-
-/** Who picks us up at Anand at 01:42 on 4 Nov. */
-export const PICKUP = { name: "", phone: "" };
 
 /* -------------------------------------------------------------- numbers */
 
@@ -604,7 +601,7 @@ export const USEFUL_NUMBERS = [
 export const REMINDERS = [
   "Om Senjalia: name is SENJALIYA on the North East Exp ticket. Carry an original photo ID.",
   "Garib Rath has no bedding. Carry a bedsheet each.",
-  "Arrival at Anand is 01:42 on 4 Nov. Confirm the pickup.",
+  "Arrival at Anand is 01:42 on 4 Nov. Rapido or auto home, stay together.",
 ];
 
 /* ---------------------------------------------------------------- grant */

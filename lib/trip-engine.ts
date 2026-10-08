@@ -10,7 +10,6 @@ import {
   EVENT,
   LEGS,
   PLACES,
-  PICKUP,
   type Block,
   type Deadline,
   type Leg,
@@ -404,8 +403,11 @@ function instructionFor(step: Step, mode: "upcoming" | "active") {
       : { instruction: `Be back at Kamakhya by ${hhmm(step.end)}. Train at 16:55.`, countdownTo: step.end, countdownLabel: "Head to Kamakhya" };
   }
   if (step.kind === "pickup") {
-    const who = PICKUP.name ? `Meet ${PICKUP.name}` : "Pickup not set yet. Arrange it";
-    return { instruction: `${who} at Anand station.`, countdownTo: step.start, countdownLabel: "Pickup" };
+    return {
+      instruction: "Book a Rapido or take an auto home. Stay together.",
+      countdownTo: mode === "upcoming" ? step.start : undefined,
+      countdownLabel: "Arrive Anand",
+    };
   }
   if (step.kind === "stay") {
     return { instruction: `Rest at ${PLACES[step.place ?? "IITG"].short}. Hackathon starts ${hhmm(ms(EVENT.start))}.`, countdownTo: step.end, countdownLabel: "Rest ends" };

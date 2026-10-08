@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { DEADLINES, EVENT, LEGS, PICKUP, PLACES, REMINDERS, TEAM, USEFUL_NUMBERS } from "@/data/trip";
+import { DEADLINES, EVENT, LEGS, PLACES, REMINDERS, TEAM, USEFUL_NUMBERS } from "@/data/trip";
 import { personName, statusSummary } from "@/components/leg-bits";
 import { useNow } from "@/lib/clock";
 import { useLive } from "@/lib/live-store";
@@ -116,7 +116,7 @@ export function PrintView() {
             ))}
           </ul>
           <p className="mt-2">
-            <b>Anand pickup 4 Nov 01:42:</b> {PICKUP.name ? `${PICKUP.name} ${PICKUP.phone}` : "________"}
+            <b>Anand 4 Nov 01:42:</b> Rapido or auto home, stay together
           </p>
           <h2 className="mt-3 font-bold">Numbers</h2>
           <ul className="mt-1">

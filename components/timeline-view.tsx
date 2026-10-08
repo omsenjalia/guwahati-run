@@ -157,6 +157,16 @@ function StepRow({
         </div>
         {leg?.kind === "transfer" && plan && !past && <TransferPlanCard plan={plan} now={now} className="mt-3" />}
         {leg?.kind === "transfer" && <TransferLinks from={leg.from} to={leg.to} road={plan?.mode !== "metro"} />}
+        {step.kind === "pickup" && (
+          <a
+            href={rapidoLink(/android/i.test(navigator.userAgent))}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-3 flex h-11 items-center justify-center rounded-lg bg-secondary text-sm font-medium active:scale-[0.98]"
+          >
+            Open Rapido
+          </a>
+        )}
       </Panel>
     </div>
   );

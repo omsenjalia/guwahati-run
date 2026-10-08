@@ -69,7 +69,7 @@ export function GrantView() {
           </li>
         </ul>
         <p className="mt-3 text-xs leading-relaxed text-subtle">
-          Not covered: local travel under 25 km from BVM (getting to Anand station, the 01:42 pickup). Food and stay only
+          Not covered: local travel under 25 km from BVM (getting to Anand station, the ride home at 2 am). Food and stay only
           with prior approval. Amounts for metro and cabs are estimates until we have the bills.
         </p>
       </Panel>

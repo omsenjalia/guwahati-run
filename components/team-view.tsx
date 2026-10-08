@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSyncExternalStore } from "react";
 import { Check, Phone, Moon, Sun, DeviceMobile } from "@phosphor-icons/react";
-import { PICKUP, TEAM, USEFUL_NUMBERS } from "@/data/trip";
+import { TEAM, USEFUL_NUMBERS } from "@/data/trip";
 import { Panel, PanelTitle, Skeleton } from "@/components/bits";
 import { AlertsPanel } from "@/components/alerts-panel";
 import { ChecklistPanel } from "@/components/checklist-panel";
@@ -54,7 +54,7 @@ export function TeamView() {
                 <p className="font-medium">
                   {p.name} <span className="font-normal text-muted-foreground">{p.age}</span>
                 </p>
-                <p className="text-sm text-muted-foreground">{p.role || "Role not set"}</p>
+                {p.role && <p className="text-sm text-muted-foreground">{p.role}</p>}
                 {p.guardian.phone && (
                   <a href={telLink(p.guardian.phone)} className="text-sm text-primary">
                     {p.guardian.relation || "Guardian"}: {p.guardian.name}
@@ -75,11 +75,6 @@ export function TeamView() {
             </li>
           ))}
         </ul>
-        {!PICKUP.name && (
-          <p className="mt-3 rounded-lg bg-warn-soft px-3 py-2.5 text-sm text-warn">
-            Anand pickup on 4 Nov, 01:42 is not arranged yet.
-          </p>
-        )}
       </Panel>
 
       <Panel>
