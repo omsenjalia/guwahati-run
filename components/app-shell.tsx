@@ -13,6 +13,7 @@ import {
   WifiSlash,
   ClockCounterClockwise,
   Warning,
+  HandCoins,
 } from "@phosphor-icons/react";
 import { Toaster } from "@/components/ui/sonner";
 import { useOnline } from "@/components/bits";
@@ -97,6 +98,7 @@ function BottomNav() {
       : { href: "/timeline", label: "Timeline", Icon: Path },
     { href: "/tickets", label: "Tickets", Icon: Ticket },
     { href: "/money", label: "Money", Icon: Wallet },
+    { href: "/grant", label: "Grant", Icon: HandCoins },
     { href: "/team", label: "Team", Icon: UsersThree },
   ];
   return (
@@ -104,7 +106,7 @@ function BottomNav() {
       aria-label="Main"
       className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/92 pb-[env(safe-area-inset-bottom)] backdrop-blur-md"
     >
-      <ul className="mx-auto grid h-16 max-w-md grid-cols-5">
+      <ul className="mx-auto grid h-16 max-w-md grid-cols-6">
         {items.map(({ href, label, Icon }) => {
           const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
           return (
@@ -113,7 +115,7 @@ function BottomNav() {
                 href={href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex h-full flex-col items-center justify-center gap-1 text-[0.7rem] font-medium transition-colors",
+                  "flex h-full flex-col items-center justify-center gap-1 text-[0.68rem] font-medium tracking-tight transition-colors",
                   active ? "text-primary" : "text-muted-foreground",
                 )}
               >

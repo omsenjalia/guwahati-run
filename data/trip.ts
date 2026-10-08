@@ -565,6 +565,69 @@ export const REMINDERS = [
   "Arrival at Anand is 01:42 on 4 Nov. Confirm the pickup.",
 ];
 
+/* ---------------------------------------------------------------- grant */
+// BVM SSIP 2.0 "Student Innovation Event Participation Expenses
+// Reimbursement Policy". Amounts per student unless noted.
+
+export type GrantItem = {
+  id: string;
+  label: string;
+  /** What each of us actually pays. */
+  paidPerPerson: number;
+  /** Claimable if the college insists on the most economical class. */
+  economyPerPerson?: number;
+  note?: string;
+  kind: "train" | "local" | "fee";
+  leg?: LegId;
+};
+
+export const GRANT = {
+  policy: "BVM SSIP 2.0: Student Innovation Event Participation Expenses Reimbursement",
+  /** Outside Gujarat. Within Gujarat it is 2,000. */
+  capPerStudent: 5000,
+  /** Larger events may get more, case by case, up to this per event. */
+  maxPerEventCaseByCase: 50000,
+  items: [
+    { id: "g-L0", leg: "L0", kind: "train", label: "Anand to Ahmedabad (unreserved)", paidPerPerson: 35, note: "UTS fare, approx." },
+    { id: "g-L0b", leg: "L0b", kind: "local", label: "Kalupur to Sabarmati (metro)", paidPerPerson: 30 },
+    { id: "g-L1", leg: "L1", kind: "train", label: "19031 Yoga Express (SL)", paidPerPerson: 1997.7 / 4 },
+    { id: "g-L1b", leg: "L1b", kind: "local", label: "Delhi Jn to Anand Vihar (metro or cab)", paidPerPerson: 45 },
+    {
+      id: "g-L2",
+      leg: "L2",
+      kind: "train",
+      label: "12506 North East Express (3A)",
+      paidPerPerson: 8275.4 / 4,
+      economyPerPerson: 825,
+      note: "Sleeper fare ₹825 if only the most economical class is allowed",
+    },
+    { id: "g-L2b", leg: "L2b", kind: "local", label: "Kamakhya to IIT Guwahati (shared cab)", paidPerPerson: 150, note: "Station to venue, sharing basis" },
+    { id: "g-back", kind: "local", label: "IIT Guwahati to Kamakhya (shared cab)", paidPerPerson: 150, note: "Venue to station, sharing basis" },
+    {
+      id: "g-L3",
+      leg: "L3",
+      kind: "train",
+      label: "15658 Brahmaputra Express (3A)",
+      paidPerPerson: 8477.2 / 4,
+      economyPerPerson: 825,
+      note: "Sleeper fare ₹825 if only the most economical class is allowed",
+    },
+    { id: "g-L3b", leg: "L3b", kind: "local", label: "Delhi Jn to Sarai Rohilla (shared auto)", paidPerPerson: 37.5 },
+    { id: "g-L4", leg: "L4", kind: "train", label: "12215 BDTS Garib Rath (3A)", paidPerPerson: 3995.4 / 4, note: "3A is the only class on Garib Rath" },
+    { id: "g-reg", kind: "fee", label: "Registration fee", paidPerPerson: 900, note: "Approved" },
+  ] as GrantItem[],
+  documents: [
+    "Prior approval from HOD (before 28 Oct)",
+    "Approved application form",
+    "Event invitation and schedule",
+    "Proof of participation (certificate or letter)",
+    "Original travel tickets (print every e-ticket)",
+    "Bills: metro tickets, cab invoices, registration receipt",
+    "Brief report on learnings from the event",
+    "Confirm no similar reimbursement in the last 6 months",
+  ],
+};
+
 /* -------------------------------------------------------------- packing */
 
 export const PACKING_TEAM = [

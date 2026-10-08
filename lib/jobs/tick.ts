@@ -137,10 +137,13 @@ async function seedTrip() {
   const { error } = await db.from("trip_snapshot").upsert({ id: 1, data: snapshot, updated_at: new Date().toISOString() });
   if (error) throw new Error(error.message);
 
-  // First run: seed the shared packing list.
-  const { count } = await db.from("packing_items").select("id", { count: "exact", head: true });
-  if (!count) {
-    await db.from("packing_items").insert(trip.PACKING_TEAM.map((label, sort) => ({ owner: "team", label, sort })));
+  // First run: seed the shared packing list and the grant document checklist.
+  for (const [owner, labels] of [
+    ["team", trip.PACKING_TEAM],
+    ["grant", trip.GRANT.documents],
+  ] as const) {
+    const { count } = await db.from("packing_items").select("id", { count: "exact", head: true }).eq("owner", owner);
+    if (!count) await db.from("packing_items").insert(labels.map((label, sort) => ({ owner, label, sort })));
   }
   return { ok: true, message: data ? "trip data updated" : "trip data seeded" };
 }
