@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Guwahati Run
 
-## Getting Started
+Trip companion PWA for 4 of us: Gujarat to Delhi to Guwahati (IIT Guwahati hackathon finals) and back, 28 Oct to 4 Nov 2026.
 
-First, run the development server:
+## The one file you might edit
+
+`data/trip.ts` holds all static trip data: team, phone numbers, parent contacts, roles, legs, PNRs, deadlines, packing list, pickup person. Everything live (PNR status, delays, platforms, berths) is fetched automatically and layered on top.
+
+## Run locally
 
 ```bash
+npm install
+cp .env.example .env.local   # then fill in the values
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000 and sign in with `TEAM_PASSCODE`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Preview any moment of the trip
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Add `?at=` to any page, in IST:
 
-## Learn More
+- `/?at=2026-10-29T03:30`: on the Yoga Express at night
+- `/?at=2026-10-31T14:00`: hackathon mode
+- `/?at=off`: back to real time
 
-To learn more about Next.js, take a look at the following resources:
+## Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+app/(app)/          Now, Timeline, Tickets, Money, Team, Hackathon (team passcode)
+app/parent/         Read-only parent view (parent passcode)
+app/login/          Passcode screen
+app/api/calendar/   Subscribable .ics feed
+components/         Screens and shared UI
+data/trip.ts        All static trip data
+lib/trip-engine.ts  "What's happening now", health, buffers, chart times
+lib/clock.ts        Shared ticking clock (+ ?at= simulation)
+proxy.ts            Passcode gate and noindex
+public/sw.js        Offline copy and push notifications
+```

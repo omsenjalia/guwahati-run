@@ -1,0 +1,183 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+import {
+  Train,
+  Subway,
+  Car,
+  CodeBlock,
+  Bed,
+  ForkKnife,
+  MapPinArea,
+  House,
+  Mountains,
+  CalendarPlus,
+} from "@phosphor-icons/react";
+import { PLACES } from "@/data/trip";
+import { Panel, Skeleton } from "@/components/bits";
+import { Route, statusSummary } from "@/components/leg-bits";
+import { useNow } from "@/lib/clock";
+import { useLive } from "@/lib/live-store";
+import { mapsLink, olaLink, uberLink } from "@/lib/links";
+import { hhmm, istDateKey, weekdayDate } from "@/lib/time";
+import { buildSteps, type Step, type StepKind } from "@/lib/trip-engine";
+import { cn } from "@/lib/utils";
+
+const ICONS: Record<StepKind, typeof Train> = {
+  train: Train,
+  "local-train": Train,
+  transfer: Subway,
+  event: CodeBlock,
+  stay: House,
+  explore: Mountains,
+  pickup: Car,
+  meal: ForkKnife,
+  sleep: Bed,
+};
+
+export function TimelineView({ calendarPath }: { calendarPath?: string }) {
+  const now = useNow();
+  const live = useLive();
+  const currentRef = useRef<HTMLLIElement>(null);
+  const ready = now !== null;
+
+  useEffect(() => {
+    if (ready) currentRef.current?.scrollIntoView({ block: "center" });
+  }, [ready]);
+
+  if (now === null) {
+    return (
+      <div className="flex flex-col gap-3">
+        <Skeleton className="h-12" />
+        <Skeleton className="h-96" />
+      </div>
+    );
+  }
+
+  const steps = buildSteps(live);
+  const days = new Map<string, Step[]>();
+  for (const s of steps) {
+    const k = istDateKey(s.start);
+    days.set(k, [...(days.get(k) ?? []), s]);
+  }
+  // The first step that hasn't ended yet gets the "you are here" marker.
+  const currentId = steps.find((s) => !s.minor && s.end > now)?.id;
+
+  return (
+    <div className="flex flex-col gap-5">
+      <div className="flex items-end justify-between gap-3">
+        <h1 className="text-2xl font-semibold tracking-tight">Timeline</h1>
+        {calendarPath && <CalendarButton path={calendarPath} />}
+      </div>
+
+      {[...days.entries()].map(([key, items]) => (
+        <section key={key} aria-label={weekdayDate(items[0].start)}>
+          <h2 className="sticky top-[calc(3.25rem+env(safe-area-inset-top))] z-10 -mx-4 bg-background/90 px-4 py-2 text-sm font-semibold text-muted-foreground backdrop-blur">
+            {weekdayDate(items[0].start)}
+          </h2>
+          <ol className="relative mt-1">
+            {items.map((s) => {
+              const isCurrent = s.id === currentId;
+              return (
+                <li key={s.id} ref={isCurrent ? currentRef : undefined}>
+                  <StepRow step={s} now={now} current={isCurrent} live={live} />
+                </li>
+              );
+            })}
+          </ol>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+function StepRow({
+  step,
+  now,
+  current,
+  live,
+}: {
+  step: Step;
+  now: number;
+  current: boolean;
+  live: ReturnType<typeof useLive>;
+}) {
+  const Icon = ICONS[step.kind];
+  const past = step.end <= now;
+  const shifted = Math.abs(step.start - step.plannedStart) >= 5 * 60000;
+  const leg = step.leg;
+
+  if (step.minor) {
+    return (
+      <div className={cn("flex min-h-10 items-center gap-3 pl-1", past && "opacity-45")}>
+        <span className="w-12 shrink-0 font-mono text-xs text-subtle tabular">{hhmm(step.start)}</span>
+        <Icon className="size-4 shrink-0 text-subtle" />
+        <span className="text-sm text-muted-foreground">{step.title}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn("flex gap-3 py-1.5", past && "opacity-45")}>
+      <div className="w-12 shrink-0 pt-3.5 pl-1">
+        <p className="font-mono text-sm font-semibold tabular">{hhmm(step.start)}</p>
+        {shifted && <p className="font-mono text-xs text-subtle line-through tabular">{hhmm(step.plannedStart)}</p>}
+      </div>
+      <Panel className={cn("min-w-0 flex-1 p-3.5", current && "border-primary/50 bg-accent/40")}>
+        <div className="flex items-start gap-2.5">
+          <Icon className={cn("mt-0.5 size-5 shrink-0", current ? "text-primary" : "text-muted-foreground")} />
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold leading-snug">{step.title}</p>
+            {leg && leg.kind !== "transfer" && <Route leg={leg} className="text-sm text-muted-foreground" />}
+            {leg?.kind === "transfer" && <p className="text-sm text-muted-foreground">{leg.modeHint}</p>}
+            {step.block && step.kind !== "event" && (
+              <p className="text-sm text-muted-foreground">{PLACES[step.block.place].name}</p>
+            )}
+            <p className="mt-1 text-xs text-subtle">
+              until <span className="font-mono tabular">{hhmm(step.end)}</span>
+              {step.approx && " (approx.)"}
+              {leg?.pnr && <span className="ml-2 font-mono tabular">{statusSummary(leg, live)}</span>}
+            </p>
+            {step.block?.notes?.map((n) => (
+              <p key={n} className="mt-1.5 text-sm">
+                {n}
+              </p>
+            ))}
+          </div>
+        </div>
+        {leg?.kind === "transfer" && <TransferLinks from={leg.from} to={leg.to} road={leg.id === "L2b" || leg.id === "L3b"} />}
+      </Panel>
+    </div>
+  );
+}
+
+function TransferLinks({ from, to, road }: { from: keyof typeof PLACES; to: keyof typeof PLACES; road: boolean }) {
+  const a = PLACES[from];
+  const b = PLACES[to];
+  const link = "inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-lg bg-secondary text-sm font-medium active:scale-[0.98]";
+  return (
+    <div className="mt-3 flex gap-2">
+      <a className={link} href={mapsLink(a, b, road ? "driving" : "transit")} target="_blank" rel="noreferrer">
+        <MapPinArea className="size-4" /> Maps
+      </a>
+      <a className={link} href={uberLink(a, b)} target="_blank" rel="noreferrer">
+        Uber
+      </a>
+      <a className={link} href={olaLink(a, b)} target="_blank" rel="noreferrer">
+        Ola
+      </a>
+    </div>
+  );
+}
+
+function CalendarButton({ path }: { path: string }) {
+  return (
+    <a
+      href={`webcal://${typeof window !== "undefined" ? window.location.host : ""}${path}`}
+      className="inline-flex h-11 items-center gap-1.5 rounded-lg bg-secondary px-3 text-sm font-medium active:scale-[0.98]"
+    >
+      <CalendarPlus className="size-4" />
+      Add to calendar
+    </a>
+  );
+}
