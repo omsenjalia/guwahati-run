@@ -52,5 +52,21 @@ export function useChecklist(owner: string) {
       .eq("id", item.id);
   }
 
-  return { items, toggle };
+  async function add(label: string) {
+    const sort = (items?.reduce((m, i) => Math.max(m, i.sort), 0) ?? 0) + 1;
+    const { data, error } = await browserDb()
+      .from("packing_items")
+      .insert({ owner, label, sort })
+      .select("id, label, done, done_by, sort")
+      .single();
+    if (error) throw new Error(error.message);
+    setItems((cur) => [...(cur ?? []), data as CheckItem]);
+  }
+
+  async function remove(item: CheckItem) {
+    setItems((cur) => cur?.filter((i) => i.id !== item.id) ?? cur);
+    await browserDb().from("packing_items").delete().eq("id", item.id);
+  }
+
+  return { items, toggle, add, remove };
 }

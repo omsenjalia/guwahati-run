@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useSyncExternalStore } from "react";
+import { useSyncExternalStore } from "react";
 import { Check, Phone, Moon, Sun, DeviceMobile } from "@phosphor-icons/react";
-import { PACKING_TEAM, PICKUP, TEAM, USEFUL_NUMBERS } from "@/data/trip";
+import { PICKUP, TEAM, USEFUL_NUMBERS } from "@/data/trip";
 import { Panel, PanelTitle, Skeleton } from "@/components/bits";
 import { AlertsPanel } from "@/components/alerts-panel";
+import { ChecklistPanel } from "@/components/checklist-panel";
 import { useNow } from "@/lib/clock";
 import { setMe, useMe } from "@/lib/me";
 import { telLink } from "@/lib/links";
@@ -98,7 +99,8 @@ export function TeamView() {
         </ul>
       </Panel>
 
-      <PackingPanel />
+      <ChecklistPanel owner="team" title="Team packing" />
+      {me && <ChecklistPanel owner={me} title={`${TEAM.find((p) => p.id === me)?.short}'s packing`} />}
       <ThemePanel />
       <Link
         href="/print"
@@ -110,53 +112,6 @@ export function TeamView() {
         System status and data self-test
       </Link>
     </div>
-  );
-}
-
-/** Local-only for now; shared syncing arrives with the database. */
-function PackingPanel() {
-  const [done, setDone] = useState<Record<string, boolean>>(() => {
-    try {
-      return JSON.parse(localStorage.getItem("gr-packing") ?? "{}");
-    } catch {
-      return {};
-    }
-  });
-  const toggle = (item: string) => {
-    const next = { ...done, [item]: !done[item] };
-    setDone(next);
-    try {
-      localStorage.setItem("gr-packing", JSON.stringify(next));
-    } catch {}
-  };
-  return (
-    <Panel>
-      <PanelTitle aside={<span className="text-sm text-muted-foreground">{Object.values(done).filter(Boolean).length}/{PACKING_TEAM.length}</span>}>
-        Team packing
-      </PanelTitle>
-      <ul className="flex flex-col">
-        {PACKING_TEAM.map((item) => (
-          <li key={item}>
-            <button
-              type="button"
-              onClick={() => toggle(item)}
-              aria-pressed={!!done[item]}
-              className="-mx-2 flex min-h-12 w-[calc(100%+1rem)] items-center gap-3 rounded-lg px-2 text-left active:bg-secondary"
-            >
-              <span
-                className={cn(
-                  "flex size-6 shrink-0 items-center justify-center rounded-md border-2",
-                  done[item] ? "border-ok bg-ok text-background" : "border-input",
-                )}
-              >
-                {done[item] && <Check className="size-4" weight="bold" />}
-              </span>
-              <span className={cn("text-[0.95rem]", done[item] && "text-muted-foreground line-through")}>{item}</span>
-            </button>
-          </li>
-        ))}
-      </ul>
-    </Panel>
   );
 }
 

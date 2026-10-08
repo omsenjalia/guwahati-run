@@ -144,10 +144,12 @@ async function seedTrip() {
   if (error) throw new Error(error.message);
 
   // First run: seed the shared packing list and the grant document checklist.
-  for (const [owner, labels] of [
+  const lists: [string, readonly string[]][] = [
     ["team", trip.PACKING_TEAM],
     ["grant", trip.GRANT.documents],
-  ] as const) {
+    ...trip.TEAM.map((p): [string, readonly string[]] => [p.id, trip.PACKING_PERSONAL]),
+  ];
+  for (const [owner, labels] of lists) {
     const { count } = await db.from("packing_items").select("id", { count: "exact", head: true }).eq("owner", owner);
     if (!count) await db.from("packing_items").insert(labels.map((label, sort) => ({ owner, label, sort })));
   }

@@ -648,6 +648,17 @@ export const PACKING_TEAM = [
   "Water bottles",
 ];
 
+/** Starting personal list for each of us (everyone can edit their own). */
+export const PACKING_PERSONAL = [
+  "Original photo ID",
+  "Phone charger and cable",
+  "Clothes for 7 days",
+  "Warm layer for AC coaches",
+  "Toiletries and towel",
+  "Personal medicines",
+  "Earphones",
+];
+
 export const TRIP = {
   name: "Guwahati Run",
   start: "2026-10-28T06:00:00+05:30",

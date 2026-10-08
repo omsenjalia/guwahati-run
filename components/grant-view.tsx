@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Lightbulb } from "@phosphor-icons/react";
+import { Lightbulb } from "@phosphor-icons/react";
 import { GRANT } from "@/data/trip";
-import { Panel, PanelTitle, Skeleton } from "@/components/bits";
+import { Panel, PanelTitle } from "@/components/bits";
+import { ChecklistPanel } from "@/components/checklist-panel";
 import { personName } from "@/components/leg-bits";
 import { grantEstimate, type GrantScenario } from "@/lib/grant";
 import { useMe } from "@/lib/me";
-import { useChecklist } from "@/lib/use-checklist";
 import { useExpenses } from "@/lib/use-expenses";
 import { CATEGORIES, spendingPerPerson } from "@/lib/expenses";
 import { cn } from "@/lib/utils";
@@ -108,7 +108,7 @@ export function GrantView() {
         </Panel>
       )}
 
-      <DocumentsPanel />
+      <ChecklistPanel owner="grant" title="Documents for the claim" />
 
       <p className="px-1 pb-2 text-xs leading-relaxed text-subtle">{GRANT.policy}</p>
     </div>
@@ -144,50 +144,5 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: str
       <dt className="text-xs text-muted-foreground">{label}</dt>
       <dd className={cn("mt-0.5 font-mono text-[1.05rem] font-semibold tabular", tone)}>{value}</dd>
     </div>
-  );
-}
-
-/** Shared checklist: ticking on one phone shows on all four. */
-function DocumentsPanel() {
-  const me = useMe();
-  const { items, toggle } = useChecklist("grant");
-  const done = items?.filter((i) => i.done).length ?? 0;
-  return (
-    <Panel>
-      <PanelTitle aside={items && <span className="text-sm text-muted-foreground">{done}/{items.length}</span>}>
-        Documents for the claim
-      </PanelTitle>
-      {!items ? (
-        <Skeleton className="h-48 rounded-lg" />
-      ) : (
-        <ul className="flex flex-col">
-          {items.map((item) => (
-            <li key={item.id}>
-              <button
-                type="button"
-                onClick={() => toggle(item, me)}
-                aria-pressed={item.done}
-                className="-mx-2 flex min-h-12 w-[calc(100%+1rem)] items-center gap-3 rounded-lg px-2 py-1.5 text-left active:bg-secondary"
-              >
-                <span
-                  className={cn(
-                    "flex size-6 shrink-0 items-center justify-center rounded-md border-2",
-                    item.done ? "border-ok bg-ok text-background" : "border-input",
-                  )}
-                >
-                  {item.done && <Check className="size-4" weight="bold" />}
-                </span>
-                <span className="min-w-0">
-                  <span className={cn("block text-[0.95rem] leading-snug", item.done && "text-muted-foreground line-through")}>
-                    {item.label}
-                  </span>
-                  {item.done && item.done_by && <span className="text-xs text-subtle">by {personName(item.done_by)}</span>}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </Panel>
   );
 }
