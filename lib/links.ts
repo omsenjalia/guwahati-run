@@ -35,4 +35,17 @@ export function olaLink(from: Place, to: Place) {
   return `https://book.olacabs.com/?${p}`;
 }
 
+/**
+ * Rapido has no public deep link that pre-fills pickup/drop. On Android this
+ * opens the Rapido app (Play Store if missing); elsewhere the Rapido site.
+ */
+export function rapidoLink(isAndroid: boolean) {
+  const site = "https://www.rapido.bike";
+  return isAndroid
+    ? `intent://#Intent;package=com.rapido.passenger;S.browser_fallback_url=${encodeURIComponent(
+        "https://play.google.com/store/apps/details?id=com.rapido.passenger",
+      )};end`
+    : site;
+}
+
 export const telLink = (n: string) => `tel:${n.replace(/\s+/g, "")}`;

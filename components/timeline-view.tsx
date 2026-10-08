@@ -18,7 +18,8 @@ import { Panel, Skeleton } from "@/components/bits";
 import { Route, statusSummary } from "@/components/leg-bits";
 import { useNow } from "@/lib/clock";
 import { useLive } from "@/lib/live-store";
-import { mapsLink, olaLink, uberLink } from "@/lib/links";
+import { mapsLink, olaLink, rapidoLink, uberLink } from "@/lib/links";
+import { toast } from "sonner";
 import { hhmm, istDateKey, weekdayDate } from "@/lib/time";
 import { buildSteps, type Step, type StepKind } from "@/lib/trip-engine";
 import { cn } from "@/lib/utils";
@@ -154,9 +155,10 @@ function StepRow({
 function TransferLinks({ from, to, road }: { from: keyof typeof PLACES; to: keyof typeof PLACES; road: boolean }) {
   const a = PLACES[from];
   const b = PLACES[to];
-  const link = "inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-lg bg-secondary text-sm font-medium active:scale-[0.98]";
+  const isAndroid = /android/i.test(navigator.userAgent);
+  const link = "inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-secondary text-sm font-medium active:scale-[0.98]";
   return (
-    <div className="mt-3 flex gap-2">
+    <div className="mt-3 grid grid-cols-2 gap-2">
       <a className={link} href={mapsLink(a, b, road ? "driving" : "transit")} target="_blank" rel="noreferrer">
         <MapPinArea className="size-4" /> Maps
       </a>
@@ -165,6 +167,21 @@ function TransferLinks({ from, to, road }: { from: keyof typeof PLACES; to: keyo
       </a>
       <a className={link} href={olaLink(a, b)} target="_blank" rel="noreferrer">
         Ola
+      </a>
+      <a
+        className={link}
+        href={rapidoLink(isAndroid)}
+        target="_blank"
+        rel="noreferrer"
+        onClick={() => {
+          // Rapido can't be pre-filled, so put the destination on the clipboard.
+          navigator.clipboard
+            ?.writeText(b.name)
+            .then(() => toast.success(`Copied "${b.name}". Paste it into Rapido.`))
+            .catch(() => {});
+        }}
+      >
+        Rapido
       </a>
     </div>
   );
