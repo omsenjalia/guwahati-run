@@ -1,13 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import { FilePdf, FileXls, Lightbulb } from "@phosphor-icons/react";
 import { buildClaims, claimCsv } from "@/lib/claim";
 import { GRANT } from "@/data/trip";
 import { Panel, PanelTitle } from "@/components/bits";
 import { ChecklistPanel } from "@/components/checklist-panel";
 import { personName } from "@/components/leg-bits";
-import { grantEstimate, type GrantScenario } from "@/lib/grant";
+import { grantEstimate } from "@/lib/grant";
 import { useMe } from "@/lib/me";
 import { useExpenses } from "@/lib/use-expenses";
 import { CATEGORIES, spendingPerPerson } from "@/lib/expenses";
@@ -15,37 +14,16 @@ import { cn } from "@/lib/utils";
 
 const rupees = (n: number) => `₹${Math.round(n).toLocaleString("en-IN")}`;
 
-const SCENARIOS: { id: GrantScenario; label: string; hint: string }[] = [
-  { id: "booked", label: "3A accepted", hint: "College reimburses the classes we booked." },
-  { id: "economy", label: "Sleeper rate", hint: "College pays only the most economical class (policy wording)." },
-];
-
 export function GrantView() {
-  const [scenario, setScenario] = useState<GrantScenario>("booked");
-  const g = grantEstimate(scenario);
+  const g = grantEstimate();
 
   return (
     <div className="flex flex-col gap-3">
       <h1 className="text-2xl font-semibold tracking-tight">Grant</h1>
 
-      <div role="tablist" aria-label="Fare rule" className="grid grid-cols-2 gap-1 rounded-xl bg-secondary p-1">
-        {SCENARIOS.map((s) => (
-          <button
-            key={s.id}
-            role="tab"
-            type="button"
-            aria-selected={scenario === s.id}
-            onClick={() => setScenario(s.id)}
-            className={cn(
-              "h-11 rounded-lg text-[0.95rem] font-medium transition",
-              scenario === s.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground",
-            )}
-          >
-            {s.label}
-          </button>
-        ))}
-      </div>
-      <p className="-mt-1 px-1 text-sm text-muted-foreground">{SCENARIOS.find((s) => s.id === scenario)!.hint}</p>
+      <p className="-mt-1 px-1 text-sm text-muted-foreground">
+        Train fares count at sleeper class, the most economical, as the policy says.
+      </p>
 
       <Panel className="p-5">
         <p className="text-sm text-muted-foreground">Expected grant per student</p>
@@ -134,7 +112,7 @@ function ExportPanel() {
     <Panel>
       <PanelTitle>Claim for the college</PanelTitle>
       <p className="text-[0.95rem] leading-relaxed text-muted-foreground">
-        Every ticket and bill per student, under both fare rules, with the limit applied. Built from tickets and the Money tab.
+        Every ticket and bill per student, train fares at sleeper rate, with the limit applied. Built from tickets and the Money tab.
       </p>
       <div className="mt-4 grid grid-cols-2 gap-2">
         <a href="/claim" className="flex h-12 items-center justify-center gap-2 rounded-lg bg-primary text-[0.95rem] font-medium text-primary-foreground active:scale-[0.98]">
@@ -168,11 +146,11 @@ function RecordedPanel() {
     <Panel>
       <PanelTitle>Recorded in Money so far</PanelTitle>
       <dl className="grid grid-cols-2 gap-3">
-        <Stat label={`${personName(person)}'s grant-eligible share`} value={rupees(spend[person].grantable)} />
+        <Stat label={`${personName(person)} spent on claimable items`} value={rupees(spend[person].grantable)} />
         <Stat label="Bills attached" value={`${withBill} of ${grantable.length}`} tone={withBill < grantable.length ? "text-warn" : "text-ok"} />
       </dl>
       <p className="mt-2 text-xs leading-relaxed text-subtle">
-        Tickets, registration and local travel count. Attach a bill photo to each so the claim has proof.
+        Actual spend at the prices paid; the grant above uses sleeper fares. Attach a bill photo to each item so the claim has proof.
       </p>
     </Panel>
   );

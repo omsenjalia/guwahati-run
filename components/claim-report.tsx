@@ -12,8 +12,8 @@ const rs = (n: number) => `₹${n.toLocaleString("en-IN", { minimumFractionDigit
 
 /**
  * Printable reimbursement claim for the BVM SSIP committee: one section per
- * student with every item, the claimable amount under both fare rules, and
- * the capped grant. Always light, A4. Print or "Save as PDF".
+ * student with every item, the claimable amount (train fares at sleeper
+ * class) and the capped grant. Always light, A4. Print or "Save as PDF".
  */
 export function ClaimReport() {
   const now = useNow();
@@ -22,8 +22,8 @@ export function ClaimReport() {
   if (now === null || !items) return null;
   const claims = buildClaims(items);
   const totals = claims.reduce(
-    (t, c) => ({ paid: t.paid + c.paid, booked: t.booked + c.grantBooked, economy: t.economy + c.grantEconomy }),
-    { paid: 0, booked: 0, economy: 0 },
+    (t, c) => ({ paid: t.paid + c.paid, grant: t.grant + c.grant }),
+    { paid: 0, grant: 0 },
   );
 
   return (
@@ -53,12 +53,15 @@ export function ClaimReport() {
           </tr>
           <tr>
             <td className="py-0.5 pr-3 text-zinc-600">Limit</td>
-            <td>₹{GRANT.capPerStudent.toLocaleString("en-IN")} per student (event outside Gujarat)</td>
+            <td>
+              ₹{GRANT.capPerStudent.toLocaleString("en-IN")} per student (event outside Gujarat). Train fares claimed at sleeper
+              class, the most economical.
+            </td>
           </tr>
           <tr>
             <td className="py-0.5 pr-3 text-zinc-600">Team total</td>
             <td>
-              Spent {rs(totals.paid)}. Claim {rs(totals.booked)} at booked class, or {rs(totals.economy)} at sleeper rate.
+              Spent {rs(totals.paid)}. Reimbursement requested {rs(totals.grant)}.
             </td>
           </tr>
         </tbody>
@@ -73,8 +76,7 @@ export function ClaimReport() {
                 <th className="py-1 pr-2">Date</th>
                 <th className="py-1 pr-2">Item</th>
                 <th className="py-1 pr-2 text-right">Paid</th>
-                <th className="py-1 pr-2 text-right">Claim (booked)</th>
-                <th className="py-1 text-right">Claim (sleeper)</th>
+                <th className="py-1 text-right">Claimable</th>
               </tr>
             </thead>
             <tbody>
@@ -89,8 +91,7 @@ export function ClaimReport() {
                     </span>
                   </td>
                   <td className="py-1 pr-2 text-right font-mono">{rs(r.paid)}</td>
-                  <td className="py-1 pr-2 text-right font-mono">{rs(r.claimBooked)}</td>
-                  <td className="py-1 text-right font-mono">{rs(r.claimEconomy)}</td>
+                  <td className="py-1 text-right font-mono">{rs(r.claim)}</td>
                 </tr>
               ))}
               <tr className="border-t-2 border-zinc-900 font-semibold">
@@ -98,15 +99,13 @@ export function ClaimReport() {
                   Eligible total
                 </td>
                 <td className="py-1 pr-2 text-right font-mono">{rs(c.paid)}</td>
-                <td className="py-1 pr-2 text-right font-mono">{rs(c.eligibleBooked)}</td>
-                <td className="py-1 text-right font-mono">{rs(c.eligibleEconomy)}</td>
+                <td className="py-1 text-right font-mono">{rs(c.eligible)}</td>
               </tr>
               <tr className="font-bold">
                 <td className="py-1 pr-2" colSpan={3}>
                   Reimbursement requested (after ₹{GRANT.capPerStudent.toLocaleString("en-IN")} limit)
                 </td>
-                <td className="py-1 pr-2 text-right font-mono">{rs(c.grantBooked)}</td>
-                <td className="py-1 text-right font-mono">{rs(c.grantEconomy)}</td>
+                <td className="py-1 text-right font-mono">{rs(c.grant)}</td>
               </tr>
             </tbody>
           </table>
