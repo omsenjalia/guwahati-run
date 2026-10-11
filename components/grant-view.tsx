@@ -9,6 +9,7 @@ import { personName } from "@/components/leg-bits";
 import { grantEstimate } from "@/lib/grant";
 import { useMe } from "@/lib/me";
 import { useExpenses } from "@/lib/use-expenses";
+import { useDocuments } from "@/lib/receipts";
 import { CATEGORIES, spendingPerPerson } from "@/lib/expenses";
 import { cn } from "@/lib/utils";
 
@@ -137,10 +138,11 @@ function ExportPanel() {
 function RecordedPanel() {
   const me = useMe();
   const { items } = useExpenses();
+  const { docs } = useDocuments();
   if (!items) return null;
   const spend = spendingPerPerson(items);
   const grantable = items.filter((e) => CATEGORIES.find((c) => c.id === e.category)?.grant);
-  const withBill = grantable.filter((e) => e.receipt_path).length;
+  const withBill = grantable.filter((e) => docs?.some((d) => d.expense_id === e.id)).length;
   const person = me ?? "oms";
   return (
     <Panel>

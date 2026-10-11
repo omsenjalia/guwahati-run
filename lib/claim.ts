@@ -33,7 +33,7 @@ const share = (e: Expense, p: PersonId) =>
     : 0;
 
 export function buildClaims(expenses: Expense[]): StudentClaim[] {
-  const travel = expenses.filter((e) => e.category === "travel");
+  const travel = expenses.filter((e) => e.category === "metro" || e.category === "cab");
   const registration = expenses.filter((e) => e.category === "registration");
 
   return TEAM.map((person) => {
@@ -58,7 +58,7 @@ export function buildClaims(expenses: Expense[]): StudentClaim[] {
     if (reg.length) {
       for (const e of reg) {
         const v = share(e, person.id);
-        rows.push({ date: dayMonth(`${e.spent_on}T12:00:00+05:30`), item: e.title, detail: "Approved registration fee", paid: v, claim: v, source: "expense", hasBill: !!e.receipt_path });
+        rows.push({ date: dayMonth(`${e.spent_on}T12:00:00+05:30`), item: e.title, detail: "Approved registration fee", paid: v, claim: v, source: "expense", hasBill: false });
       }
     } else {
       const fee = GRANT.items.find((i) => i.kind === "fee")!;
@@ -70,7 +70,7 @@ export function buildClaims(expenses: Expense[]): StudentClaim[] {
     if (mine.length) {
       for (const e of mine) {
         const v = share(e, person.id);
-        rows.push({ date: dayMonth(`${e.spent_on}T12:00:00+05:30`), item: e.title, detail: "Station to venue, sharing basis", paid: v, claim: v, source: "expense", hasBill: !!e.receipt_path });
+        rows.push({ date: dayMonth(`${e.spent_on}T12:00:00+05:30`), item: e.title, detail: "Station to venue, sharing basis", paid: v, claim: v, source: "expense", hasBill: false });
       }
     } else {
       for (const item of GRANT.items.filter((i) => i.kind === "local")) {

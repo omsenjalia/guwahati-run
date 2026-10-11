@@ -53,28 +53,24 @@ export function useExpenses() {
   return { items, error };
 }
 
-export async function addExpense(e: Omit<Expense, "id" | "created_at" | "receipt_path"> & { receipt?: File | null }) {
+/** An expense without a bill (a bill goes through queueUpload instead). */
+export async function addExpense(e: Omit<Expense, "id" | "created_at">) {
   const sb = browserDb();
   if (!(await ensureSession())) throw new Error("Can't reach the database. Check your connection.");
-  let receipt_path: string | null = null;
-  if (e.receipt) {
-    const ext = e.receipt.name.split(".").pop()?.toLowerCase() || "jpg";
-    receipt_path = `receipts/${crypto.randomUUID()}.${ext}`;
-    const up = await sb.storage.from("trip-files").upload(receipt_path, e.receipt, { contentType: e.receipt.type });
-    if (up.error) throw new Error(`Bill photo upload failed: ${up.error.message}`);
-  }
-  const { receipt: _receipt, ...row } = e;
-  void _receipt;
-  const { error } = await sb.from("expenses").insert({ ...row, receipt_path });
+  const { error } = await sb.from("expenses").insert(e);
+  if (error) throw new Error(error.message);
+}
+
+export async function updateExpense(id: string, patch: Partial<Omit<Expense, "id" | "created_at">>) {
+  if (!(await ensureSession())) throw new Error("Can't reach the database. Check your connection.");
+  const { error } = await browserDb()
+    .from("expenses")
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq("id", id);
   if (error) throw new Error(error.message);
 }
 
 export async function deleteExpense(id: string) {
   const { error } = await browserDb().from("expenses").delete().eq("id", id);
   if (error) throw new Error(error.message);
-}
-
-export async function receiptUrl(path: string) {
-  const { data } = await browserDb().storage.from("trip-files").createSignedUrl(path, 600);
-  return data?.signedUrl;
 }

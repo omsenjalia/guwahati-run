@@ -5,13 +5,17 @@
  * - On install, every screen and its JS/CSS is saved to the phone.
  * - Pages: try the network (fresh), fall back to the saved copy when offline.
  * - Build assets (/_next/static) never change, so they're served from cache.
+ * - Tickets and receipts (/api/docs/<id>/file?v=<sha>) never change for a
+ *   given ?v=, so once opened they're kept in their own cache for offline use.
  * - Push notifications (phase 4) are handled here too.
  */
 
-const VERSION = "gr-v2";
+const VERSION = "gr-v3";
+// Survives app updates: files are addressed by their content hash.
+const DOCS_CACHE = "gr-docs";
 // Registered as /sw.js?dev=1 during development: push only, no caching.
 const DEV = new URL(self.location.href).searchParams.has("dev");
-const PAGES = ["/", "/timeline", "/tickets", "/money", "/team", "/hackathon", "/grant", "/admin", "/print", "/claim", "/sos", "/guide", "/journal"];
+const PAGES = ["/", "/timeline", "/tickets", "/wallet", "/money", "/team", "/hackathon", "/grant", "/admin", "/print", "/sos", "/guide", "/journal"];
 const NETWORK_TIMEOUT_MS = 4000;
 
 self.addEventListener("install", (event) => {
@@ -22,7 +26,7 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
       const keys = await caches.keys();
-      await Promise.all(keys.filter((k) => k !== VERSION).map((k) => caches.delete(k)));
+      await Promise.all(keys.filter((k) => k !== VERSION && k !== DOCS_CACHE).map((k) => caches.delete(k)));
       await self.clients.claim();
     })(),
   );
@@ -64,6 +68,10 @@ self.addEventListener("fetch", (event) => {
   if (DEV || req.method !== "GET") return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
+  if (/^\/api\/docs\/[^/]+\/file$/.test(url.pathname) && url.searchParams.has("v")) {
+    event.respondWith(cacheFirst(req, DOCS_CACHE));
+    return;
+  }
   if (url.pathname.startsWith("/api/")) return;
 
   if (url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/icons/") || url.pathname === "/manifest.webmanifest") {
@@ -83,8 +91,8 @@ self.addEventListener("fetch", (event) => {
   }
 });
 
-async function cacheFirst(req) {
-  const cache = await caches.open(VERSION);
+async function cacheFirst(req, name = VERSION) {
+  const cache = await caches.open(name);
   const hit = await cache.match(req, { ignoreSearch: req.url.includes("/icons/") });
   if (hit) return hit;
   const res = await fetch(req);

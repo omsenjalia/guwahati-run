@@ -6,7 +6,15 @@ import { TEAM, type PersonId } from "@/data/trip";
  * paid by the person paying back and "split" to the person receiving.
  */
 
-export type ExpenseCategory = "tickets" | "registration" | "travel" | "food" | "stay" | "other" | "settlement";
+export type ExpenseCategory =
+  | "train"
+  | "metro"
+  | "cab"
+  | "food"
+  | "accommodation"
+  | "registration"
+  | "other"
+  | "settlement";
 
 export type Expense = {
   id: string;
@@ -16,20 +24,23 @@ export type Expense = {
   split_between: PersonId[];
   category: ExpenseCategory;
   spent_on: string;
-  receipt_path: string | null;
   note: string | null;
   created_by: string | null;
   created_at: string;
 };
 
+/** grant: counts towards the college reimbursement. */
 export const CATEGORIES: { id: Exclude<ExpenseCategory, "settlement">; label: string; grant: boolean }[] = [
-  { id: "travel", label: "Cab, auto, metro", grant: true },
+  { id: "train", label: "Train", grant: true },
+  { id: "metro", label: "Metro", grant: true },
+  { id: "cab", label: "Cab or auto", grant: true },
   { id: "food", label: "Food", grant: false },
-  { id: "tickets", label: "Train tickets", grant: true },
+  { id: "accommodation", label: "Accommodation", grant: false },
   { id: "registration", label: "Registration", grant: true },
-  { id: "stay", label: "Stay", grant: false },
   { id: "other", label: "Other", grant: false },
 ];
+
+export const categoryLabel = (id: string) => CATEGORIES.find((c) => c.id === id)?.label ?? id;
 
 const PEOPLE = TEAM.map((p) => p.id);
 
