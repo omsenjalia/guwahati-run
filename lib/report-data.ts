@@ -52,7 +52,8 @@ export function reportRows(expenses: Expense[], docs: DocRow[]): ReportRow[] {
         label: `${leg.train!.name} cancellation charge`,
         description: `${leg.train!.name} rebooking: cancellation charge (paid Rs. ${leg.rebooking.oldPaid.toFixed(2)}, refunded Rs. ${leg.rebooking.refunded.toFixed(2)})`,
         amount: loss,
-        eligible: loss,
+        // A cancellation charge isn't a travel fare: the grant doesn't cover it.
+        eligible: 0,
         docIds: [],
       });
     }
