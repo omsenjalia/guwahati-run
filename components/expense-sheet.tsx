@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Camera, FilePdf } from "@phosphor-icons/react";
 import { toast } from "sonner";
-import { LEGS, type LegId } from "@/data/trip";
+import { BACKUPS, LEGS, type LegId } from "@/data/trip";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { CATEGORIES, type Expense, type ExpenseCategory } from "@/lib/expenses";
@@ -24,7 +24,7 @@ const QUICK: { title: string; category: Category }[] = [
   { title: "Water and snacks", category: "food" },
 ];
 
-const TRAINS = LEGS.filter((l) => l.train);
+const TRAINS = [...LEGS.filter((l) => l.train), ...BACKUPS];
 /** Event paperwork the college asks for (Grant tab checklist). */
 const DOC_NAMES = ["Invitation letter", "Event schedule"];
 const chip = (on: boolean) =>
@@ -185,6 +185,7 @@ function SheetForm({ mode, onClose }: { mode: SheetMode; onClose: () => void }) 
               {TRAINS.map((l) => (
                 <option key={l.id} value={l.id}>
                   {l.train!.number} {l.train!.name}
+                  {l.backupFor ? " (backup)" : ""}
                 </option>
               ))}
             </select>

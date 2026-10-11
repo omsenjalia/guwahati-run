@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { CheckCircle, CircleDashed, CloudArrowUp, FilePdf, PencilSimple, Plus, Trash, X } from "@phosphor-icons/react";
 import { toast } from "sonner";
-import { LEGS, rebookingLoss } from "@/data/trip";
+import { BACKUPS, LEGS, rebookingLoss } from "@/data/trip";
 import { Panel, PanelTitle, Skeleton } from "@/components/bits";
 import { ExpenseSheet, type SheetMode } from "@/components/expense-sheet";
 import { Route } from "@/components/leg-bits";
@@ -384,6 +384,12 @@ function FaresPanel() {
         ))}
       </div>
       <p className="mt-3 text-xs text-subtle">Totals for all 4 tickets on each PNR.</p>
+      {BACKUPS.map((b) => (
+        <p key={b.id} className="mt-1 text-xs text-subtle">
+          Not counted: backup {b.train!.number} {b.train!.name} (₹{b.fareTotal!.toLocaleString("en-IN", { minimumFractionDigits: 2 })}), to be cancelled for a refund
+          unless we use it.
+        </p>
+      ))}
     </Panel>
   );
 }

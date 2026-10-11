@@ -48,7 +48,7 @@ export type Place = {
   lon: number;
 };
 
-export type LegId = "L0" | "L0b" | "L1" | "L1b" | "L2" | "L2b" | "L3" | "L3b" | "L4";
+export type LegId = "L0" | "L0b" | "L1" | "L1b" | "L2" | "L2b" | "L3" | "L3b" | "L4" | "B1";
 
 export type LegKind = "train" | "transfer";
 
@@ -81,8 +81,10 @@ export type Leg = {
    * the status as last checked by hand; only `tracked` legs update live.
    */
   passengers?: { person: PersonId; booked: string; current?: string }[];
-  /** True for the one ticket the app still polls (North East Express). */
+  /** True for tickets the app still polls (North East Express and its backup). */
   tracked?: boolean;
+  /** A backup booking for this leg (kept only until we know which one we use). */
+  backupFor?: LegId;
   /** We get off before the ticket's destination (e.g. booked to Haridwar). */
   ticketTo?: string;
   /** A cancelled earlier booking for this leg: what it cost and what came back. */
@@ -431,6 +433,43 @@ export const LEGS: Leg[] = [
     notes: [
       "Garib Rath usually has no bedding. Carry a bedsheet each.",
       "Arrives Anand at 01:42. Rapido or auto home, stay together.",
+    ],
+  },
+];
+
+/* -------------------------------------------------------------- backups */
+// Extra bookings held in case a waitlisted ticket doesn't clear. Not part of
+// the itinerary, the money totals or the report: the one we don't use gets
+// cancelled for a refund.
+
+export const BACKUPS: Leg[] = [
+  {
+    id: "B1",
+    kind: "train",
+    backupFor: "L2",
+    from: "DLI",
+    to: "KYQ",
+    train: { number: "15910", name: "Avadh Assam Express" },
+    km: 1938,
+    // The e-ticket prints 22:50 on 28 Oct: that's the start at Pili Bangan.
+    // At Delhi Jn it leaves 07:22 on 29 Oct (timetable, day 2).
+    depart: "2026-10-29T07:22:00+05:30",
+    arrive: "2026-10-31T00:35:00+05:30",
+    travelClass: "3A",
+    pnr: "2960910157",
+    bookedStatus: "WL 55-58",
+    // Ticket order. Last known status (11 Oct); the tracker replaces it live.
+    passengers: [
+      { person: "heet", booked: "WL 55", current: "WL 16" },
+      { person: "omk", booked: "WL 57", current: "WL 18" },
+      { person: "sujal", booked: "WL 58", current: "WL 19" },
+      { person: "oms", booked: "WL 56", current: "WL 17" },
+    ],
+    fareTotal: 9095.4,
+    tracked: true,
+    notes: [
+      "Backup for 12506. Leaves from Delhi Jn itself (where the Yoga Express arrives), so no cross-city transfer.",
+      "Reaches Kamakhya 00:35 on 31 Oct: in time for 9:00 reporting, but we'd miss the hostel night on 30 Oct.",
     ],
   },
 ];

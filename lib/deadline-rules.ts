@@ -5,7 +5,8 @@
 import { CONNECTIONS, DEADLINES, LEGS, type Deadline } from "@/data/trip";
 import type { LiveState } from "@/lib/live-types";
 import { HOUR, MIN, duration, hhmm, ms, stamp } from "@/lib/time";
-import { chartTime, legPassengers, legSituation, parseStatus } from "@/lib/trip-engine";
+import { canBoard, chartTime, legPassengers, legSituation, parseStatus } from "@/lib/trip-engine";
+import { BACKUP } from "@/lib/ticket-choice";
 
 export type Verdict = {
   id: string;
@@ -41,6 +42,7 @@ export function evaluate(d: Deadline, live: LiveState, now: number): Verdict {
       // AC Tatkal for 12506, 28 Oct 10:00. Only matters while still waitlisted.
       if (now > at + 2 * HOUR) return v("passed", "Tatkal window has passed.");
       if (sit.kind !== "waitlisted") return v("ok", `No action: ${sit.title.toLowerCase()}.`);
+      if (canBoard(BACKUP, live)) return v("ok", `No action: the backup ${BACKUP.train!.number} ${BACKUP.train!.name} has seats.`);
       const wl = maxWl(leg.id, live);
       const chance = minChance(leg.id, live);
       const risky = wl > 15 || (chance !== undefined && chance < 70);
@@ -58,7 +60,8 @@ export function evaluate(d: Deadline, live: LiveState, now: number): Verdict {
           : v("upcoming", "Chart is late. Still checking every 15 minutes.");
       }
       if (sit.kind === "waitlisted") {
-        return v("action", "All 4 still waitlisted after the chart: the ticket auto-cancels and refunds. Use the Tatkal ticket or the Plan B alternatives.");
+        if (canBoard(BACKUP, live)) return v("ok", `12506 didn't clear, but the backup ${BACKUP.train!.number} has seats: take it from Delhi Jn.`);
+        return v("action", "All 4 still waitlisted after the chart: the ticket auto-cancels and refunds. Use the backup if it clears, a Tatkal ticket, or the Plan B alternatives.");
       }
       return v("ok", `Chart done: ${sit.title.toLowerCase()}.`);
     }

@@ -1,4 +1,4 @@
-import { FALLBACK_TRAINS, LEGS, NE_ALTERNATIVES, PLACES } from "@/data/trip";
+import { BACKUPS, FALLBACK_TRAINS, LEGS, NE_ALTERNATIVES, PLACES } from "@/data/trip";
 import { getAvailability, getLiveRunningStatus, getPnrStatus, AllProvidersFailed } from "@/lib/providers/index.ts";
 import { istDateKey } from "@/lib/time";
 
@@ -34,7 +34,7 @@ export async function GET() {
   const trains = LEGS.filter((l) => l.kind === "train");
   const today = istDateKey(Date.now());
 
-  const pnrChecks = trains
+  const pnrChecks = [...trains, ...BACKUPS]
     .filter((l) => l.pnr && l.tracked)
     .map((l) =>
       timed("PNR", `${l.train!.number} ${l.train!.name}`, async () => {

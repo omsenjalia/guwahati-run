@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { CaretRight, CodeBlock } from "@phosphor-icons/react";
-import { EVENT, LEGS, PLACES, TEAM, type Leg } from "@/data/trip";
+import { BACKUPS, EVENT, LEGS, PLACES, TEAM, type Leg } from "@/data/trip";
+import { storedChoice } from "@/lib/ticket-choice";
 import { Panel, PanelTitle, Skeleton } from "@/components/bits";
 import { Countdown, statusSummary } from "@/components/leg-bits";
 import { DeadlinePanel, ForecastPanel, softButton } from "@/components/now/shared";
@@ -61,7 +62,11 @@ function legStatus(leg: Leg, live: LiveState) {
 }
 
 function TripStatus({ live }: { live: LiveState }) {
-  const trains = LEGS.filter((l) => l.kind === "train");
+  const choice = storedChoice(live);
+  // The backup sits right after North East, until one of them is dropped.
+  const trains = LEGS.filter((l) => l.kind === "train")
+    .flatMap((l) => [l, ...BACKUPS.filter((b) => b.backupFor === l.id)])
+    .filter((l) => l.id !== choice?.loser);
   return (
     <Panel>
       <PanelTitle>Trip status</PanelTitle>
@@ -78,6 +83,7 @@ function TripStatus({ live }: { live: LiveState }) {
                 <span className="min-w-0 flex-1">
                   <span className="flex items-baseline justify-between gap-2">
                     <span className="truncate text-[0.95rem]">
+                      {leg.backupFor && <span className="text-muted-foreground">Backup: </span>}
                       {PLACES[leg.from].short} to {PLACES[leg.to].short}
                     </span>
                     <span className={cn("shrink-0 text-sm font-semibold tabular", waiting && "text-warn")}>{s.text}</span>

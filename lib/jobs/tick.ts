@@ -2,9 +2,10 @@
  * The background brain. Supabase's scheduler calls /api/jobs/tick every
  * 5 minutes; this decides which jobs are due and runs them:
  *
- *   PNR sync      North East Express only: every 6h until 25 Oct, hourly
- *                 from 26 Oct, every 15 min from 28 Oct 16:00 until the
- *                 chart is out. Stops once charted (it becomes a static card).
+ *   PNR sync      North East Express and its backup (15910): every 6h until
+ *                 25 Oct, hourly from 26 Oct, every 15 min from 28 Oct 16:00
+ *                 until the chart is out. Stops once charted, and stops for
+ *                 the ticket we won't use once one of them clears.
  *   Live status   every tick (5 min) from 3h before departure to 1h after arrival
  *   Weather       every 3h
  *
@@ -12,7 +13,8 @@
  * in job_runs for the system health panel.
  */
 import * as trip from "@/data/trip";
-import { LEGS, PLACES, type Berth, type Leg, type PersonId } from "@/data/trip";
+import { BACKUPS, LEGS, PLACES, type Berth, type Leg, type PersonId } from "@/data/trip";
+import type { TicketChoice } from "@/lib/ticket-choice";
 import { AllProvidersFailed, getLiveRunningStatus, getPnrStatus } from "@/lib/providers/index.ts";
 import type { LegLive, PassengerLive } from "@/lib/live-types";
 import { notify } from "@/lib/notify";
@@ -69,9 +71,11 @@ export async function runTick(opts: { force?: JobName[]; now?: number } = {}) {
 
   results.push(await logged("seed", () => seedTrip()));
 
-  // PNR sync
-  const pnrLegs = LEGS.filter((l) => {
-    if (!l.pnr || !l.tracked) return false;
+  // PNR sync (the loser of North East vs backup is no longer watched)
+  const { data: choiceRow } = await db.from("app_state").select("value").eq("key", "ticket-choice").maybeSingle();
+  const loser = (choiceRow?.value as TicketChoice | undefined)?.loser;
+  const pnrLegs = [...LEGS, ...BACKUPS].filter((l) => {
+    if (!l.pnr || !l.tracked || l.id === loser) return false;
     if (force.has("pnr-sync")) return true;
     const interval = pnrInterval(l, now, live.get(l.id));
     return interval !== null && isDue(live.get(l.id)?.pnrUpdatedAt, interval, now);

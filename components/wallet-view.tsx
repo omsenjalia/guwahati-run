@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, FilePdf, IdentificationBadge, X } from "@phosphor-icons/react";
-import { LEGS, PLACES, TEAM, type Leg } from "@/data/trip";
+import { BACKUPS, LEGS, PLACES, TEAM, type Leg } from "@/data/trip";
 import { CopyChip, Skeleton } from "@/components/bits";
 import { personName } from "@/components/leg-bits";
 import { useNow } from "@/lib/clock";
@@ -15,7 +15,7 @@ import { canBoard, legBerths, legPassengers, parseStatus } from "@/lib/trip-engi
 import type { LiveState } from "@/lib/live-types";
 import { cn } from "@/lib/utils";
 
-const TICKETS = LEGS.filter((l) => l.pnr);
+const TICKETS = [...LEGS.filter((l) => l.pnr), ...BACKUPS];
 const fullName = (id: string) => TEAM.find((p) => p.id === id)?.name ?? id;
 
 /**
@@ -102,6 +102,7 @@ function TicketFace({ leg, live }: { leg: Leg; live: LiveState }) {
         <div className="min-w-0">
           <p className="font-mono text-sm text-muted-foreground tabular">
             {leg.train?.number} · {leg.travelClass}
+            {leg.backupFor && <span className="ml-1.5 font-sans font-semibold text-primary">Backup</span>}
           </p>
           <p className="text-lg font-semibold leading-tight">{leg.train?.name}</p>
         </div>

@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { ArrowSquareOut, ChatText, IdentificationCard, Info, Wallet, Warning } from "@phosphor-icons/react";
-import { IRCTC_PNR_URL, LEGS, TEAM, type Leg } from "@/data/trip";
+import { BACKUPS, IRCTC_PNR_URL, LEGS, TEAM, type Leg } from "@/data/trip";
 import { CopyChip, LiveStamp, Panel, Skeleton, StatusPill, healthText } from "@/components/bits";
 import { CoachStrip, Route, TimeRange, personName } from "@/components/leg-bits";
-import { NePlanB } from "@/components/plan-b";
+import { ChoiceBanner, NePlanB } from "@/components/plan-b";
+import { storedChoice } from "@/lib/ticket-choice";
 import { PnrHistory } from "@/components/pnr-history";
 import { smsLink } from "@/lib/links";
 import { useNow } from "@/lib/clock";
@@ -36,6 +37,10 @@ export function TicketsView() {
       {trains.map((leg) => (
         <TicketCard key={leg.id} leg={leg} live={live} now={now} />
       ))}
+      <p className="pt-2 text-sm font-semibold text-muted-foreground">Backup ticket</p>
+      {BACKUPS.map((leg) => (
+        <TicketCard key={leg.id} leg={leg} live={live} now={now} />
+      ))}
     </div>
   );
 }
@@ -53,7 +58,9 @@ function TicketCard({ leg, live, now }: { leg: Leg; live: LiveState; now: number
   const pax = legPassengers(leg, live);
   const berths = legBerths(leg, live);
   const done = ms(leg.arrive) < now;
-  const watching = !!leg.tracked && !l?.chartPrepared;
+  const choice = storedChoice(live);
+  const dropped = choice?.loser === leg.id;
+  const watching = !!leg.tracked && !l?.chartPrepared && !dropped;
   const boardable = canBoard(leg, live);
 
   return (
@@ -62,10 +69,13 @@ function TicketCard({ leg, live, now }: { leg: Leg; live: LiveState; now: number
         <div className="p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
+              {leg.backupFor && <p className="text-xs font-semibold text-primary">Backup for 12506 North East</p>}
               <p className="font-mono text-sm text-muted-foreground tabular">{leg.train?.number}</p>
               <p className="text-lg font-semibold leading-tight">{leg.train?.name}</p>
             </div>
-            {!leg.pnr ? (
+            {dropped ? (
+              <StatusPill health="red">Cancel this</StatusPill>
+            ) : !leg.pnr ? (
               <StatusPill health="amber">Details to add</StatusPill>
             ) : !pax.length ? (
               <StatusPill health="green">Unreserved</StatusPill>
@@ -166,7 +176,8 @@ function TicketCard({ leg, live, now }: { leg: Leg; live: LiveState; now: number
           <TicketNotes leg={leg} />
         </div>
       </Panel>
-      {leg.tracked && !done && <NePlanB live={live} now={now} />}
+      {leg.id === "L2" && !done && <ChoiceBanner live={live} />}
+      {leg.id === "L2" && !done && <NePlanB live={live} now={now} />}
     </>
   );
 }

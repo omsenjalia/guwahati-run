@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import { AirplaneTilt, ArrowClockwise, ArrowSquareOut } from "@phosphor-icons/react";
 import { DEADLINES, IRCTC_BOOK_URL, LEGS, NE_ALTERNATIVES, TATKAL_BOOKER } from "@/data/trip";
 import { Panel, PanelTitle, StatusPill } from "@/components/bits";
-import { Countdown, personName } from "@/components/leg-bits";
+import { Countdown, personName, statusSummary } from "@/components/leg-bits";
 import { evaluate } from "@/lib/deadline-rules";
 import type { LiveState } from "@/lib/live-types";
 import { HOUR, hhmm, ms, stamp } from "@/lib/time";
-import { chartTime, legSituation } from "@/lib/trip-engine";
+import { canBoard, chartTime, legSituation } from "@/lib/trip-engine";
+import { BACKUP, choiceText, storedChoice } from "@/lib/ticket-choice";
 import { cn } from "@/lib/utils";
 import type { Alternative } from "@/app/api/alternatives/route";
 
@@ -23,7 +24,8 @@ const TATKAL = DEADLINES.find((d) => d.id === "ne-tatkal")!;
  */
 export function NePlanB({ live, now, compact }: { live: LiveState; now: number; compact?: boolean }) {
   const sit = legSituation(NE, live);
-  if (sit.kind !== "waitlisted" || now > ms(NE.depart)) return null;
+  // Nothing to plan once North East or its backup can board.
+  if (sit.kind !== "waitlisted" || canBoard(BACKUP, live) || now > ms(NE.depart)) return null;
   const charted = live.legs[NE.id]?.chartPrepared ?? false;
   const tatkalAt = ms(TATKAL.at);
   const verdict = evaluate(TATKAL, live, now);
@@ -34,6 +36,11 @@ export function NePlanB({ live, now, compact }: { live: LiveState; now: number; 
       <PanelTitle aside={<StatusPill health={charted ? "red" : "amber"}>{charted ? "Act now" : "Plan B ready"}</StatusPill>}>
         Plan B: 12506 North East
       </PanelTitle>
+
+      <p className="mb-3 rounded-lg bg-secondary px-3 py-2.5 text-sm leading-snug">
+        Backup booked: <span className="font-semibold">{BACKUP.train!.number} {BACKUP.train!.name}</span>, Delhi Jn {hhmm(BACKUP.depart)},{" "}
+        <span className="font-mono tabular">{statusSummary(BACKUP, live)}</span>. Whichever clears first, we take; North East if both do.
+      </p>
 
       {!charted && tatkalOpen && (
         <div className="flex flex-col gap-2">
@@ -81,6 +88,40 @@ export function NePlanB({ live, now, compact }: { live: LiveState; now: number; 
           </p>
         )
       )}
+    </Panel>
+  );
+}
+
+/**
+ * North East vs backup: the rule while both are waitlisted, then the
+ * decision (and which PNR to cancel) once one clears.
+ */
+export function ChoiceBanner({ live }: { live: LiveState }) {
+  const choice = storedChoice(live);
+  if (!choice) {
+    return (
+      <Panel className="py-3">
+        <p className="text-sm leading-snug">
+          <span className="font-semibold">Two tickets for 29 Oct.</span> Whichever of 12506 North East or the backup {BACKUP.train!.number} clears first
+          (anyone confirmed or RAC), we keep; if both clear together, North East. The app alerts everyone to cancel the other.
+        </p>
+      </Panel>
+    );
+  }
+  const t = choiceText(choice);
+  return (
+    <Panel className="border-bad/40 bg-bad-soft">
+      <PanelTitle aside={<StatusPill health="red">Action</StatusPill>}>{t.title}</PanelTitle>
+      <p className="text-[0.95rem] leading-snug">{t.action}</p>
+      <a
+        href="https://www.irctc.co.in/nget/txn/cancel-ticket"
+        target="_blank"
+        rel="noreferrer"
+        className="mt-3 inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-lg bg-primary text-[0.95rem] font-medium text-primary-foreground"
+      >
+        Cancel {t.lose.train!.number} on IRCTC
+        <ArrowSquareOut className="size-4" />
+      </a>
     </Panel>
   );
 }
