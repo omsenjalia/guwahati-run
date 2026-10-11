@@ -1,4 +1,4 @@
-import { GRANT, LEGS, PLACES, REPORT, TEAM, rebookingLoss, type PersonId } from "@/data/trip";
+import { GRANT, LEGS, PLACES, REPORT, TEAM, rebookingLoss } from "@/data/trip";
 import { CATEGORIES, categoryLabel, type Expense } from "@/lib/expenses";
 import type { DocRow } from "@/lib/documents";
 import { dayMonth, hhmm } from "@/lib/time";
@@ -13,26 +13,19 @@ import { dayMonth, hhmm } from "@/lib/time";
  * Each row with an uploaded bill gets a reference R-01, R-02... in date order.
  */
 
-const PEOPLE = TEAM.map((p) => p.id);
-const short = (id: string) => TEAM.find((p) => p.id === id)?.short ?? id;
+const STUDENTS = TEAM.length;
 
 export type ReportRow = {
   ref?: string;
   date: string;
   category: string;
   description: string;
-  paidBy: string;
   amount: number;
-  /** Each person's share. */
-  shares: Record<PersonId, number>;
   /** What the SSIP policy reimburses for this row, for all 4 (sleeper rate for 3A). */
   eligible: number;
   /** Bills proving this row (e.g. a fee receipt and its payment screenshot). */
   docIds: string[];
 };
-
-const even = (amount: number, among: PersonId[] = PEOPLE) =>
-  Object.fromEntries(PEOPLE.map((p) => [p, among.includes(p) ? amount / among.length : 0])) as Record<PersonId, number>;
 
 export function reportRows(expenses: Expense[], docs: DocRow[]): ReportRow[] {
   const rows: ReportRow[] = [];
@@ -44,9 +37,7 @@ export function reportRows(expenses: Expense[], docs: DocRow[]): ReportRow[] {
       date: leg.depart.slice(0, 10),
       category: "Train",
       description: `${leg.train!.number} ${leg.train!.name}, ${PLACES[leg.from].short} to ${PLACES[leg.to].short}, ${leg.travelClass}${leg.pnr ? `, PNR ${leg.pnr}` : ""}`,
-      paidBy: short(leg.paidBy ?? "oms"),
       amount: leg.fareTotal!,
-      shares: even(leg.fareTotal!),
       eligible: item?.economyPerPerson !== undefined ? item.economyPerPerson * 4 : leg.fareTotal!,
       docIds: tickets.map((d) => d.id),
     });
@@ -56,9 +47,7 @@ export function reportRows(expenses: Expense[], docs: DocRow[]): ReportRow[] {
         date: leg.rebooking.cancelledOn,
         category: "Train",
         description: `${leg.train!.name} rebooking: cancellation charge (paid Rs. ${leg.rebooking.oldPaid.toFixed(2)}, refunded Rs. ${leg.rebooking.refunded.toFixed(2)})`,
-        paidBy: short(leg.rebooking.paidBy),
         amount: loss,
-        shares: even(loss),
         eligible: loss,
         docIds: [],
       });
@@ -66,17 +55,14 @@ export function reportRows(expenses: Expense[], docs: DocRow[]): ReportRow[] {
   }
 
   for (const e of expenses) {
-    if (e.category === "settlement") continue;
-    if (e.created_by === "setup" && e.category === "train") continue; // shown per ticket above
+    if (e.created_by === "setup" && e.category === "train") continue; // old lump sums; fares come from the tickets
     const bills = docs.filter((d) => d.kind === "receipt" && d.expense_id === e.id);
     const grant = CATEGORIES.find((c) => c.id === e.category)?.grant ?? false;
     rows.push({
       date: e.spent_on,
       category: categoryLabel(e.category),
       description: e.note ? `${e.title} (${e.note})` : e.title,
-      paidBy: short(e.paid_by),
       amount: e.amount,
-      shares: even(e.amount, e.split_between.length ? e.split_between : PEOPLE),
       eligible: grant ? e.amount : 0,
       docIds: bills.map((d) => d.id),
     });
@@ -91,11 +77,12 @@ export function reportRows(expenses: Expense[], docs: DocRow[]): ReportRow[] {
 export function reportTotals(rows: ReportRow[]) {
   const byCategory = new Map<string, number>();
   for (const r of rows) byCategory.set(r.category, (byCategory.get(r.category) ?? 0) + r.amount);
-  const perPerson = Object.fromEntries(PEOPLE.map((p) => [p, rows.reduce((t, r) => t + r.shares[p], 0)])) as Record<PersonId, number>;
-  const eligiblePerPerson = rows.reduce((t, r) => t + r.eligible, 0) / PEOPLE.length;
   const total = rows.reduce((t, r) => t + r.amount, 0);
-  const requested = REPORT.requestedPerStudent * PEOPLE.length;
-  return { byCategory: [...byCategory.entries()], perPerson, total, eligiblePerPerson, requested };
+  // Per student only for the funding page: the college funds each student.
+  const perStudent = total / STUDENTS;
+  const eligiblePerStudent = rows.reduce((t, r) => t + r.eligible, 0) / STUDENTS;
+  const requested = REPORT.requestedPerStudent * STUDENTS;
+  return { byCategory: [...byCategory.entries()], total, perStudent, eligiblePerStudent, requested };
 }
 
 /** Auto-filled trip summary paragraph (editable in the Grant tab before export). */
@@ -134,11 +121,11 @@ const csvCell = (v: string | number) => {
 export function reportCsv(rows: ReportRow[]) {
   const t = reportTotals(rows);
   const lines: (string | number)[][] = [
-    ["Ref", "Date", "Category", "Description", "Paid by", "Amount (Rs)", ...TEAM.map((p) => `${p.short} share`)],
-    ...rows.map((r) => [r.ref ?? "", r.date, r.category, r.description, r.paidBy, r.amount, ...PEOPLE.map((p) => r.shares[p])]),
+    ["Ref", "Date", "Category", "Description", "Amount (Rs)"],
+    ...rows.map((r) => [r.ref ?? "", r.date, r.category, r.description, r.amount]),
     [],
-    ...t.byCategory.map(([c, v]) => ["", "", c, "Subtotal", "", v]),
-    ["", "", "", "Grand total", "", t.total, ...PEOPLE.map((p) => t.perPerson[p])],
+    ...t.byCategory.map(([c, v]) => ["", "", c, "Subtotal", v]),
+    ["", "", "", "Grand total", t.total],
   ];
   // Byte-order mark so Excel opens the file as UTF-8.
   return "﻿" + lines.map((l) => l.map(csvCell).join(",")).join("\r\n");

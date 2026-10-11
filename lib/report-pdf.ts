@@ -146,7 +146,7 @@ function cover(w: Writer, now: number) {
   w.y -= 120;
   w.text("Travel and Expense Report", { size: 26, bold: true, gap: 6 });
   w.text(EVENT.name, { size: 16, gap: 2 });
-  w.text(`${REPORT.association}, ${EVENT.venue}`, { size: 12, color: GREY, gap: 2 });
+  w.text(REPORT.association, { size: 12, color: GREY, gap: 2 });
   w.text(`Event: ${REPORT.eventDates}. Travel: ${REPORT.travelDates}.`, { size: 12, color: GREY, gap: 30 });
   w.rule(1);
   w.y -= 10;
@@ -181,8 +181,8 @@ function expenseTable(w: Writer, rows: ReportRow[], t: ReturnType<typeof reportT
   w.text("Expenses", { size: 18, bold: true, gap: 4 });
   w.text("Every ticket and bill. Ref is the receipt number in the appendix; '-' means no bill attached.", { size: 9, color: GREY, gap: 6 });
   w.table(
-    [{ title: "Ref", width: 36 }, { title: "Date", width: 46 }, { title: "Category", width: 70 }, { title: "Description" }, { title: "Paid by", width: 46 }, { title: "Amount", width: 78, align: "right" }],
-    rows.map((r) => [r.ref ?? "-", dayMonth(`${r.date}T12:00:00+05:30`), r.category, r.description, r.paidBy, money(r.amount)]),
+    [{ title: "Ref", width: 36 }, { title: "Date", width: 46 }, { title: "Category", width: 76 }, { title: "Description" }, { title: "Amount", width: 84, align: "right" }],
+    rows.map((r) => [r.ref ?? "-", dayMonth(`${r.date}T12:00:00+05:30`), r.category, r.description, money(r.amount)]),
   );
   w.ensure(120);
   w.text("Subtotals by category", { size: 12, bold: true, gap: 2 });
@@ -191,24 +191,17 @@ function expenseTable(w: Writer, rows: ReportRow[], t: ReturnType<typeof reportT
     [...t.byCategory.map(([c, v]) => [c, money(v)]), ["Grand total", money(t.total)]],
     { boldLast: true },
   );
-  w.ensure(120);
-  w.text("Per person", { size: 12, bold: true, gap: 2 });
-  w.table(
-    [{ title: "Student" }, { title: "Share of expenses", width: 130, align: "right" }],
-    [...TEAM.map((p) => [p.name, money(t.perPerson[p.id])]), ["Team total", money(t.total)]],
-    { boldLast: true },
-  );
 }
 
 function requestedVsSpent(w: Writer, t: ReturnType<typeof reportTotals>) {
   w.newPage();
   w.text("Funding requested vs actual spend", { size: 18, bold: true, gap: 10 });
   const req = REPORT.requestedPerStudent;
-  const eligible = t.eligiblePerPerson;
+  const eligible = t.eligiblePerStudent;
   w.table(
-    [{ title: "Student" }, { title: "Actual spend", width: 100, align: "right" }, { title: "Eligible (SSIP)", width: 100, align: "right" }, { title: "Requested", width: 90, align: "right" }],
+    [{ title: "Student" }, { title: "Spend (total / 4)", width: 100, align: "right" }, { title: "Eligible (SSIP)", width: 100, align: "right" }, { title: "Requested", width: 90, align: "right" }],
     [
-      ...TEAM.map((p) => [p.name, money(t.perPerson[p.id]), money(eligible), money(req)]),
+      ...TEAM.map((p) => [p.name, money(t.perStudent), money(eligible), money(req)]),
       ["Team", money(t.total), money(eligible * TEAM.length), money(t.requested)],
     ],
     { boldLast: true },
@@ -260,12 +253,14 @@ async function appendix(w: Writer, rows: ReportRow[], docs: DocRow[]) {
   w.text("Appendix: receipts", { size: 18, bold: true, gap: 4 });
   w.text("In reference order. Train tickets are the IRCTC e-tickets; other bills are photos taken at the time.", { size: 9, color: GREY, gap: 8 });
 
-  let slot = 1; // the appendix title page takes the top half
+  // The first file shares the title page, placed right under the title.
+  let slot = 1;
+  let firstTop: number | undefined = w.y - 6;
   const items = [
     ...referenced.flatMap((r) =>
       r.docIds.map((id, i) => ({
         doc: byId(id),
-        label: `${r.ref}${r.docIds.length > 1 ? ` (${i + 1} of ${r.docIds.length})` : ""}  ${r.category}, ${money(r.amount)}, paid by ${r.paidBy}, ${dayMonth(`${r.date}T12:00:00+05:30`)}`,
+        label: `${r.ref}${r.docIds.length > 1 ? ` (${i + 1} of ${r.docIds.length})` : ""}  ${r.category}, ${money(r.amount)}, ${dayMonth(`${r.date}T12:00:00+05:30`)}`,
       })),
     ),
     ...certificates.map((d) => ({ doc: d, label: `Certificate: ${d.title ?? ""}` })),
@@ -280,6 +275,7 @@ async function appendix(w: Writer, rows: ReportRow[], docs: DocRow[]) {
       try {
         const src = await PDFDocument.load(bytes, { ignoreEncryption: true });
         const pages = await w.doc.copyPages(src, src.getPageIndices());
+        firstTop = undefined;
         for (const p of pages) {
           w.doc.addPage(p);
           stampLabel(w, p, label);
@@ -296,8 +292,10 @@ async function appendix(w: Writer, rows: ReportRow[], docs: DocRow[]) {
         w.newPage();
         slot = 0;
       }
-      const top = slot === 0 ? A4[1] - M : (A4[1] - M) / 2 + M / 2 - 10;
-      const height = (A4[1] - 2 * M) / 2 - 30;
+      const top = firstTop ?? (slot === 0 ? A4[1] - M : (A4[1] - M) / 2 + M / 2 - 10);
+      const height = firstTop !== undefined ? firstTop - M - 50 : (A4[1] - 2 * M) / 2 - 30;
+      if (firstTop !== undefined) slot = 1; // took the whole title page
+      firstTop = undefined;
       w.page.drawText(pdfSafe(label), { x: M, y: top - 11, size: 10, font: w.bold, color: INK });
       const scale = Math.min((A4[0] - 2 * M) / img.width, height / img.height);
       const iw = img.width * scale;

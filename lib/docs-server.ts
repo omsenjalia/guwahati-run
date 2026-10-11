@@ -1,5 +1,4 @@
 import "server-only";
-import { TEAM } from "@/data/trip";
 import { DOCS_ROOT, createFile, deleteFile, readBlob, slug } from "@/lib/github";
 import { categoryLabel } from "@/lib/expenses";
 import {
@@ -21,22 +20,21 @@ import { istDateKey } from "@/lib/time";
  */
 
 const BUCKET = "trip-files";
-const short = (id: string) => TEAM.find((p) => p.id === id)?.short ?? id;
 const rupees = (n: number) => `₹${Number.isInteger(n) ? n : n.toFixed(2)}`;
 
-type ExpenseRow = { id: string; title: string; amount: number; category: string; paid_by: string; spent_on: string; note: string | null };
+type ExpenseRow = { id: string; title: string; amount: number; category: string; spent_on: string; note: string | null };
 
 /**
- * documents/receipts/2026-10-28/train_659_om-s_sabarmati-delhi.jpg
+ * documents/receipts/2026-10-28/train_659_sabarmati-delhi.jpg
  * documents/tickets/L1_19031-yoga-express.pdf
  * documents/certificates/2026-11-01_finalist-certificate.pdf
  */
-export function docPath(kind: DocKind, mime: string, title: string, opts: { legId?: string | null; expense?: Pick<ExpenseRow, "amount" | "category" | "paid_by" | "spent_on" | "note" | "title"> } = {}) {
+export function docPath(kind: DocKind, mime: string, title: string, opts: { legId?: string | null; expense?: Pick<ExpenseRow, "amount" | "category" | "spent_on" | "note" | "title"> } = {}) {
   const ext = extFor(mime);
   const e = opts.expense;
   if (kind === "receipt" && e) {
     const what = slug(e.note || e.title || "bill", 32) || "bill";
-    return `${DOCS_ROOT}/receipts/${e.spent_on}/${e.category}_${Math.round(e.amount)}_${slug(short(e.paid_by))}_${what}.${ext}`;
+    return `${DOCS_ROOT}/receipts/${e.spent_on}/${e.category}_${Math.round(e.amount)}_${what}.${ext}`;
   }
   const name = slug(title) || kind;
   if (kind === "ticket") return `${DOCS_ROOT}/tickets/${opts.legId ? `${opts.legId}_` : ""}${name}.${ext}`;
@@ -44,8 +42,8 @@ export function docPath(kind: DocKind, mime: string, title: string, opts: { legI
   return `${DOCS_ROOT}/reports/${name}.${ext}`;
 }
 
-function commitMessage(kind: DocKind, title: string, e?: Pick<ExpenseRow, "amount" | "category" | "paid_by">) {
-  if (kind === "receipt" && e) return `Add receipt: ${categoryLabel(e.category).toLowerCase()} ${rupees(e.amount)} (${short(e.paid_by)})`;
+function commitMessage(kind: DocKind, title: string, e?: Pick<ExpenseRow, "amount" | "category">) {
+  if (kind === "receipt" && e) return `Add receipt: ${categoryLabel(e.category).toLowerCase()} ${rupees(e.amount)} (${title})`;
   return `Add ${kind}: ${title}`;
 }
 
@@ -78,7 +76,7 @@ export async function uploadDocument(u: DocUpload): Promise<DocRow> {
     if (error) throw new Error(`That expense is gone: ${error.message}`);
     expense = { ...(data as ExpenseRow), amount: Number((data as ExpenseRow).amount) };
   } else if (u.expense) {
-    const row = { id: u.id, ...u.expense, created_by: u.created_by ?? null };
+    const row = { id: u.id, ...u.expense, paid_by: u.created_by ?? "oms", created_by: u.created_by ?? null };
     const { data, error } = await db.from("expenses").upsert(row, { onConflict: "id" }).select().single();
     if (error) throw new Error(`Saving the expense failed: ${error.message}`);
     expense = { ...(data as ExpenseRow), amount: Number((data as ExpenseRow).amount) };
@@ -132,7 +130,7 @@ export async function editDocument(id: string, edit: DocEdit): Promise<DocRow> {
   // Same folder and name (ignoring a -2 suffix): keep the file where it is.
   if (nextPath.replace(/\.[a-z0-9]+$/i, "") !== doc.path.replace(/(-\d+)?\.[a-z0-9]+$/i, "")) {
     const bytes = new Uint8Array(await readBlob(doc.sha));
-    const put = await createFile(nextPath, bytes, `Update ${doc.kind}: ${expense ? `${categoryLabel(expense.category).toLowerCase()} ${rupees(expense.amount)} (${short(expense.paid_by)})` : title}`);
+    const put = await createFile(nextPath, bytes, `Update ${doc.kind}: ${expense ? `${categoryLabel(expense.category).toLowerCase()} ${rupees(expense.amount)} (${title})` : title}`);
     await deleteFile(doc.path, doc.sha, `Remove old name: ${doc.path.split("/").pop()}`);
     moved = { path: put.path, sha: put.sha, commit_sha: put.commitSha };
   }

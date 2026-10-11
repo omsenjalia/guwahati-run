@@ -57,7 +57,8 @@ export function useExpenses() {
 export async function addExpense(e: Omit<Expense, "id" | "created_at">) {
   const sb = browserDb();
   if (!(await ensureSession())) throw new Error("Can't reach the database. Check your connection.");
-  const { error } = await sb.from("expenses").insert(e);
+  // paid_by is required by the table but unused (Splitwise handles who paid).
+  const { error } = await sb.from("expenses").insert({ ...e, paid_by: e.created_by ?? "oms" });
   if (error) throw new Error(error.message);
 }
 

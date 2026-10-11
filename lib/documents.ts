@@ -1,4 +1,4 @@
-import type { LegId, PersonId } from "@/data/trip";
+import type { LegId } from "@/data/trip";
 import type { ExpenseCategory } from "@/lib/expenses";
 
 /**
@@ -38,9 +38,7 @@ export type DocUpload = {
   expense?: {
     title: string;
     amount: number;
-    category: Exclude<ExpenseCategory, "settlement">;
-    paid_by: PersonId;
-    split_between: PersonId[];
+    category: ExpenseCategory;
     spent_on: string;
     note: string | null;
   };
@@ -49,8 +47,7 @@ export type DocUpload = {
 export type DocEdit = Partial<{
   title: string;
   amount: number;
-  category: Exclude<ExpenseCategory, "settlement">;
-  paid_by: PersonId;
+  category: ExpenseCategory;
   spent_on: string;
   note: string | null;
 }>;

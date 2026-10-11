@@ -11,7 +11,8 @@ import type { LiveState } from "@/lib/live-types";
 import { useMe } from "@/lib/me";
 import { HOUR, MIN, hhmm, ms, stamp, weekdayDate } from "@/lib/time";
 import { buildSteps } from "@/lib/trip-engine";
-import { spendingPerPerson } from "@/lib/expenses";
+import { useDocuments } from "@/lib/receipts";
+import { reportRows, reportTotals } from "@/lib/report-data";
 import { useExpenses } from "@/lib/use-expenses";
 import { cn } from "@/lib/utils";
 
@@ -185,11 +186,11 @@ export function ArrivalReminder() {
 /** Phase E: trip complete, with the three things left to do. */
 export function AfterTrip({ live }: { live: LiveState }) {
   const { items } = useExpenses();
+  const { docs } = useDocuments();
   const trains = buildSteps(live).filter((s) => s.kind === "train");
   const km = LEGS.reduce((t, l) => t + (l.km ?? 0), 0);
   const hours = Math.round(trains.reduce((t, s) => t + (s.end - s.start), 0) / HOUR);
-  const spend = items ? spendingPerPerson(items) : null;
-  const perPerson = spend ? Object.values(spend).reduce((t, s) => t + s.total, 0) / Object.keys(spend).length : 0;
+  const total = items ? reportTotals(reportRows(items, docs ?? [])).total : null;
 
   return (
     <>
@@ -201,18 +202,8 @@ export function AfterTrip({ live }: { live: LiveState }) {
         <dl className="mt-4 grid grid-cols-3 gap-2">
           <Stat label="By train" value={`${km.toLocaleString("en-IN")} km`} />
           <Stat label="On trains" value={`${hours} h`} />
-          <Stat label="Spent each" value={spend ? `₹${Math.round(perPerson).toLocaleString("en-IN")}` : "..."} />
+          <Stat label="Total spent" value={total !== null ? `₹${Math.round(total).toLocaleString("en-IN")}` : "..."} />
         </dl>
-        {spend && (
-          <ul className="mt-3 grid grid-cols-4 gap-1 text-center text-xs text-muted-foreground">
-            {Object.entries(spend).map(([p, s]) => (
-              <li key={p}>
-                {personName(p)}
-                <span className="block font-mono text-sm text-foreground tabular">₹{Math.round(s.total).toLocaleString("en-IN")}</span>
-              </li>
-            ))}
-          </ul>
-        )}
         {!items && <Skeleton className="mt-3 h-10 rounded-lg" />}
       </Panel>
       <div className="flex flex-col gap-2">
@@ -220,16 +211,15 @@ export function AfterTrip({ live }: { live: LiveState }) {
           <FilePdf className="size-5" />
           Generate final report (PDF)
         </Link>
-        <Link href="/money" className={cn(softButton, "h-14 text-base")}>
+        <a href="https://secure.splitwise.com/" target="_blank" rel="noreferrer" className={cn(softButton, "h-14 text-base")}>
           <HandCoins className="size-5" />
-          Settle up
-        </Link>
+          Settle up in Splitwise
+        </a>
         <Link href="/journal#post" className={cn(softButton, "h-14 text-base")}>
           <PencilSimpleLine className="size-5" />
           Write recap post
         </Link>
       </div>
-      <p className="px-1 text-xs text-subtle">Settle up shows who owes whom from the Money tab.</p>
     </>
   );
 }

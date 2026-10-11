@@ -86,15 +86,13 @@ export type Leg = {
   /** We get off before the ticket's destination (e.g. booked to Haridwar). */
   ticketTo?: string;
   /** A cancelled earlier booking for this leg: what it cost and what came back. */
-  rebooking?: { oldPaid: number; refunded: number; paidBy: PersonId; refundTo: PersonId; cancelledOn: string };
+  rebooking?: { oldPaid: number; refunded: number; cancelledOn: string };
   /** Confirmed berths known at booking. Live chart data overrides this. */
   berths?: Berth[];
   /** Total for 4 passengers, rupees. */
   fareTotal?: number;
   /** Rail distance we ride, from the timetable. */
   km?: number;
-  /** Who paid for this ticket. */
-  paidBy?: PersonId;
   notes?: string[];
 };
 
@@ -303,7 +301,6 @@ export const LEGS: Leg[] = [
       { person: "heet", coach: "S5", berth: 9, type: "Lower" },
     ],
     fareTotal: 639.5,
-    paidBy: "oms",
   },
   {
     id: "L0b",
@@ -335,8 +332,7 @@ export const LEGS: Leg[] = [
       { person: "sujal", booked: "WL 18", current: "RAC 81" },
     ],
     fareTotal: 2359.5,
-    paidBy: "oms",
-    rebooking: { oldPaid: 1997.7, refunded: 1740, paidBy: "heet", refundTo: "heet", cancelledOn: "2026-10-10" },
+    rebooking: { oldPaid: 1997.7, refunded: 1740, cancelledOn: "2026-10-10" },
     notes: ["Ticket is to Haridwar; we get off at Delhi Jn."],
   },
   {
@@ -369,7 +365,6 @@ export const LEGS: Leg[] = [
       { person: "sujal", booked: "GNWL 84", current: "GNWL 47" },
     ],
     fareTotal: 8275.4,
-    paidBy: "heet",
     tracked: true,
   },
   {
@@ -401,7 +396,6 @@ export const LEGS: Leg[] = [
       { person: "sujal", booked: "WL 10", current: "RAC 41" },
     ],
     fareTotal: 8477.2,
-    paidBy: "heet",
     notes: ["Often runs late. The app watches the 3 Nov Delhi connection automatically."],
   },
   {
@@ -434,7 +428,6 @@ export const LEGS: Leg[] = [
       { person: "sujal", coach: "G8", berth: 22, type: "Upper" },
     ],
     fareTotal: 3995.4,
-    paidBy: "heet",
     notes: [
       "Garib Rath usually has no bedding. Carry a bedsheet each.",
       "Arrives Anand at 01:42. Rapido or auto home, stay together.",
@@ -752,15 +745,12 @@ export const GRANT = {
 };
 
 /* ------------------------------------------------------------- expenses */
-// Added to the shared expenses list on first run. After that, add and edit
-// expenses in the app (Money tab), not here.
+// Added to the expenses list on first run. Train fares come from LEGS above,
+// not from expenses. After that, add receipts in the app (Money tab).
 
 export const INITIAL_EXPENSES = [
+  // paid_by is required by the table; who paid is tracked in Splitwise.
   { title: "Hackathon registration fee", amount: 3600, paid_by: "oms", category: "registration", spent_on: "2026-10-07", note: "UPI UTR 628085234718, receipt WC4U2026-18" },
-  { title: "Train tickets: North East, Brahmaputra, Garib Rath", amount: 21193.41, paid_by: "heet", category: "train", spent_on: "2026-10-07" },
-  { title: "Yoga Exp rebooking: cancellation charge", amount: 257.7, paid_by: "heet", category: "train", spent_on: "2026-10-10", note: "Paid ₹1,997.70, refunded ₹1,740.00" },
-  { title: "19031 Yoga Express (PNR 8154913954)", amount: 2359.5, paid_by: "oms", category: "train", spent_on: "2026-10-10" },
-  { title: "19310 Shanti Express (PNR 8835664180)", amount: 639.5, paid_by: "oms", category: "train", spent_on: "2026-10-10" },
 ] as const;
 
 /* ----------------------------------------------------------------- prep */

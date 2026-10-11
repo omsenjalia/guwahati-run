@@ -7,12 +7,10 @@ import { defaultSummary, reportCsv, reportRows } from "@/lib/report-data";
 import { GRANT } from "@/data/trip";
 import { Panel, PanelTitle } from "@/components/bits";
 import { ChecklistPanel } from "@/components/checklist-panel";
-import { personName } from "@/components/leg-bits";
 import { grantEstimate } from "@/lib/grant";
-import { useMe } from "@/lib/me";
 import { useExpenses } from "@/lib/use-expenses";
 import { useDocuments } from "@/lib/receipts";
-import { CATEGORIES, spendingPerPerson } from "@/lib/expenses";
+import { CATEGORIES } from "@/lib/expenses";
 import { cn } from "@/lib/utils";
 
 const rupees = (n: number) => `₹${Math.round(n).toLocaleString("en-IN")}`;
@@ -217,21 +215,20 @@ function ReportPanel() {
   );
 }
 
-/** Real spending entered in Money that counts for the grant, per person. */
+/** Claimable spending recorded so far (tickets plus Money), and how much has a bill. */
 function RecordedPanel() {
-  const me = useMe();
   const { items } = useExpenses();
   const { docs } = useDocuments();
   if (!items) return null;
-  const spend = spendingPerPerson(items);
-  const grantable = items.filter((e) => CATEGORIES.find((c) => c.id === e.category)?.grant);
-  const withBill = grantable.filter((e) => docs?.some((d) => d.expense_id === e.id)).length;
-  const person = me ?? "oms";
+  const rows = reportRows(items, docs ?? []);
+  const grantable = rows.filter((r) => r.category === "Train" || CATEGORIES.find((c) => c.label === r.category)?.grant);
+  const claimable = grantable.reduce((t, r) => t + r.amount, 0);
+  const withBill = grantable.filter((r) => r.docIds.length).length;
   return (
     <Panel>
       <PanelTitle>Recorded in Money so far</PanelTitle>
       <dl className="grid grid-cols-2 gap-3">
-        <Stat label={`${personName(person)} spent on claimable items`} value={rupees(spend[person].grantable)} />
+        <Stat label="Claimable spend, team" value={rupees(claimable)} />
         <Stat label="Bills attached" value={`${withBill} of ${grantable.length}`} tone={withBill < grantable.length ? "text-warn" : "text-ok"} />
       </dl>
       <p className="mt-2 text-xs leading-relaxed text-subtle">

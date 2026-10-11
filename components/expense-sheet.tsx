@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Camera, Check, FilePdf } from "@phosphor-icons/react";
+import { Camera, FilePdf } from "@phosphor-icons/react";
 import { toast } from "sonner";
-import { LEGS, TEAM, type LegId, type PersonId } from "@/data/trip";
+import { LEGS, type LegId } from "@/data/trip";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { CATEGORIES, type Expense, type ExpenseCategory } from "@/lib/expenses";
@@ -14,7 +14,7 @@ import { istDateKey } from "@/lib/time";
 import { addExpense, updateExpense } from "@/lib/use-expenses";
 import { cn } from "@/lib/utils";
 
-type Category = Exclude<ExpenseCategory, "settlement">;
+type Category = ExpenseCategory;
 
 const QUICK: { title: string; category: Category }[] = [
   { title: "Cab", category: "cab" },
@@ -25,7 +25,6 @@ const QUICK: { title: string; category: Category }[] = [
 ];
 
 const TRAINS = LEGS.filter((l) => l.train);
-const ALL = TEAM.map((p) => p.id);
 const chip = (on: boolean) =>
   cn(
     "h-11 rounded-full border px-4 text-[0.95rem] font-medium transition active:scale-[0.98]",
@@ -36,8 +35,7 @@ const field =
 
 export type SheetMode =
   | { type: "add"; kind?: Exclude<DocKind, "report"> }
-  | { type: "edit"; expense: Expense; doc?: DocRow }
-  | { type: "settle"; from: PersonId; to: PersonId; amount: number };
+  | { type: "edit"; expense: Expense; doc?: DocRow };
 
 const keys = new WeakMap<SheetMode, number>();
 let nextKey = 0;
@@ -49,8 +47,7 @@ const keyOf = (m: SheetMode) => {
 /**
  * One bottom sheet for money and documents:
  *   add     a receipt (expense + optional photo/PDF), a ticket or a certificate
- *   edit    change an expense; its bill is renamed in GitHub to match
- *   settle  record a repayment
+ *   edit    change an expense, or attach another bill; the file is renamed in GitHub to match
  */
 export function ExpenseSheet({ mode, onClose }: { mode: SheetMode | null; onClose: () => void }) {
   return (
@@ -69,9 +66,7 @@ function SheetForm({ mode, onClose }: { mode: SheetMode; onClose: () => void }) 
   const [kind, setKind] = useState<Exclude<DocKind, "report">>(mode.type === "add" ? (mode.kind ?? "receipt") : "receipt");
   const [title, setTitle] = useState(editing?.title ?? "");
   const [amount, setAmount] = useState(editing ? String(editing.amount) : "");
-  const [paidBy, setPaidBy] = useState<PersonId | null>(editing?.paid_by ?? null);
-  const [split, setSplit] = useState<PersonId[]>(editing?.split_between.length ? editing.split_between : ALL);
-  const [category, setCategory] = useState<Category>(editing && editing.category !== "settlement" ? editing.category : "cab");
+  const [category, setCategory] = useState<Category>(editing?.category ?? "cab");
   const [date, setDate] = useState(() => editing?.spent_on ?? istDateKey(Date.now()));
   const [note, setNote] = useState(editing?.note ?? "");
   const [legId, setLegId] = useState<LegId>(TRAINS[0].id);
@@ -79,8 +74,6 @@ function SheetForm({ mode, onClose }: { mode: SheetMode; onClose: () => void }) 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
-  const payer = paidBy ?? me ?? "oms";
-  const name = (id: string) => TEAM.find((p) => p.id === id)?.short ?? id;
   const hasDoc = mode.type === "edit" && !!mode.doc;
 
   async function save(e: React.FormEvent) {
@@ -88,21 +81,6 @@ function SheetForm({ mode, onClose }: { mode: SheetMode; onClose: () => void }) 
     setError("");
     setBusy(true);
     try {
-      if (mode.type === "settle") {
-        await addExpense({
-          title: `${name(mode.from)} paid ${name(mode.to)} back`,
-          amount: mode.amount,
-          paid_by: mode.from,
-          split_between: [mode.to],
-          category: "settlement",
-          spent_on: istDateKey(Date.now()),
-          note: null,
-          created_by: me,
-        });
-        toast.success("Repayment recorded");
-        return onClose();
-      }
-
       if (kind !== "receipt") {
         // Ticket or certificate: a file, no money.
         if (!file) throw new Error("Pick the PDF or photo.");
@@ -120,18 +98,15 @@ function SheetForm({ mode, onClose }: { mode: SheetMode; onClose: () => void }) 
 
       const value = Number(amount.replace(/,/g, ""));
       if (!title.trim() || !(value > 0)) throw new Error("Add what it was for and an amount.");
-      if (!split.length) throw new Error("Pick at least one person to split with.");
       const fields = {
         title: title.trim(),
         amount: Math.round(value * 100) / 100,
-        paid_by: payer,
         category,
         spent_on: date,
         note: note.trim() || null,
       };
 
       if (editing) {
-        if (split.join() !== editing.split_between.join()) await updateExpense(editing.id, { split_between: split });
         if (mode.type === "edit" && mode.doc) await editDoc(mode.doc.id, fields);
         else await updateExpense(editing.id, fields);
         if (file) {
@@ -154,14 +129,14 @@ function SheetForm({ mode, onClose }: { mode: SheetMode; onClose: () => void }) 
             kind: "receipt",
             title: fields.title,
             created_by: me,
-            expense: { ...fields, split_between: split },
+            expense: fields,
           },
           ...prepared,
           addedAt: Date.now(),
         });
         toast.success(navigator.onLine ? "Receipt uploading" : "Saved on this phone. Uploads when you're back online.");
       } else {
-        await addExpense({ ...fields, split_between: split, created_by: me });
+        await addExpense({ ...fields, created_by: me });
         toast.success("Expense added");
       }
       onClose();
@@ -172,19 +147,16 @@ function SheetForm({ mode, onClose }: { mode: SheetMode; onClose: () => void }) 
     }
   }
 
-  const heading =
-    mode.type === "settle" ? "Record repayment" : editing ? "Edit expense" : kind === "receipt" ? "Add receipt" : kind === "ticket" ? "Add ticket" : "Add certificate";
+  const heading = editing ? "Edit receipt" : kind === "receipt" ? "Add receipt" : kind === "ticket" ? "Add ticket" : "Add certificate";
 
   return (
     <>
       <SheetHeader>
         <SheetTitle className="text-lg">{heading}</SheetTitle>
         <SheetDescription>
-          {mode.type === "settle"
-            ? `${name(mode.from)} pays ${name(mode.to)} ₹${mode.amount.toLocaleString("en-IN")}. Record it once the money is sent.`
-            : kind === "receipt"
-              ? "Everyone sees it instantly. The bill goes to our private GitHub folder for the college report."
-              : "Saved to our private GitHub folder and added to the final report."}
+          {kind === "receipt"
+            ? "Saved to our private GitHub folder for the college report. Splitting the money stays in Splitwise."
+            : "Saved to our private GitHub folder and added to the final report."}
         </SheetDescription>
       </SheetHeader>
 
@@ -199,11 +171,9 @@ function SheetForm({ mode, onClose }: { mode: SheetMode; onClose: () => void }) 
           </div>
         )}
 
-        {mode.type !== "settle" && (
-          <FilePicker file={file} onFile={setFile} required={kind !== "receipt"} another={hasDoc} />
-        )}
+        <FilePicker file={file} onFile={setFile} required={kind !== "receipt"} another={hasDoc} />
 
-        {mode.type !== "settle" && kind === "ticket" && (
+        {kind === "ticket" && (
           <div className="flex flex-col gap-2">
             <label htmlFor="doc-leg" className="text-sm font-medium">
               Which train
@@ -218,7 +188,7 @@ function SheetForm({ mode, onClose }: { mode: SheetMode; onClose: () => void }) 
           </div>
         )}
 
-        {mode.type !== "settle" && kind === "certificate" && (
+        {kind === "certificate" && (
           <div className="flex flex-col gap-2">
             <label htmlFor="doc-title" className="text-sm font-medium">
               Name
@@ -227,7 +197,7 @@ function SheetForm({ mode, onClose }: { mode: SheetMode; onClose: () => void }) 
           </div>
         )}
 
-        {mode.type !== "settle" && kind === "receipt" && (
+        {kind === "receipt" && (
           <>
             <div className="flex flex-col gap-2">
               <label htmlFor="exp-title" className="text-sm font-medium">
@@ -277,43 +247,6 @@ function SheetForm({ mode, onClose }: { mode: SheetMode; onClose: () => void }) 
               {CATEGORIES.find((c) => c.id === category)?.grant && <p className="text-xs text-ok">Counts for the college grant. Add the bill.</p>}
             </fieldset>
 
-            <fieldset className="flex flex-col gap-2">
-              <legend className="mb-2 text-sm font-medium">Paid by</legend>
-              <div className="grid grid-cols-4 gap-2">
-                {TEAM.map((p) => (
-                  <button key={p.id} type="button" onClick={() => setPaidBy(p.id)} className={cn(chip(payer === p.id), "px-2")}>
-                    {p.short}
-                  </button>
-                ))}
-              </div>
-            </fieldset>
-
-            <fieldset className="flex flex-col gap-2">
-              <legend className="mb-2 text-sm font-medium">
-                Split between{" "}
-                <span className="font-normal text-muted-foreground">
-                  {split.length > 0 && amount ? `(₹${Math.round(Number(amount.replace(/,/g, "")) / split.length || 0)} each)` : ""}
-                </span>
-              </legend>
-              <div className="grid grid-cols-4 gap-2">
-                {TEAM.map((p) => {
-                  const on = split.includes(p.id);
-                  return (
-                    <button
-                      key={p.id}
-                      type="button"
-                      aria-pressed={on}
-                      onClick={() => setSplit((s) => (on ? s.filter((x) => x !== p.id) : ALL.filter((x) => x === p.id || s.includes(x))))}
-                      className={cn(chip(on), "inline-flex items-center justify-center gap-1 px-2")}
-                    >
-                      {on && <Check className="size-4" weight="bold" />}
-                      {p.short}
-                    </button>
-                  );
-                })}
-              </div>
-            </fieldset>
-
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-2">
                 <label htmlFor="exp-date" className="text-sm font-medium">
@@ -333,7 +266,7 @@ function SheetForm({ mode, onClose }: { mode: SheetMode; onClose: () => void }) 
 
         {error && <p className="text-sm text-bad">{error}</p>}
         <Button type="submit" size="lg" disabled={busy} className="h-14 text-base">
-          {busy ? "Saving" : mode.type === "settle" ? "Mark as paid" : editing ? "Save changes" : heading}
+          {busy ? "Saving" : editing ? "Save changes" : heading}
         </Button>
       </form>
     </>

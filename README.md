@@ -9,7 +9,7 @@ Trip companion PWA for 4 of us: Gujarat to Delhi to Guwahati (IIT Guwahati hacka
 - **Now**: switches by date. Before the trip: countdown, trip status, prep progress, next important date, Guwahati forecast. Travel days: current step with live delay, our seats, next action with leave-by, metro-or-cab plan, journey bar, food stations. Hackathon: submission countdown, rest rotation. Free time: leave-IIT-by. After: trip stats, final report, settle up, recap post.
 - **Timeline**: every leg, transfer, meal and sleep block with live times; Maps, Uber, Ola, Rapido links; subscribable calendar.
 - **Tickets**: static cards with "Can board" and a Check on IRCTC link. North East Express (the one waitlisted ticket) keeps live status, chance, waitlist graph and Plan B. **Wallet**: every ticket offline, with a full-screen "show to TTE" mode.
-- **Money**: receipts (photo or PDF) saved to the private repo's `documents/` folder, offline upload queue, who owes whom, receipt checklist, rail cost per person.
+- **Money**: receipt and document uploader. Bills, tickets and certificates (photo or PDF) go to the private repo's `documents/` folder, with an offline upload queue, totals by category and a checklist of missing bills. Splitting money stays in Splitwise.
 - **Grant**: BVM SSIP estimate, document checklist, final PDF report (cover, summary, expenses with receipt numbers, requested vs spent, every receipt attached) and Excel.
 - **Team**: members, alerts, packing lists, guides, journal, paper backup, system status.
 - **Hackathon** (replaces Timeline from 30 Oct evening): countdown, schedule, rest rotation, task board, pitch timer, demo checklist.

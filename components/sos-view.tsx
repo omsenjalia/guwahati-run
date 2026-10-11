@@ -42,7 +42,7 @@ const LOST = [
     title: "Lost wallet or cards",
     steps: [
       "Block cards from your bank app on a teammate's phone, or call the bank's helpline.",
-      "Log the loss in Money if teammates cover you, so it's settled later.",
+      "If teammates cover you, add it in Splitwise so it's settled later.",
       "Report to RPF (139) if it happened on the train.",
     ],
   },

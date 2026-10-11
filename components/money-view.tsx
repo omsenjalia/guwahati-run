@@ -1,18 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, CheckCircle, CircleDashed, CloudArrowUp, FilePdf, PencilSimple, Plus, Trash, X } from "@phosphor-icons/react";
+import { CheckCircle, CircleDashed, CloudArrowUp, FilePdf, PencilSimple, Plus, Trash, X } from "@phosphor-icons/react";
 import { toast } from "sonner";
-import { LEGS, TEAM, legCostPerPerson, rebookingLoss, type PersonId } from "@/data/trip";
+import { LEGS, rebookingLoss } from "@/data/trip";
 import { Panel, PanelTitle, Skeleton } from "@/components/bits";
 import { ExpenseSheet, type SheetMode } from "@/components/expense-sheet";
 import { Route } from "@/components/leg-bits";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useNow } from "@/lib/clock";
-import { balances, categoryLabel, settleUp, spendingPerPerson, type Expense } from "@/lib/expenses";
+import { categoryLabel, type Expense } from "@/lib/expenses";
+import { reportRows, reportTotals } from "@/lib/report-data";
 import { docFileUrl, type DocRow } from "@/lib/documents";
-import { useMe } from "@/lib/me";
 import { deleteDoc, discardUpload, processQueue, useDocuments, useUploadQueue } from "@/lib/receipts";
 import { expectedReceipts } from "@/lib/receipt-checklist";
 import { weekdayDate } from "@/lib/time";
@@ -21,7 +21,6 @@ import { cn } from "@/lib/utils";
 
 const rupees = (n: number) => `₹${Math.round(n).toLocaleString("en-IN")}`;
 const rupees2 = (n: number) => `₹${n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-const name = (id: string) => TEAM.find((p) => p.id === id)?.short ?? id;
 
 export function MoneyView() {
   const mounted = useNow() !== null;
@@ -57,7 +56,7 @@ export function MoneyView() {
         <Skeleton className="h-48" />
       ) : items ? (
         <>
-          <BalancesPanel items={items} onSettle={(m) => setSheet({ type: "settle", ...m })} />
+          <SummaryPanel items={items} docs={docs ?? []} />
           <ExpenseList items={items} docs={docs ?? []} onEdit={(expense, doc) => setSheet({ type: "edit", expense, doc })} onView={setViewing} />
           <ChecklistPanel items={items} docs={docs} onAdd={(kind) => setSheet({ type: "add", kind })} />
           <DocumentsPanel docs={docs ?? []} onView={setViewing} />
@@ -104,63 +103,29 @@ function QueueBadge() {
   );
 }
 
-/* ------------------------------------------------------------ balances */
+/* ------------------------------------------------------------- summary */
 
-function BalancesPanel({ items, onSettle }: { items: Expense[]; onSettle: (s: { from: PersonId; to: PersonId; amount: number }) => void }) {
-  const me = useMe();
-  const net = balances(items);
-  const moves = settleUp(net);
-  const spend = spendingPerPerson(items);
-  const paid = Object.fromEntries(TEAM.map((p) => [p.id, items.filter((e) => e.paid_by === p.id && e.category !== "settlement").reduce((s, e) => s + e.amount, 0)]));
-  const total = items.filter((e) => e.category !== "settlement").reduce((s, e) => s + e.amount, 0);
-
+/** What the trip has cost so far (same numbers as the report), and how many have a bill. */
+function SummaryPanel({ items, docs }: { items: Expense[]; docs: DocRow[] }) {
+  const rows = reportRows(items, docs);
+  const { total, byCategory } = reportTotals(rows);
+  const withBill = rows.filter((r) => r.docIds.length).length;
+  const byCat = byCategory.map(([label, sum]) => ({ id: label, label, sum }));
   return (
     <Panel>
-      <PanelTitle aside={<span className="font-mono text-sm text-muted-foreground tabular">{rupees(total)} spent</span>}>Who owes whom</PanelTitle>
-      {moves.length ? (
-        <ul className="flex flex-col gap-2">
-          {moves.map((m) => (
-            <li key={`${m.from}-${m.to}`} className={cn("flex items-center gap-3 rounded-lg bg-secondary px-3 py-2.5", (m.from === me || m.to === me) && "ring-1 ring-primary/40")}>
-              <p className="min-w-0 flex-1 text-[0.95rem]">
-                <span className="font-semibold">{name(m.from)}</span>
-                <ArrowRight className="mx-1.5 inline size-3.5 text-subtle" />
-                <span className="font-semibold">{name(m.to)}</span>
-                <span className="ml-2 font-mono font-semibold tabular">{rupees(m.amount)}</span>
-              </p>
-              <button type="button" onClick={() => onSettle(m)} className="h-10 shrink-0 rounded-lg bg-card px-3 text-sm font-medium active:scale-[0.98]">
-                Mark paid
-              </button>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="text-[0.95rem] text-ok">Everyone is settled up.</p>
-      )}
-
-      <table className="mt-4 w-full text-sm">
-        <thead>
-          <tr className="text-left text-xs text-muted-foreground">
-            <th className="pb-1 font-medium">Person</th>
-            <th className="pb-1 text-right font-medium">Paid</th>
-            <th className="pb-1 text-right font-medium">Share</th>
-            <th className="pb-1 text-right font-medium">Balance</th>
-          </tr>
-        </thead>
-        <tbody className="font-mono tabular">
-          {TEAM.map((p) => (
-            <tr key={p.id} className={cn(p.id === me && "font-semibold")}>
-              <td className="py-1.5 font-sans">{p.short}</td>
-              <td className="py-1.5 text-right">{rupees(paid[p.id])}</td>
-              <td className="py-1.5 text-right">{rupees(spend[p.id].total)}</td>
-              <td className={cn("py-1.5 text-right", net[p.id] > 0.5 ? "text-ok" : net[p.id] < -0.5 ? "text-warn" : "")}>
-                {net[p.id] > 0.5 ? "+" : net[p.id] < -0.5 ? "-" : ""}
-                {rupees(Math.abs(net[p.id]))}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <p className="mt-2 text-xs text-subtle">Balance: plus means you get money back, minus means you owe.</p>
+      <PanelTitle aside={<span className={cn("text-sm", withBill < items.length ? "text-warn" : "text-ok")}>{withBill} of {rows.length} with a bill</span>}>
+        Spent so far
+      </PanelTitle>
+      <p className="font-mono text-[2rem] leading-none font-semibold tabular">{rupees2(total)}</p>
+      <ul className="mt-3 flex flex-col gap-1.5">
+        {byCat.map((c) => (
+          <li key={c.id} className="flex items-baseline justify-between gap-3 text-sm">
+            <span className="text-muted-foreground">{c.label}</span>
+            <span className="font-mono tabular">{rupees2(c.sum)}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-3 text-xs text-subtle">Train fares come from the tickets. Who owes whom is in Splitwise; this is the record and proof for the college report.</p>
     </Panel>
   );
 }
@@ -221,8 +186,6 @@ function Thumb({ doc, onView }: { doc: DocRow; onView: (d: DocRow) => void }) {
 
 function ExpenseRow({ e, docs, onEdit, onView }: { e: Expense; docs: DocRow[]; onEdit: (e: Expense, d?: DocRow) => void; onView: (d: DocRow) => void }) {
   const doc = docs[0];
-  const settlement = e.category === "settlement";
-  const splitAll = e.split_between.length === TEAM.length;
   return (
     <li className="flex items-center gap-3 px-4 py-2">
       {doc ? (
@@ -243,18 +206,17 @@ function ExpenseRow({ e, docs, onEdit, onView }: { e: Expense; docs: DocRow[]; o
         <span className="size-11 shrink-0" />
       )}
       <div className="min-w-0 flex-1">
-        <p className={cn("truncate text-[0.95rem]", settlement && "text-muted-foreground")}>{e.title}</p>
+        <p className="truncate text-[0.95rem]">{e.title}</p>
         <p className="truncate text-xs text-muted-foreground">
-          {settlement ? "Repayment" : `${name(e.paid_by)} paid${splitAll ? "" : `, for ${e.split_between.map(name).join(", ")}`} · ${categoryLabel(e.category)}`}
+          {categoryLabel(e.category)}
           {e.note ? ` · ${e.note}` : ""}
+          {!docs.length && <span className="text-warn"> · no bill</span>}
         </p>
       </div>
-      <span className={cn("font-mono text-[0.95rem] font-semibold tabular", settlement && "text-muted-foreground")}>{rupees(e.amount)}</span>
-      {!settlement && (
-        <button type="button" aria-label={`Edit ${e.title}`} onClick={() => onEdit(e, doc)} className="inline-flex size-10 items-center justify-center rounded-lg text-subtle active:bg-secondary">
-          <PencilSimple className="size-5" />
-        </button>
-      )}
+      <span className="font-mono text-[0.95rem] font-semibold tabular">{rupees(e.amount)}</span>
+      <button type="button" aria-label={`Edit ${e.title}`} onClick={() => onEdit(e, doc)} className="inline-flex size-10 items-center justify-center rounded-lg text-subtle active:bg-secondary">
+        <PencilSimple className="size-5" />
+      </button>
       <button
         type="button"
         aria-label={`Delete ${e.title}`}
@@ -382,41 +344,42 @@ function Viewer({ doc, onClose }: { doc: DocRow | null; onClose: () => void }) {
 
 /* --------------------------------------------------------------- fares */
 
-/** Rail cost per person each way, from the ticket data (incl. the Yoga cancellation loss). */
+/** Train fares each way for all 4 of us, from the ticket data (incl. the Yoga cancellation loss). */
 function FaresPanel() {
   const fareLegs = LEGS.filter((l) => l.train);
+  const cost = (id: string) => {
+    const l = LEGS.find((x) => x.id === id)!;
+    return (l.fareTotal ?? 0) + rebookingLoss(l);
+  };
   const ways = [
     { name: "Gujarat to Guwahati", legs: fareLegs.filter((l) => ["L0", "L1", "L2"].includes(l.id)) },
     { name: "Guwahati to Gujarat", legs: fareLegs.filter((l) => ["L3", "L4"].includes(l.id)) },
   ];
   return (
     <Panel>
-      <PanelTitle>Rail cost per person</PanelTitle>
+      <PanelTitle>Train fares</PanelTitle>
       <div className="flex flex-col gap-4">
-        {ways.map((w) => {
-          const sum = w.legs.reduce((s, l) => s + legCostPerPerson(l.id), 0);
-          return (
-            <div key={w.name}>
-              <div className="flex items-baseline justify-between gap-3">
-                <p className="text-sm font-medium">{w.name}</p>
-                <span className="font-mono text-sm font-semibold tabular">{rupees2(sum)}</span>
-              </div>
-              <ul className="mt-1.5 flex flex-col gap-1.5">
-                {w.legs.map((l) => (
-                  <li key={l.id} className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
-                    <span>
-                      <Route leg={l} />
-                      {rebookingLoss(l) > 0 && <span className="block text-xs">incl. {rupees2(rebookingLoss(l) / 4)} cancellation loss</span>}
-                      {!l.fareTotal && <span className="block text-xs">fare to add with the ticket</span>}
-                    </span>
-                    <span className="font-mono tabular">{rupees2(legCostPerPerson(l.id))}</span>
-                  </li>
-                ))}
-              </ul>
+        {ways.map((w) => (
+          <div key={w.name}>
+            <div className="flex items-baseline justify-between gap-3">
+              <p className="text-sm font-medium">{w.name}</p>
+              <span className="font-mono text-sm font-semibold tabular">{rupees2(w.legs.reduce((s, l) => s + cost(l.id), 0))}</span>
             </div>
-          );
-        })}
+            <ul className="mt-1.5 flex flex-col gap-1.5">
+              {w.legs.map((l) => (
+                <li key={l.id} className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
+                  <span>
+                    <Route leg={l} />
+                    {rebookingLoss(l) > 0 && <span className="block text-xs">incl. {rupees2(rebookingLoss(l))} cancellation loss</span>}
+                  </span>
+                  <span className="font-mono tabular">{rupees2(cost(l.id))}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </div>
+      <p className="mt-3 text-xs text-subtle">Totals for all 4 tickets on each PNR.</p>
     </Panel>
   );
 }
