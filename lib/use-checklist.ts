@@ -9,7 +9,21 @@ import { idbGet, idbSet } from "@/lib/offline/idb";
  * A checklist shared by all 4 phones (packing_items rows with one owner),
  * live via Realtime and kept offline in IndexedDB.
  */
-export type CheckItem = { id: string; label: string; done: boolean; done_by: string | null; sort: number };
+export type CheckItem = {
+  id: string;
+  label: string;
+  done: boolean;
+  done_by: string | null;
+  sort: number;
+  /** Prep list only: deadline (YYYY-MM-DD), and who has ticked a per-person item. */
+  due?: string | null;
+  per_person?: boolean;
+  done_people?: string[];
+};
+
+const BASE = "id, label, done, done_by, sort";
+// The prep list has extra columns (supabase/003_confirmed_trip.sql).
+const cols = (owner: string) => (owner === "prep" ? `${BASE}, due, per_person, done_people` : BASE);
 
 export function useChecklist(owner: string) {
   const [items, setItems] = useState<CheckItem[] | null>(null);
@@ -29,8 +43,8 @@ export function useChecklist(owner: string) {
     });
     const load = async () => {
       if (!(await ensureSession())) return;
-      const { data } = await sb.from("packing_items").select("id, label, done, done_by, sort").eq("owner", owner);
-      if (data) apply(data as CheckItem[]);
+      const { data } = await sb.from("packing_items").select(cols(owner)).eq("owner", owner);
+      if (data) apply(data as unknown as CheckItem[]);
     };
     void load();
     const channel = sb
@@ -57,10 +71,22 @@ export function useChecklist(owner: string) {
     const { data, error } = await browserDb()
       .from("packing_items")
       .insert({ owner, label, sort })
-      .select("id, label, done, done_by, sort")
+      .select(cols(owner))
       .single();
     if (error) throw new Error(error.message);
-    setItems((cur) => [...(cur ?? []), data as CheckItem]);
+    setItems((cur) => [...(cur ?? []), data as unknown as CheckItem]);
+  }
+
+  /** Per-person item: tick or untick for one person; done once all 4 have. */
+  async function togglePerson(item: CheckItem, person: string, everyone: string[]) {
+    const had = item.done_people ?? [];
+    const done_people = had.includes(person) ? had.filter((p) => p !== person) : [...had, person];
+    const done = everyone.every((p) => done_people.includes(p));
+    setItems((cur) => cur?.map((i) => (i.id === item.id ? { ...i, done_people, done } : i)) ?? cur);
+    await browserDb()
+      .from("packing_items")
+      .update({ done_people, done, done_by: done ? person : null, updated_at: new Date().toISOString() })
+      .eq("id", item.id);
   }
 
   async function remove(item: CheckItem) {
@@ -68,5 +94,5 @@ export function useChecklist(owner: string) {
     await browserDb().from("packing_items").delete().eq("id", item.id);
   }
 
-  return { items, toggle, add, remove };
+  return { items, toggle, togglePerson, add, remove };
 }

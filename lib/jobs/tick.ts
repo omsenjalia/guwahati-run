@@ -20,7 +20,7 @@ import { runWatchers } from "@/lib/jobs/watchers";
 import type { StopTime } from "@/lib/meal-planner";
 import { serverDb } from "@/lib/supabase/server";
 import { HOUR, MIN, istDateKey, ms } from "@/lib/time";
-import { chartTime, parseStatus } from "@/lib/trip-engine";
+import { parseStatus } from "@/lib/trip-engine";
 import { fetchWeatherMany } from "@/lib/weather";
 
 export type JobName = "seed" | "pnr-sync" | "live-status" | "weather" | "watchers" | "schedules";
@@ -151,10 +151,9 @@ async function seedTrip() {
   const snapshot = JSON.parse(JSON.stringify({ ...trip }));
   const { data } = await db.from("trip_snapshot").select("data").eq("id", 1).maybeSingle();
   if (data && stableJson(data.data) === stableJson(snapshot)) return { ok: true, message: "unchanged" };
-  const { error } = await db.from("trip_snapshot").upsert({ id: 1, data: snapshot, updated_at: new Date().toISOString() });
-  if (error) throw new Error(error.message);
 
-  // First run: seed the shared packing list and the grant document checklist.
+  // Seed any checklist that doesn't exist yet (packing, grant documents, prep).
+  // Done before saving the snapshot so a failure is retried on the next tick.
   const lists: [string, readonly string[]][] = [
     ["team", trip.PACKING_TEAM],
     ["grant", trip.GRANT.documents],
@@ -165,6 +164,16 @@ async function seedTrip() {
     const { count } = await db.from("packing_items").select("id", { count: "exact", head: true }).eq("owner", owner);
     if (!count) await db.from("packing_items").insert(labels.map((label, sort) => ({ owner, label, sort })));
   }
+  const prep = await db.from("packing_items").select("id", { count: "exact", head: true }).eq("owner", "prep");
+  if (!prep.count) {
+    const { error } = await db
+      .from("packing_items")
+      .insert(trip.PREP.map((p, sort) => ({ owner: "prep", label: p.label, due: p.due, per_person: !!p.perPerson, sort })));
+    if (error) throw new Error(`Prep checklist: ${error.message}. Run supabase/003_confirmed_trip.sql.`);
+  }
+
+  const { error } = await db.from("trip_snapshot").upsert({ id: 1, data: snapshot, updated_at: new Date().toISOString() });
+  if (error) throw new Error(error.message);
   return { ok: true, message: data ? "trip data updated" : "trip data seeded" };
 }
 

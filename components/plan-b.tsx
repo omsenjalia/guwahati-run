@@ -74,7 +74,7 @@ export function NePlanB({ live, now, compact }: { live: LiveState; now: number; 
           <Alternatives />
         </>
       ) : (
-        !compact && (
+        (!compact || !tatkalOpen) && (
           <p className={cn("text-sm leading-snug text-muted-foreground", tatkalOpen && "mt-3 border-t pt-3")}>
             Chart around {stamp(chartTime(NE.depart))}. If even 1 of us gets RAC or a berth, all 4 can board on this PNR. If all
             4 are still waitlisted, this card switches to live alternatives from Delhi.
@@ -88,27 +88,33 @@ export function NePlanB({ live, now, compact }: { live: LiveState; now: number; 
 type AltResponse = { fetchedAt: number; trains: Alternative[] };
 
 /** Other Delhi to Guwahati trains on 29 Oct, fetched live, plus flights as a last resort. */
+async function fetchAlternatives(): Promise<AltResponse> {
+  const res = await fetch("/api/alternatives", { cache: "no-store" });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
 export function Alternatives() {
   const [data, setData] = useState<AltResponse | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState(true);
   const [error, setError] = useState("");
 
-  async function load() {
+  const settle = (p: Promise<AltResponse>) =>
+    p
+      .then((d) => {
+        setData(d);
+        setError("");
+      })
+      .catch((e) => setError(navigator.onLine ? (e as Error).message : "Offline. Connect to check seats."))
+      .finally(() => setBusy(false));
+
+  function load() {
     setBusy(true);
-    setError("");
-    try {
-      const res = await fetch("/api/alternatives", { cache: "no-store" });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      setData(await res.json());
-    } catch (e) {
-      setError(navigator.onLine ? (e as Error).message : "Offline. Connect to check seats.");
-    } finally {
-      setBusy(false);
-    }
+    void settle(fetchAlternatives());
   }
 
   useEffect(() => {
-    void load();
+    void settle(fetchAlternatives());
   }, []);
 
   return (

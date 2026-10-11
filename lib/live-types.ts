@@ -47,6 +47,8 @@ export type Weather = {
   todayMax: number;
   todayMin: number;
   rainChance: number;
+  /** Daily forecast, up to 16 days ahead (YYYY-MM-DD in IST). */
+  days?: { date: string; max: number; min: number; rainChance: number; code: number }[];
   fetchedAt: number;
 };
 

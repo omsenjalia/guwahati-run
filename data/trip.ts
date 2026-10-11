@@ -92,6 +92,8 @@ export type Leg = {
   berths?: Berth[];
   /** Total for 4 passengers, rupees. */
   fareTotal?: number;
+  /** Rail distance we ride, from the timetable. */
+  km?: number;
   /** Who paid for this ticket. */
   paidBy?: PersonId;
   notes?: string[];
@@ -285,6 +287,7 @@ export const LEGS: Leg[] = [
     to: "ADI",
     train: { number: "19310", name: "Shanti Express" },
     backupTrain: { number: "11464", name: "Somnath Express", depart: "2026-10-28T06:29:00+05:30" },
+    km: 64,
     depart: "2026-10-28T06:55:00+05:30",
     arrive: "2026-10-28T08:20:00+05:30",
     travelClass: "UR",
@@ -306,6 +309,7 @@ export const LEGS: Leg[] = [
     from: "SBIB",
     to: "DLI",
     train: { number: "19031", name: "Yoga Express" },
+    km: 950,
     depart: "2026-10-28T11:25:00+05:30",
     arrive: "2026-10-29T04:50:00+05:30",
     travelClass: "SL",
@@ -339,6 +343,7 @@ export const LEGS: Leg[] = [
     from: "ANVT",
     to: "KYQ",
     train: { number: "12506", name: "North East Express" },
+    km: 1856,
     depart: "2026-10-29T07:40:00+05:30",
     arrive: "2026-10-30T16:25:00+05:30",
     travelClass: "3A",
@@ -365,6 +370,7 @@ export const LEGS: Leg[] = [
     from: "KYQ",
     to: "DLI",
     train: { number: "15658", name: "Brahmaputra Express" },
+    km: 2028,
     depart: "2026-11-01T16:55:00+05:30",
     arrive: "2026-11-03T04:50:00+05:30",
     travelClass: "3A",
@@ -391,6 +397,7 @@ export const LEGS: Leg[] = [
     from: "DEE",
     to: "ANND",
     train: { number: "12215", name: "BDTS Garib Rath" },
+    km: 1016,
     depart: "2026-11-03T08:55:00+05:30",
     arrive: "2026-11-04T01:42:00+05:30",
     travelClass: "3A",
@@ -712,6 +719,23 @@ export const INITIAL_EXPENSES = [
   { title: "Yoga Exp rebooking: cancellation charge", amount: 257.7, paid_by: "heet", category: "train", spent_on: "2026-10-10", note: "Paid ₹1,997.70, refunded ₹1,740.00" },
   { title: "19031 Yoga Express (PNR 8154913954)", amount: 2359.5, paid_by: "oms", category: "train", spent_on: "2026-10-10" },
 ] as const;
+
+/* ----------------------------------------------------------------- prep */
+// Before-the-trip checklist. perPerson items need a tick from each of us.
+// Seeded once; after that add, tick and edit in the app (Team tab).
+
+export type PrepItem = { label: string; due: string; perPerson?: boolean };
+
+export const PREP: PrepItem[] = [
+  { label: "Install IRCTC, UTS and Where is my Train apps", due: "2026-10-20", perPerson: true },
+  { label: "Upload the Anand to Ahmedabad e-ticket", due: "2026-10-20" },
+  { label: "Original photo ID: college ID and Aadhaar", due: "2026-10-25", perPerson: true },
+  { label: "Download offline maps of Delhi and Guwahati", due: "2026-10-25", perPerson: true },
+  { label: "Arrange the 01:42 pickup at Anand on 4 Nov", due: "2026-10-25" },
+  { label: "Pack laptop and charger", due: "2026-10-27", perPerson: true },
+  { label: "Pack the extension board", due: "2026-10-27" },
+  { label: "Carry a bedsheet for the Garib Rath", due: "2026-10-27", perPerson: true },
+];
 
 /* -------------------------------------------------------------- packing */
 

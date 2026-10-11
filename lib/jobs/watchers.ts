@@ -7,6 +7,7 @@
  *   transfers     metro or cab for each transfer, from the live ETA
  *   deadlines     every backup rule evaluated: "action needed" or "no action"
  *   wake          "Wake up, Delhi in 45 min" from the live ETA
+ *   leave IIT     1 Nov: 30 min before and at the "leave IIT by" time
  *   briefing      07:00 IST daily summary during the trip
  *   settle        Splitwise reminder after the trip
  */
@@ -18,6 +19,7 @@ import { HOUR, MIN, duration, hhmm, istDateKey, ms } from "@/lib/time";
 import { evaluate, type Verdict } from "@/lib/deadline-rules";
 import { planTransfers, type TransferPlan } from "@/lib/transfer-planner";
 import { buildSteps, computeNow, connectionStates, type ConnectionState, type Health } from "@/lib/trip-engine";
+import { returnLeaveBy } from "@/lib/phases";
 
 const name = (id: string) => TEAM.find((p) => p.id === id)?.short ?? id;
 
@@ -111,6 +113,20 @@ export async function runWatchers(legs: Map<string, LegLive>, now: number) {
         kind: "wake",
         title: `Wake up: ${PLACES[s.leg.to].short} in ${duration(s.end - now)}`,
         body: `Arriving ${hhmm(s.end)}.${coach} Pack up and check under the berths.`,
+        url: "/",
+      });
+    }
+  }
+
+  /* ---- leave IIT for the train home (1 Nov) ---------------------------- */
+  const back = returnLeaveBy(live);
+  for (const lead of [30 * MIN, 0]) {
+    const at = back.leaveIit - lead;
+    if (now >= at && now < at + 20 * MIN) {
+      once(`leave-iit-${lead ? "30" : "now"}`, {
+        kind: "wake",
+        title: lead ? `Leave IIT in 30 min (by ${hhmm(back.leaveIit)})` : `Leave IIT now for the ${hhmm(back.depart)} train`,
+        body: `Be on the Kamakhya platform by ${hhmm(back.atStation)}. Leave Kamakhya Temple by ${hhmm(back.leaveTemple)}.`,
         url: "/",
       });
     }
