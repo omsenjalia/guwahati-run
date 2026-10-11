@@ -457,13 +457,13 @@ export const BACKUPS: Leg[] = [
     arrive: "2026-10-31T00:35:00+05:30",
     travelClass: "3A",
     pnr: "2960910157",
-    bookedStatus: "WL 55-58",
+    bookedStatus: "GNWL 55-58",
     // Ticket order. Last known status (11 Oct); the tracker replaces it live.
     passengers: [
-      { person: "heet", booked: "WL 55", current: "WL 16" },
-      { person: "omk", booked: "WL 57", current: "WL 18" },
-      { person: "sujal", booked: "WL 58", current: "WL 19" },
-      { person: "oms", booked: "WL 56", current: "WL 17" },
+      { person: "heet", booked: "GNWL 55", current: "GNWL 16" },
+      { person: "omk", booked: "GNWL 57", current: "GNWL 18" },
+      { person: "sujal", booked: "GNWL 58", current: "GNWL 19" },
+      { person: "oms", booked: "GNWL 56", current: "GNWL 17" },
     ],
     fareTotal: 9095.4,
     tracked: true,

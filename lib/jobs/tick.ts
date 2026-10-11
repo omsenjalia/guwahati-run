@@ -193,17 +193,22 @@ async function syncPnrs(legs: Leg[], live: Map<string, LegLive>) {
     try {
       const r = await getPnrStatus(leg.pnr!);
       source = r.source;
-      // Passenger 1-4 on the ticket, in the order written in data/trip.ts.
+      // Match each live passenger to one of us by their booked waitlist number
+      // (the provider sorts by that number, not by ticket order); fall back
+      // to position for confirmed bookings.
       const order: PersonId[] = (leg.passengers ?? []).map((p) => p.person);
+      const bookedNo = (s?: string) => Number(s?.match(/(\d+)\s*$/)?.[1] ?? NaN);
+      const personFor = (p: { number: number; booking: string }) =>
+        leg.passengers?.find((x) => bookedNo(x.booked) === bookedNo(p.booking))?.person ?? order[p.number - 1] ?? order[0];
       const passengers: PassengerLive[] = r.data.passengers.map((p) => ({
-        person: order[p.number - 1] ?? order[0],
+        person: personFor(p),
         booked: p.booking,
         current: p.current,
         confirmChance: p.confirmChance,
       }));
       const berths: Berth[] = r.data.passengers.flatMap((p) =>
         p.coach && p.berth
-          ? [{ person: order[p.number - 1], coach: p.coach, berth: p.berth, type: BERTH_TYPES[p.berthCode ?? ""] ?? "Lower" }]
+          ? [{ person: personFor(p), coach: p.coach, berth: p.berth, type: BERTH_TYPES[p.berthCode ?? ""] ?? "Lower" }]
           : [],
       );
       const next: LegLive = {
