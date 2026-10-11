@@ -5,7 +5,7 @@ Everything here is clicking in a browser except one optional command. Do it once
 ## 1. What's already done
 
 - GitHub: private repo `omsenjalia/guwahati-run` with all the code.
-- Supabase: project created, SQL files run (`supabase/schema.sql`, `supabase/002_expenses.sql`, and `supabase/003_confirmed_trip.sql` for the prep checklist and receipts).
+- Supabase: project created, SQL files run (`supabase/schema.sql`, `supabase/002_expenses.sql`, `supabase/003_confirmed_trip.sql` for the prep checklist and receipts, and `supabase/004_event_documents.sql` for the Documents category).
 - `.env` in the repo holds every key the app needs (committed on purpose; the repo is private).
 
 ## 2. Put it online (Vercel, free)

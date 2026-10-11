@@ -5,7 +5,8 @@ import type { ExpenseCategory } from "@/lib/expenses";
  * A file kept in the private GitHub repo (documents/ folder), with its row
  * in the documents table. Receipts point at the expense they prove.
  */
-export type DocKind = "receipt" | "ticket" | "certificate" | "report";
+/** document: event paperwork such as the invitation letter or HOD approval. */
+export type DocKind = "receipt" | "ticket" | "certificate" | "document" | "report";
 
 export type DocRow = {
   id: string;

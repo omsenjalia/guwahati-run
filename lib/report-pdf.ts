@@ -244,19 +244,21 @@ async function fetchAll(list: DocRow[]) {
 async function appendix(w: Writer, rows: ReportRow[], docs: DocRow[]) {
   const referenced = rows.filter((r) => r.ref);
   const certificates = docs.filter((d) => d.kind === "certificate");
+  const papers = docs.filter((d) => d.kind === "document");
   const byId = (id: string) => docs.find((d) => d.id === id)!;
-  const wanted = [...referenced.flatMap((r) => r.docIds.map(byId)), ...certificates];
+  const wanted = [...papers, ...referenced.flatMap((r) => r.docIds.map(byId)), ...certificates];
   if (!wanted.length) return;
   const files = await fetchAll(wanted);
 
   w.newPage();
-  w.text("Appendix: receipts", { size: 18, bold: true, gap: 4 });
-  w.text("In reference order. Train tickets are the IRCTC e-tickets; other bills are photos taken at the time.", { size: 9, color: GREY, gap: 8 });
+  w.text("Appendix: documents and receipts", { size: 18, bold: true, gap: 4 });
+  w.text("Event documents first (D-01...), then receipts in reference order (R-01...). Train tickets are the IRCTC e-tickets; other bills are photos taken at the time.", { size: 9, color: GREY, gap: 8 });
 
   // The first file shares the title page, placed right under the title.
   let slot = 1;
   let firstTop: number | undefined = w.y - 6;
   const items = [
+    ...papers.map((d, i) => ({ doc: d, label: `D-${String(i + 1).padStart(2, "0")}  ${d.title ?? "Document"}` })),
     ...referenced.flatMap((r) =>
       r.docIds.map((id, i) => ({
         doc: byId(id),

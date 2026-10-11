@@ -28,6 +28,7 @@ type ExpenseRow = { id: string; title: string; amount: number; category: string;
  * documents/receipts/2026-10-28/train_659_sabarmati-delhi.jpg
  * documents/tickets/L1_19031-yoga-express.pdf
  * documents/certificates/2026-11-01_finalist-certificate.pdf
+ * documents/event-documents/hod-approval.pdf
  */
 export function docPath(kind: DocKind, mime: string, title: string, opts: { legId?: string | null; expense?: Pick<ExpenseRow, "amount" | "category" | "spent_on" | "note" | "title"> } = {}) {
   const ext = extFor(mime);
@@ -39,6 +40,7 @@ export function docPath(kind: DocKind, mime: string, title: string, opts: { legI
   const name = slug(title) || kind;
   if (kind === "ticket") return `${DOCS_ROOT}/tickets/${opts.legId ? `${opts.legId}_` : ""}${name}.${ext}`;
   if (kind === "certificate") return `${DOCS_ROOT}/certificates/${istDateKey(Date.now())}_${name}.${ext}`;
+  if (kind === "document") return `${DOCS_ROOT}/event-documents/${name}.${ext}`;
   return `${DOCS_ROOT}/reports/${name}.${ext}`;
 }
 

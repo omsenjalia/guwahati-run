@@ -242,7 +242,7 @@ function ExpenseRow({ e, docs, onEdit, onView }: { e: Expense; docs: DocRow[]; o
 
 /* --------------------------------------------------------- checklist */
 
-function ChecklistPanel({ items, docs, onAdd }: { items: Expense[]; docs: DocRow[] | null; onAdd: (kind: "receipt" | "ticket") => void }) {
+function ChecklistPanel({ items, docs, onAdd }: { items: Expense[]; docs: DocRow[] | null; onAdd: (kind: "receipt" | "ticket" | "document") => void }) {
   if (!docs) return null;
   const list = expectedReceipts(docs, items);
   const missing = list.filter((x) => !x.have);
@@ -267,9 +267,12 @@ function ChecklistPanel({ items, docs, onAdd }: { items: Expense[]; docs: DocRow
         <p className="text-[0.95rem] text-ok">Every expected receipt is in. The report is complete.</p>
       )}
       {missing.length > 0 && (
-        <div className="mt-3 grid grid-cols-2 gap-2">
+        <div className="mt-3 grid grid-cols-3 gap-2">
           <button type="button" onClick={() => onAdd("ticket")} className="h-11 rounded-lg bg-secondary text-sm font-medium">
             Add ticket
+          </button>
+          <button type="button" onClick={() => onAdd("document")} className="h-11 rounded-lg bg-secondary text-sm font-medium">
+            Add document
           </button>
           <button type="button" onClick={() => onAdd("receipt")} className="h-11 rounded-lg bg-secondary text-sm font-medium">
             Add receipt
@@ -283,11 +286,12 @@ function ChecklistPanel({ items, docs, onAdd }: { items: Expense[]; docs: DocRow
 /* ---------------------------------------------------------- documents */
 
 function DocumentsPanel({ docs, onView }: { docs: DocRow[]; onView: (d: DocRow) => void }) {
-  const files = docs.filter((d) => d.kind === "ticket" || d.kind === "certificate");
+  const order = { document: 0, ticket: 1, certificate: 2 } as Record<string, number>;
+  const files = docs.filter((d) => d.kind in order).sort((a, b) => order[a.kind] - order[b.kind]);
   if (!files.length) return null;
   return (
     <Panel>
-      <PanelTitle>Tickets and certificates</PanelTitle>
+      <PanelTitle>Tickets, documents and certificates</PanelTitle>
       <ul className="flex flex-col gap-1">
         {files.map((d) => (
           <li key={d.id} className="flex items-center gap-3">

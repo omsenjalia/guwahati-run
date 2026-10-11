@@ -25,6 +25,8 @@ const QUICK: { title: string; category: Category }[] = [
 ];
 
 const TRAINS = LEGS.filter((l) => l.train);
+/** Event paperwork the college asks for (Grant tab checklist). */
+const DOC_NAMES = ["Invitation letter", "HOD approval", "Event schedule", "Application form"];
 const chip = (on: boolean) =>
   cn(
     "h-11 rounded-full border px-4 text-[0.95rem] font-medium transition active:scale-[0.98]",
@@ -85,7 +87,8 @@ function SheetForm({ mode, onClose }: { mode: SheetMode; onClose: () => void }) 
         // Ticket or certificate: a file, no money.
         if (!file) throw new Error("Pick the PDF or photo.");
         const leg = TRAINS.find((l) => l.id === legId)!;
-        const docTitle = title.trim() || (kind === "ticket" ? `${leg.train!.number} ${leg.train!.name}` : "Certificate");
+        const docTitle =
+          title.trim() || (kind === "ticket" ? `${leg.train!.number} ${leg.train!.name}` : kind === "document" ? "Document" : "Certificate");
         const prepared = await prepareFile(file);
         await queueUpload({
           meta: { id: crypto.randomUUID(), kind, title: docTitle, leg_id: kind === "ticket" ? legId : null, created_by: me },
@@ -147,7 +150,7 @@ function SheetForm({ mode, onClose }: { mode: SheetMode; onClose: () => void }) 
     }
   }
 
-  const heading = editing ? "Edit receipt" : kind === "receipt" ? "Add receipt" : kind === "ticket" ? "Add ticket" : "Add certificate";
+  const heading = editing ? "Edit receipt" : `Add ${kind}`;
 
   return (
     <>
@@ -162,8 +165,8 @@ function SheetForm({ mode, onClose }: { mode: SheetMode; onClose: () => void }) 
 
       <form onSubmit={save} className="flex flex-col gap-5 px-4">
         {mode.type === "add" && (
-          <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="What are you adding">
-            {(["receipt", "ticket", "certificate"] as const).map((k) => (
+          <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="What are you adding">
+            {(["receipt", "ticket", "certificate", "document"] as const).map((k) => (
               <button key={k} type="button" role="radio" aria-checked={kind === k} onClick={() => setKind(k)} className={cn(chip(kind === k), "px-2 capitalize")}>
                 {k}
               </button>
@@ -188,12 +191,27 @@ function SheetForm({ mode, onClose }: { mode: SheetMode; onClose: () => void }) 
           </div>
         )}
 
-        {kind === "certificate" && (
+        {(kind === "certificate" || kind === "document") && (
           <div className="flex flex-col gap-2">
             <label htmlFor="doc-title" className="text-sm font-medium">
               Name
             </label>
-            <input id="doc-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Finalist certificate" className={field} />
+            {kind === "document" && (
+              <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+                {DOC_NAMES.map((n) => (
+                  <button key={n} type="button" onClick={() => setTitle(n)} className={cn(chip(title === n), "shrink-0")}>
+                    {n}
+                  </button>
+                ))}
+              </div>
+            )}
+            <input
+              id="doc-title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder={kind === "document" ? "e.g. Invitation letter" : "e.g. Finalist certificate"}
+              className={field}
+            />
           </div>
         )}
 

@@ -3,9 +3,9 @@ import type { Expense } from "@/lib/expenses";
 import type { DocRow } from "@/lib/documents";
 
 /**
- * Bills the college report needs, and whether each is uploaded yet:
- * every train ticket, the registration fee, and a metro/cab bill for each
- * transfer on the day it happens.
+ * What the college report needs, and whether each is uploaded yet: the
+ * invitation letter and HOD approval, every train ticket, the registration
+ * fee, and a metro/cab bill for each transfer on the day it happens.
  */
 export type Expected = { id: string; label: string; have: boolean; hint: string };
 
@@ -42,5 +42,11 @@ export function expectedReceipts(docs: DocRow[], expenses: Expense[]): Expected[
       hint: `Metro ticket or cab bill dated ${t.day.slice(8)} ${t.day.slice(5, 7) === "10" ? "Oct" : "Nov"}`,
     };
   });
-  return [...tickets, registration, ...local];
+  const paper = (id: string, label: string, match: RegExp) => ({
+    id,
+    label,
+    have: docs.some((d) => d.kind === "document" && match.test(d.title ?? "")),
+    hint: `Add document, named "${label}"`,
+  });
+  return [paper("doc-invitation", "Invitation letter", /invitation/i), paper("doc-hod", "HOD approval", /hod|approval/i), ...tickets, registration, ...local];
 }
