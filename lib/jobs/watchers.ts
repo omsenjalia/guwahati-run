@@ -104,7 +104,7 @@ export async function runWatchers(legs: Map<string, LegLive>, now: number) {
   /* ---- wake-up -------------------------------------------------------- */
   const steps = buildSteps(live);
   for (const s of steps) {
-    if ((s.kind !== "train" && s.kind !== "local-train") || !s.leg) continue;
+    if (s.kind !== "train" || !s.leg) continue;
     const lead = 45 * MIN;
     if (now >= s.end - lead && now < s.end - 5 * MIN) {
       const berths = live.legs[s.leg.id]?.berths ?? s.leg.berths;

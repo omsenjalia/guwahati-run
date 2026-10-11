@@ -47,7 +47,7 @@ export function planTransfers(live: LiveState): TransferPlan[] {
   for (const [legId, opt] of Object.entries(TRANSFERS) as [LegId, TransferOption][]) {
     const i = LEGS.findIndex((l) => l.id === legId);
     const inbound = steps.find((s) => s.id === LEGS[i - 1]?.id);
-    const outbound = LEGS[i + 1]?.kind === "train" || LEGS[i + 1]?.kind === "local-train" ? steps.find((s) => s.id === LEGS[i + 1].id) : undefined;
+    const outbound = LEGS[i + 1]?.kind === "train" ? steps.find((s) => s.id === LEGS[i + 1].id) : undefined;
     if (!inbound) continue;
     plans.push(plan(legId, opt, inbound.end, outbound?.start));
   }

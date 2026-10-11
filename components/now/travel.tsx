@@ -34,8 +34,8 @@ export function TravelDay({ now, live, direction }: { now: number; live: LiveSta
   const health = tripHealth(live, now);
   // The train we're on, or the next one.
   const trainStep =
-    [state.current, state.focus, state.next].find((s) => s?.kind === "train" || s?.kind === "local-train") ??
-    steps.find((s) => !s.minor && (s.kind === "train" || s.kind === "local-train") && s.end > now);
+    [state.current, state.focus, state.next].find((s) => s?.kind === "train") ??
+    steps.find((s) => !s.minor && s.kind === "train" && s.end > now);
   const plan = nextTransfer(state, live, now);
 
   return (
@@ -60,7 +60,7 @@ function TravelHero({ state, now, live }: { state: NowState; now: number; live: 
   const step = state.focus;
   if (!step) return null;
   const leg = step.leg;
-  const onTrain = state.focusMode === "active" && (step.kind === "train" || step.kind === "local-train");
+  const onTrain = state.focusMode === "active" && step.kind === "train";
   const legLive = leg ? live.legs[leg.id] : undefined;
   const headline = onTrain
     ? `On ${leg?.train?.name} · next: ${PLACES[step.to!].short} ${hhmm(step.end)}`
@@ -90,7 +90,7 @@ function TravelHero({ state, now, live }: { state: NowState; now: number; live: 
         {legLive?.lastStation && onTrain && now - (legLive.liveUpdatedAt ?? 0) < 30 * 60_000 && <p className="mt-0.5 text-sm text-muted-foreground">Near {legLive.lastStation}</p>}
       </div>
       <p className="mt-3 text-[1.05rem] font-medium leading-snug text-primary">{state.instruction}</p>
-      {leg?.pnr && (leg.kind === "train" || leg.kind === "local-train") && (
+      {leg?.pnr && leg.kind === "train" && (
         <div className="mt-4 flex items-center justify-between gap-3">
           <CopyChip value={leg.pnr} label="PNR" />
           <div className="text-right">

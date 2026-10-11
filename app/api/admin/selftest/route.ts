@@ -31,7 +31,7 @@ async function timed(group: Check["group"], label: string, fn: () => Promise<{ s
 const dmy = (ymd: string) => ymd.split("-").reverse().join("-");
 
 export async function GET() {
-  const trains = LEGS.filter((l) => l.kind === "train" || l.kind === "local-train");
+  const trains = LEGS.filter((l) => l.kind === "train");
   const today = istDateKey(Date.now());
 
   const pnrChecks = trains

@@ -61,7 +61,7 @@ function legStatus(leg: Leg, live: LiveState) {
 }
 
 function TripStatus({ live }: { live: LiveState }) {
-  const trains = LEGS.filter((l) => l.kind === "train" || l.kind === "local-train");
+  const trains = LEGS.filter((l) => l.kind === "train");
   return (
     <Panel>
       <PanelTitle>Trip status</PanelTitle>

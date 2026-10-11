@@ -22,7 +22,6 @@ export type Health = "green" | "amber" | "red";
 
 export type StepKind =
   | "train"
-  | "local-train"
   | "transfer"
   | "event"
   | "stay"
@@ -337,7 +336,6 @@ export type NowState = {
 
 const MAJOR_PRIORITY: Partial<Record<StepKind, number>> = {
   train: 5,
-  "local-train": 5,
   transfer: 4,
   pickup: 4,
   event: 3,
@@ -370,19 +368,18 @@ export function computeNow(steps: Step[], now: number): NowState {
 }
 
 /** How early to reach a station before departure. */
-export const REPORT_BEFORE_MIN: Record<string, number> = { train: 40, "local-train": 15 };
+export const REPORT_BEFORE_MIN = 40;
 
 function instructionFor(step: Step, mode: "upcoming" | "active") {
   const from = step.from ? PLACES[step.from].short : "";
   const to = step.to ? PLACES[step.to].short : "";
   const leg = step.leg;
 
-  if (step.kind === "train" || step.kind === "local-train") {
+  if (step.kind === "train") {
     if (mode === "upcoming") {
-      const reportBy = step.start - REPORT_BEFORE_MIN[step.kind] * MIN;
-      const extra = step.kind === "local-train" ? " Buy UTS tickets first." : "";
+      const reportBy = step.start - REPORT_BEFORE_MIN * MIN;
       return {
-        instruction: `Be at ${from} by ${hhmm(reportBy)}.${extra}`,
+        instruction: `Be at ${from} by ${hhmm(reportBy)}.`,
         countdownTo: step.start,
         countdownLabel: `Departs ${from}`,
       };

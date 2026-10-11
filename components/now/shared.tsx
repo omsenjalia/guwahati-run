@@ -113,7 +113,7 @@ export function ConnectionPlanB({ health, now }: { health: ReturnType<typeof tri
 
 /** Where we are (or will be next) and where we're heading, today. */
 export function WeatherPanel({ focus, mode }: { focus?: Step; mode: "upcoming" | "active" }) {
-  const onTrain = mode === "active" && (focus?.kind === "train" || focus?.kind === "local-train");
+  const onTrain = mode === "active" && focus?.kind === "train";
   const here: PlaceId | undefined = onTrain
     ? focus?.to
     : focus?.from && mode === "upcoming"

@@ -18,10 +18,10 @@ export const STATION_GUIDES: StationGuide[] = [
   {
     id: "ANND",
     exit: "Main entrance on the town side. Autos wait outside.",
-    transport: "Local train to Ahmedabad on 28 Oct (19310, or 11464 as backup).",
+    transport: "19310 Shanti Express to Ahmedabad on 28 Oct at 06:55, coach S5 (reserved, all 4 confirmed).",
     food: "Tea and snacks stalls on the main platform. Eat at home before an early start.",
     facilities: "Waiting room on platform 1.",
-    tip: "Book the UTS ticket before you enter: the app blocks paperless booking near the tracks.",
+    tip: "Coach S5 is a sleeper coach: check the coach display on the platform. Be there by 06:15.",
   },
   {
     id: "ADI",

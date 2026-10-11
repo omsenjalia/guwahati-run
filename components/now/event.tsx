@@ -185,7 +185,7 @@ export function ArrivalReminder() {
 /** Phase E: trip complete, with the three things left to do. */
 export function AfterTrip({ live }: { live: LiveState }) {
   const { items } = useExpenses();
-  const trains = buildSteps(live).filter((s) => s.kind === "train" || s.kind === "local-train");
+  const trains = buildSteps(live).filter((s) => s.kind === "train");
   const km = LEGS.reduce((t, l) => t + (l.km ?? 0), 0);
   const hours = Math.round(trains.reduce((t, s) => t + (s.end - s.start), 0) / HOUR);
   const spend = items ? spendingPerPerson(items) : null;

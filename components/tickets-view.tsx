@@ -20,7 +20,7 @@ export function TicketsView() {
   const now = useNow();
   const live = useLive();
   if (now === null) return <Skeleton className="h-96" />;
-  const trains = LEGS.filter((l) => l.kind === "train" || l.kind === "local-train");
+  const trains = LEGS.filter((l) => l.kind === "train");
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-3">
@@ -80,12 +80,6 @@ function TicketCard({ leg, live, now }: { leg: Leg; live: LiveState; now: number
             <TimeRange start={ms(leg.depart)} end={ms(leg.arrive)} />
             <span className="ml-2">{leg.travelClass}</span>
           </p>
-          {leg.backupTrain && (
-            <p className="mt-2 text-sm text-muted-foreground">
-              Backup: {leg.backupTrain.number} {leg.backupTrain.name} at{" "}
-              <span className="font-mono tabular">{stamp(leg.backupTrain.depart).split(" ").pop()}</span>
-            </p>
-          )}
         </div>
 
         {pax.length > 0 && (

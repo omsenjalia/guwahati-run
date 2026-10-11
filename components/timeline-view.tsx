@@ -29,7 +29,6 @@ import { cn } from "@/lib/utils";
 
 const ICONS: Record<StepKind, typeof Train> = {
   train: Train,
-  "local-train": Train,
   transfer: Subway,
   event: CodeBlock,
   stay: House,

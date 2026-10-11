@@ -55,7 +55,7 @@ export function ParentView() {
   const steps = buildSteps(live);
   const { current, next, phase } = computeNow(steps, now);
   const shown = current ?? next;
-  const nextArrival = steps.find((s) => !s.minor && (s.kind === "train" || s.kind === "local-train") && s.end > now);
+  const nextArrival = steps.find((s) => !s.minor && s.kind === "train" && s.end > now);
   const arrivalLive = nextArrival?.leg ? data?.legs[nextArrival.leg.id] : undefined;
 
   return (

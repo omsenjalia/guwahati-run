@@ -25,7 +25,7 @@ export function checkpointLabel(state: NowState): string {
   if (state.phase === "post-trip" || !s) return "Home";
   if (state.phase === "pre-trip") return s.from ? PLACES[s.from].name : "Home";
   const active = state.focusMode === "active";
-  if (s.kind === "train" || s.kind === "local-train") {
+  if (s.kind === "train") {
     return active ? `On ${s.leg?.train?.name ?? "the train"}` : PLACES[s.from!].name;
   }
   if (s.kind === "transfer") return active ? `On the way to ${PLACES[s.to!].short}` : PLACES[s.from!].name;

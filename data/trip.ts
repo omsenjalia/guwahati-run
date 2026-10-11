@@ -50,7 +50,7 @@ export type Place = {
 
 export type LegId = "L0" | "L0b" | "L1" | "L1b" | "L2" | "L2b" | "L3" | "L3b" | "L4";
 
-export type LegKind = "train" | "local-train" | "transfer";
+export type LegKind = "train" | "transfer";
 
 export type Berth = {
   person: PersonId;
@@ -66,7 +66,6 @@ export type Leg = {
   to: PlaceId;
   /** Train legs only. */
   train?: { number: string; name: string };
-  backupTrain?: { number: string; name: string; depart: string };
   /** For transfers: what we expect; the transfer planner recalculates live. */
   modeHint?: string;
   depart: string;
@@ -282,16 +281,31 @@ const seq = (prefix: string, from: number) =>
 export const LEGS: Leg[] = [
   {
     id: "L0",
-    kind: "local-train",
+    kind: "train",
     from: "ANND",
     to: "ADI",
     train: { number: "19310", name: "Shanti Express" },
-    backupTrain: { number: "11464", name: "Somnath Express", depart: "2026-10-28T06:29:00+05:30" },
     km: 64,
     depart: "2026-10-28T06:55:00+05:30",
     arrive: "2026-10-28T08:20:00+05:30",
-    travelClass: "UR",
-    notes: ["Ticket details to be added when the e-ticket is uploaded."],
+    travelClass: "SL",
+    pnr: "8835664180",
+    bookedStatus: "CNF",
+    // This ticket lists Sujal first.
+    passengers: [
+      { person: "sujal", booked: "CNF", current: "CNF" },
+      { person: "oms", booked: "CNF", current: "CNF" },
+      { person: "omk", booked: "CNF", current: "CNF" },
+      { person: "heet", booked: "CNF", current: "CNF" },
+    ],
+    berths: [
+      { person: "sujal", coach: "S5", berth: 10, type: "Middle" },
+      { person: "oms", coach: "S5", berth: 15, type: "Side Lower" },
+      { person: "omk", coach: "S5", berth: 12, type: "Lower" },
+      { person: "heet", coach: "S5", berth: 9, type: "Lower" },
+    ],
+    fareTotal: 639.5,
+    paidBy: "oms",
   },
   {
     id: "L0b",
@@ -684,7 +698,7 @@ export const GRANT = {
   /** Larger events may get more, case by case, up to this per event. */
   maxPerEventCaseByCase: 50000,
   items: [
-    { id: "g-L0", leg: "L0", kind: "train", label: "Anand to Ahmedabad", paidPerPerson: legCostPerPerson("L0") || 35, note: "Estimate until the ticket is uploaded" },
+    { id: "g-L0", leg: "L0", kind: "train", label: "19310 Shanti Express (SL)", paidPerPerson: legCostPerPerson("L0") },
     { id: "g-L0b", leg: "L0b", kind: "local", label: "Kalupur to Sabarmati (metro)", paidPerPerson: 30 },
     {
       id: "g-L1",
@@ -740,6 +754,7 @@ export const INITIAL_EXPENSES = [
   { title: "Train tickets: North East, Brahmaputra, Garib Rath", amount: 21193.41, paid_by: "heet", category: "train", spent_on: "2026-10-07" },
   { title: "Yoga Exp rebooking: cancellation charge", amount: 257.7, paid_by: "heet", category: "train", spent_on: "2026-10-10", note: "Paid ₹1,997.70, refunded ₹1,740.00" },
   { title: "19031 Yoga Express (PNR 8154913954)", amount: 2359.5, paid_by: "oms", category: "train", spent_on: "2026-10-10" },
+  { title: "19310 Shanti Express (PNR 8835664180)", amount: 639.5, paid_by: "oms", category: "train", spent_on: "2026-10-10" },
 ] as const;
 
 /* ----------------------------------------------------------------- prep */
@@ -750,7 +765,6 @@ export type PrepItem = { label: string; due: string; perPerson?: boolean };
 
 export const PREP: PrepItem[] = [
   { label: "Install IRCTC, UTS and Where is my Train apps", due: "2026-10-20", perPerson: true },
-  { label: "Upload the Anand to Ahmedabad e-ticket", due: "2026-10-20" },
   { label: "Original photo ID: college ID and Aadhaar", due: "2026-10-25", perPerson: true },
   { label: "Download offline maps of Delhi and Guwahati", due: "2026-10-25", perPerson: true },
   { label: "Arrange the 01:42 pickup at Anand on 4 Nov", due: "2026-10-25" },

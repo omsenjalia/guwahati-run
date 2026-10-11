@@ -74,7 +74,6 @@ Edit `data/trip.ts` on github.com: open the file, tap the **pencil**, change, th
 - `PICKUP`: who collects you at Anand at 01:42 on 4 Nov.
 - `TRANSFERS`: first-metro times (06:20 Ahmedabad, 05:30 Delhi are estimates) and fares.
 - `EVENT_SCHEDULE` and `VENUE_NOTES`: update when the official schedule arrives (tbc items).
-- `LEGS` L0: Anand to Ahmedabad ticket details (train, PNR, fare) once you have the e-ticket. The ₹35 in `GRANT.items` is an estimate until then.
 - `REPORT.teamName`: used in the report file name.
 
 ## 6. Share with parents
