@@ -1,43 +1,48 @@
 "use client";
 
 import { useState } from "react";
-import { Eye, FilePdf, FileXls, Lightbulb } from "@phosphor-icons/react";
+import { CheckCircle, CircleDashed, Eye, FilePdf, FileXls, Lightbulb } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { defaultSummary, reportCsv, reportRows } from "@/lib/report-data";
 import { GRANT } from "@/data/trip";
-import { Panel, PanelTitle } from "@/components/bits";
+import { Panel, PanelTitle, Skeleton } from "@/components/bits";
 import { ChecklistPanel } from "@/components/checklist-panel";
 import { grantEstimate } from "@/lib/grant";
 import { useExpenses } from "@/lib/use-expenses";
 import { useDocuments } from "@/lib/receipts";
-import { CATEGORIES } from "@/lib/expenses";
+import type { Expense } from "@/lib/expenses";
+import type { DocRow } from "@/lib/documents";
+import { claimDocuments } from "@/lib/grant-documents";
 import { cn } from "@/lib/utils";
 
 const rupees = (n: number) => `₹${Math.round(n).toLocaleString("en-IN")}`;
 
 export function GrantView() {
-  const g = grantEstimate();
+  const { items } = useExpenses();
+  const { docs } = useDocuments();
+  if (!items) return <Skeleton className="h-96" />;
+  const g = grantEstimate(reportRows(items, docs ?? []));
 
   return (
     <div className="flex flex-col gap-3">
       <h1 className="text-2xl font-semibold tracking-tight">Grant</h1>
 
       <p className="-mt-1 px-1 text-sm text-muted-foreground">
-        Train fares count at sleeper class, the most economical, as the policy says.
+        Built from our tickets and the receipts in Money. Train fares count at sleeper class, the most economical, as the policy says.
       </p>
 
       <Panel className="p-5">
         <p className="text-sm text-muted-foreground">Expected grant per student</p>
-        <p className="mt-1 font-mono text-[2.5rem] font-semibold leading-none tabular">{rupees(g.grantPerPerson)}</p>
+        <p className="mt-1 font-mono text-[2.5rem] font-semibold leading-none tabular">{rupees(g.grant)}</p>
         <p className="mt-2 text-sm text-muted-foreground">
           {g.capped
-            ? `Capped at the ${rupees(GRANT.capPerStudent)} limit. Eligible costs are ${rupees(g.eligiblePerPerson)}.`
-            : `Under the ${rupees(GRANT.capPerStudent)} limit by ${rupees(GRANT.capPerStudent - g.eligiblePerPerson)}.`}
+            ? `Capped at the ${rupees(GRANT.capPerStudent)} limit. Eligible costs are ${rupees(g.eligible)}.`
+            : `Under the ${rupees(GRANT.capPerStudent)} limit by ${rupees(GRANT.capPerStudent - g.eligible)}.`}
         </p>
         <dl className="mt-4 grid grid-cols-3 gap-2 border-t pt-4">
-          <Stat label="We spend" value={rupees(g.spentPerPerson)} />
-          <Stat label="Grant" value={rupees(g.grantPerPerson)} tone="text-ok" />
-          <Stat label="Own pocket" value={rupees(g.ownPerPerson)} tone={g.ownPerPerson > 0 ? "text-warn" : undefined} />
+          <Stat label="Spent" value={rupees(g.spent)} />
+          <Stat label="Grant" value={rupees(g.grant)} tone="text-ok" />
+          <Stat label="Not covered" value={rupees(g.own)} tone={g.own > 0 ? "text-warn" : undefined} />
         </dl>
         <p className="mt-3 text-xs text-subtle">
           Team of 4: {rupees(g.team.grant)} grant out of {rupees(g.team.spent)} spent.
@@ -45,37 +50,34 @@ export function GrantView() {
       </Panel>
 
       <Panel>
-        <PanelTitle>What we can claim, per person</PanelTitle>
+        <PanelTitle>What we can claim, per student</PanelTitle>
         <ul className="flex flex-col gap-3">
           {g.lines.map((l) => {
-            const reduced = l.claimPerPerson < l.paidPerPerson - 0.5;
+            const reduced = l.claim < l.paid - 0.5;
             return (
-              <li key={l.id} className="flex items-start justify-between gap-3">
+              <li key={l.key} className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-[0.95rem] leading-snug">{l.label}</p>
-                  {l.note && (reduced || l.kind !== "train" || !l.economyPerPerson) && (
-                    <p className="text-xs leading-snug text-muted-foreground">{l.note}</p>
-                  )}
+                  <p className="text-xs leading-snug text-muted-foreground">
+                    {[l.note, l.hasBill ? undefined : "no bill yet"].filter(Boolean).join(" · ")}
+                  </p>
                 </div>
                 <div className="shrink-0 text-right font-mono tabular">
-                  <p className="text-[0.95rem] font-semibold">{rupees(l.claimPerPerson)}</p>
-                  {reduced && <p className="text-xs text-muted-foreground line-through">{rupees(l.paidPerPerson)}</p>}
+                  <p className="text-[0.95rem] font-semibold">{rupees(l.claim)}</p>
+                  {reduced && <p className="text-xs text-muted-foreground line-through">{rupees(l.paid)}</p>}
                 </div>
               </li>
             );
           })}
           <li className="flex items-center justify-between gap-3 border-t pt-3">
             <span className="text-sm text-muted-foreground">Eligible total</span>
-            <span className="font-mono font-semibold tabular">{rupees(g.eligiblePerPerson)}</span>
+            <span className="font-mono font-semibold tabular">{rupees(g.eligible)}</span>
           </li>
         </ul>
         <p className="mt-3 text-xs leading-relaxed text-subtle">
-          Not covered: local travel under 25 km from BVM (getting to Anand station, the ride home at 2 am). Food and stay only
-          with prior approval. Amounts for metro and cabs are estimates until we have the bills.
+          Add a cab or metro bill in Money and it appears here. Not covered: local travel under 25 km from BVM, and food or stay without prior approval.
         </p>
       </Panel>
-
-      <RecordedPanel />
 
       {g.capped && (
         <Panel className="border-primary/30">
@@ -88,12 +90,37 @@ export function GrantView() {
         </Panel>
       )}
 
+      <ClaimDocsPanel items={items} docs={docs ?? []} />
+
       <ReportPanel />
 
-      <ChecklistPanel owner="grant" title="Documents for the claim" />
+      <ChecklistPanel owner="grant" title="Also for the claim" />
 
       <p className="px-1 pb-2 text-xs leading-relaxed text-subtle">{GRANT.policy}</p>
     </div>
+  );
+}
+
+/** The college's document list, ticked from what's uploaded. */
+function ClaimDocsPanel({ items, docs }: { items: Expense[]; docs: DocRow[] }) {
+  const list = claimDocuments(docs, items);
+  const done = list.filter((d) => d.have).length;
+  return (
+    <Panel>
+      <PanelTitle aside={<span className="font-mono text-sm text-muted-foreground tabular">{done}/{list.length}</span>}>Documents for the claim</PanelTitle>
+      <ul className="flex flex-col gap-2.5">
+        {list.map((d) => (
+          <li key={d.id} className="flex items-start gap-2.5">
+            {d.have ? <CheckCircle className="mt-0.5 size-5 shrink-0 text-ok" weight="fill" /> : <CircleDashed className="mt-0.5 size-5 shrink-0 text-warn" />}
+            <div className="min-w-0">
+              <p className={cn("text-[0.95rem] leading-snug", d.have && "text-muted-foreground")}>{d.label}</p>
+              <p className="text-xs text-muted-foreground">{d.detail}</p>
+            </div>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-3 text-xs text-subtle">Ticks itself when you upload in Money. Every file here goes into the final report.</p>
+    </Panel>
   );
 }
 
@@ -211,29 +238,6 @@ function ReportPanel() {
         Expense table as Excel
       </button>
       {error && <p className="mt-2 text-sm text-bad">{error}</p>}
-    </Panel>
-  );
-}
-
-/** Claimable spending recorded so far (tickets plus Money), and how much has a bill. */
-function RecordedPanel() {
-  const { items } = useExpenses();
-  const { docs } = useDocuments();
-  if (!items) return null;
-  const rows = reportRows(items, docs ?? []);
-  const grantable = rows.filter((r) => r.category === "Train" || CATEGORIES.find((c) => c.label === r.category)?.grant);
-  const claimable = grantable.reduce((t, r) => t + r.amount, 0);
-  const withBill = grantable.filter((r) => r.docIds.length).length;
-  return (
-    <Panel>
-      <PanelTitle>Recorded in Money so far</PanelTitle>
-      <dl className="grid grid-cols-2 gap-3">
-        <Stat label="Claimable spend, team" value={rupees(claimable)} />
-        <Stat label="Bills attached" value={`${withBill} of ${grantable.length}`} tone={withBill < grantable.length ? "text-warn" : "text-ok"} />
-      </dl>
-      <p className="mt-2 text-xs leading-relaxed text-subtle">
-        Actual spend at the prices paid; the grant above uses sleeper fares. Attach a bill photo to each item so the claim has proof.
-      </p>
     </Panel>
   );
 }

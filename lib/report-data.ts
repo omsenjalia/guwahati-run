@@ -19,6 +19,8 @@ export type ReportRow = {
   ref?: string;
   date: string;
   category: string;
+  /** Short name, e.g. "12506 North East Express" or the expense title. */
+  label: string;
   description: string;
   amount: number;
   /** What the SSIP policy reimburses for this row, for all 4 (sleeper rate for 3A). */
@@ -31,14 +33,15 @@ export function reportRows(expenses: Expense[], docs: DocRow[]): ReportRow[] {
   const rows: ReportRow[] = [];
 
   for (const leg of LEGS.filter((l) => l.train && l.fareTotal)) {
-    const item = GRANT.items.find((i) => i.leg === leg.id);
+    const sleeper = GRANT.sleeperFarePerPerson[leg.id];
     const tickets = docs.filter((d) => d.kind === "ticket" && d.leg_id === leg.id);
     rows.push({
       date: leg.depart.slice(0, 10),
       category: "Train",
+      label: `${leg.train!.number} ${leg.train!.name} (${leg.travelClass})`,
       description: `${leg.train!.number} ${leg.train!.name}, ${PLACES[leg.from].short} to ${PLACES[leg.to].short}, ${leg.travelClass}${leg.pnr ? `, PNR ${leg.pnr}` : ""}`,
       amount: leg.fareTotal!,
-      eligible: item?.economyPerPerson !== undefined ? item.economyPerPerson * 4 : leg.fareTotal!,
+      eligible: sleeper !== undefined ? sleeper * STUDENTS : leg.fareTotal!,
       docIds: tickets.map((d) => d.id),
     });
     if (leg.rebooking) {
@@ -46,6 +49,7 @@ export function reportRows(expenses: Expense[], docs: DocRow[]): ReportRow[] {
       rows.push({
         date: leg.rebooking.cancelledOn,
         category: "Train",
+        label: `${leg.train!.name} cancellation charge`,
         description: `${leg.train!.name} rebooking: cancellation charge (paid Rs. ${leg.rebooking.oldPaid.toFixed(2)}, refunded Rs. ${leg.rebooking.refunded.toFixed(2)})`,
         amount: loss,
         eligible: loss,
@@ -61,6 +65,7 @@ export function reportRows(expenses: Expense[], docs: DocRow[]): ReportRow[] {
     rows.push({
       date: e.spent_on,
       category: categoryLabel(e.category),
+      label: e.title,
       description: e.note ? `${e.title} (${e.note})` : e.title,
       amount: e.amount,
       eligible: grant ? e.amount : 0,

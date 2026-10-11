@@ -438,12 +438,6 @@ export const LEGS: Leg[] = [
 /** Money lost on a cancelled earlier booking (paid minus refund). */
 export const rebookingLoss = (leg: Leg) => (leg.rebooking ? leg.rebooking.oldPaid - leg.rebooking.refunded : 0);
 
-/** One person's rail cost for a leg: fare plus any cancellation loss, split 4 ways. */
-export function legCostPerPerson(id: LegId) {
-  const leg = LEGS.find((l) => l.id === id)!;
-  return ((leg.fareTotal ?? 0) + rebookingLoss(leg)) / 4;
-}
-
 /* ---------------------------------------------------------- connections */
 
 export const CONNECTIONS: Connection[] = [
@@ -678,70 +672,23 @@ export const REPORT = {
 // BVM SSIP 2.0 "Student Innovation Event Participation Expenses
 // Reimbursement Policy". Amounts per student unless noted.
 
-export type GrantItem = {
-  id: string;
-  label: string;
-  /** What each of us actually pays. */
-  paidPerPerson: number;
-  /** Claimable if the college insists on the most economical class. */
-  economyPerPerson?: number;
-  note?: string;
-  kind: "train" | "local" | "fee";
-  leg?: LegId;
-};
-
 export const GRANT = {
   policy: "BVM SSIP 2.0: Student Innovation Event Participation Expenses Reimbursement",
   /** Outside Gujarat. Within Gujarat it is 2,000. */
   capPerStudent: 5000,
   /** Larger events may get more, case by case, up to this per event. */
   maxPerEventCaseByCase: 50000,
-  items: [
-    { id: "g-L0", leg: "L0", kind: "train", label: "19310 Shanti Express (SL)", paidPerPerson: legCostPerPerson("L0") },
-    { id: "g-L0b", leg: "L0b", kind: "local", label: "Kalupur to Sabarmati (metro)", paidPerPerson: 30 },
-    {
-      id: "g-L1",
-      leg: "L1",
-      kind: "train",
-      label: "19031 Yoga Express (SL)",
-      paidPerPerson: legCostPerPerson("L1"),
-      note: "Includes ₹257.70 lost when the first booking was cancelled",
-    },
-    { id: "g-L1b", leg: "L1b", kind: "local", label: "Delhi Jn to Anand Vihar (metro or cab)", paidPerPerson: 45 },
-    {
-      id: "g-L2",
-      leg: "L2",
-      kind: "train",
-      label: "12506 North East Express (3A)",
-      paidPerPerson: legCostPerPerson("L2"),
-      economyPerPerson: 825,
-      note: "Booked 3A; claimed at the sleeper fare (₹825)",
-    },
-    { id: "g-L2b", leg: "L2b", kind: "local", label: "Kamakhya to IIT Guwahati (shared cab)", paidPerPerson: 150, note: "Station to venue, sharing basis" },
-    { id: "g-back", kind: "local", label: "IIT Guwahati to Kamakhya (shared cab)", paidPerPerson: 150, note: "Venue to station, sharing basis" },
-    {
-      id: "g-L3",
-      leg: "L3",
-      kind: "train",
-      label: "15658 Brahmaputra Express (3A)",
-      paidPerPerson: legCostPerPerson("L3"),
-      economyPerPerson: 825,
-      note: "Booked 3A; claimed at the sleeper fare (₹825)",
-    },
-    { id: "g-L3b", leg: "L3b", kind: "local", label: "Delhi Jn to Sarai Rohilla (shared auto)", paidPerPerson: 37.5 },
-    { id: "g-L4", leg: "L4", kind: "train", label: "12215 BDTS Garib Rath (3A)", paidPerPerson: legCostPerPerson("L4"), note: "3A is the only class on Garib Rath" },
-    { id: "g-reg", kind: "fee", label: "Registration fee", paidPerPerson: 900, note: "Approved" },
-  ] as GrantItem[],
-  documents: [
-    "Prior approval from HOD (before 28 Oct)",
-    "Approved application form",
-    "Event invitation and schedule",
-    "Proof of participation (certificate or letter)",
-    "Original travel tickets (print every e-ticket)",
-    "Bills: metro tickets, cab invoices, registration receipt",
-    "Brief report on learnings from the event",
-    "Confirm no similar reimbursement in the last 6 months",
-  ],
+  /**
+   * 3A legs are claimed at the sleeper fare per person (the policy pays the
+   * most economical class). Garib Rath is 3A-only, so it's claimed in full.
+   */
+  sleeperFarePerPerson: { L2: 825, L3: 825 } as Partial<Record<LegId, number>>,
+  /**
+   * Things to do for the claim that no upload can prove. Everything else on
+   * the college's list (HOD approval, invitation, tickets, bills,
+   * certificate) is ticked automatically from the uploaded documents.
+   */
+  documents: ["Brief report on learnings from the event", "Confirm no similar reimbursement in the last 6 months"],
 };
 
 /* ------------------------------------------------------------- expenses */
