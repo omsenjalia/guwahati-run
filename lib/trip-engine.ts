@@ -6,12 +6,10 @@
 import {
   BLOCKS,
   CONNECTIONS,
-  DEADLINES,
   EVENT,
   LEGS,
   PLACES,
   type Block,
-  type Deadline,
   type Leg,
   type LegId,
   type PersonId,
@@ -423,12 +421,6 @@ function instructionFor(step: Step, mode: "upcoming" | "active") {
   return { instruction: step.title, countdownTo: step.start, countdownLabel: "" };
 }
 
-/* ----------------------------------------------------------- deadlines */
-
-export function nextDeadline(now: number): Deadline | undefined {
-  return DEADLINES.find((d) => ms(d.at) > now);
-}
-
 /* --------------------------------------------------------- connections */
 
 export type ConnectionState = {
@@ -480,10 +472,6 @@ export function tripHealth(live: LiveState, now: number) {
 
 export const isHackathonMode = (now: number) =>
   now >= ms(EVENT.modeStart) && now < ms(EVENT.modeEnd);
-
-export function farePerPerson(leg: Leg) {
-  return leg.fareTotal ? leg.fareTotal / 4 : 0;
-}
 
 export function personBerth(leg: Leg, live: LiveState, person: PersonId) {
   return legBerths(leg, live).find((b) => b.person === person);

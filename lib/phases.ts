@@ -18,7 +18,7 @@ export type Phase = "before" | "travel" | "hackathon" | "return" | "after";
 const FIRST = LEGS[0];
 const RETURN_TRAIN = LEGS.find((l) => l.id === "L3")!;
 
-export const PHASE_START = {
+const PHASE_START = {
   travel: ms(FIRST.depart) - 2 * HOUR,
   hackathon: ms(EVENT.modeStart),
   return: ms(EVENT.modeEnd),

@@ -1,7 +1,9 @@
 "use client";
 
-import { FilePdf, FileXls, Lightbulb } from "@phosphor-icons/react";
-import { buildClaims, claimCsv } from "@/lib/claim";
+import { useState } from "react";
+import { Eye, FilePdf, FileXls, Lightbulb } from "@phosphor-icons/react";
+import { toast } from "sonner";
+import { defaultSummary, reportCsv, reportRows } from "@/lib/report-data";
 import { GRANT } from "@/data/trip";
 import { Panel, PanelTitle } from "@/components/bits";
 import { ChecklistPanel } from "@/components/checklist-panel";
@@ -88,7 +90,7 @@ export function GrantView() {
         </Panel>
       )}
 
-      <ExportPanel />
+      <ReportPanel />
 
       <ChecklistPanel owner="grant" title="Documents for the claim" />
 
@@ -97,39 +99,120 @@ export function GrantView() {
   );
 }
 
-/** Claim report (print/PDF) and spreadsheet for the SSIP committee. */
-function ExportPanel() {
+const SUMMARY_KEY = "gr-report-summary";
+
+/**
+ * The final report for the college: edit the summary paragraph, preview,
+ * then download (which also saves a copy to documents/reports/ in GitHub).
+ */
+function ReportPanel() {
   const { items } = useExpenses();
-  function download() {
+  const { docs } = useDocuments();
+  const [summary, setSummary] = useState(() => {
+    try {
+      return localStorage.getItem(SUMMARY_KEY) ?? defaultSummary();
+    } catch {
+      return defaultSummary();
+    }
+  });
+  const [busy, setBusy] = useState<"" | "preview" | "download">("");
+  const [error, setError] = useState("");
+
+  function edit(v: string) {
+    setSummary(v);
+    try {
+      localStorage.setItem(SUMMARY_KEY, v);
+    } catch {}
+  }
+
+  async function make(mode: "preview" | "download") {
+    setBusy(mode);
+    setError("");
+    // Open the tab now: phones block pop-ups that open after a wait.
+    const tab = window.open("about:blank", "_blank");
+    try {
+      const res = await fetch("/api/report", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mode, summary }) });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error ?? `HTTP ${res.status}`);
+      if (tab) tab.location.href = body.url;
+      else window.location.href = body.url;
+      if (mode === "download") toast.success("Report ready. A copy is saved in GitHub (documents/reports).");
+    } catch (e) {
+      tab?.close();
+      setError(navigator.onLine ? (e as Error).message : "Needs internet to build the report.");
+    } finally {
+      setBusy("");
+    }
+  }
+
+  function csv() {
     if (!items) return;
-    const blob = new Blob([claimCsv(buildClaims(items))], { type: "text/csv;charset=utf-8" });
+    const blob = new Blob([reportCsv(reportRows(items, docs ?? []))], { type: "text/csv;charset=utf-8" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = "guwahati-run-grant-claim.csv";
+    a.download = "WhyCode4U_Travel_Report.csv";
     a.click();
     URL.revokeObjectURL(a.href);
   }
+
+  const rows = items ? reportRows(items, docs ?? []) : [];
+  const withRef = rows.filter((r) => r.ref).length;
+
   return (
-    <Panel>
-      <PanelTitle>Claim for the college</PanelTitle>
+    <Panel id="report" className="scroll-mt-20">
+      <PanelTitle>Final report for the college</PanelTitle>
       <p className="text-[0.95rem] leading-relaxed text-muted-foreground">
-        Every ticket and bill per student, train fares at sleeper rate, with the limit applied. Built from tickets and the Money tab.
+        Cover, trip summary, every expense with receipt numbers, requested vs spent, and every receipt attached. A4, prints well in black and white.
       </p>
+      {items && (
+        <p className="mt-2 text-sm">
+          {rows.length} items, {withRef} with a receipt.{" "}
+          {withRef < rows.length && <span className="text-warn">Add the missing bills in Money first.</span>}
+        </p>
+      )}
+      <label htmlFor="report-summary" className="mt-4 block text-sm font-medium">
+        Trip summary (page 2)
+      </label>
+      <textarea
+        id="report-summary"
+        value={summary}
+        onChange={(e) => edit(e.target.value)}
+        rows={6}
+        className="mt-1.5 w-full rounded-lg border border-input bg-card p-3 text-[0.95rem] leading-relaxed outline-none focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-ring/40"
+      />
+      <button type="button" onClick={() => edit(defaultSummary())} className="mt-1 text-sm font-medium text-primary">
+        Reset to the automatic text
+      </button>
       <div className="mt-4 grid grid-cols-2 gap-2">
-        <a href="/claim" className="flex h-12 items-center justify-center gap-2 rounded-lg bg-primary text-[0.95rem] font-medium text-primary-foreground active:scale-[0.98]">
-          <FilePdf className="size-5" />
-          PDF report
-        </a>
         <button
           type="button"
-          onClick={download}
-          disabled={!items}
-          className="flex h-12 items-center justify-center gap-2 rounded-lg bg-secondary text-[0.95rem] font-medium active:scale-[0.98] disabled:opacity-50"
+          onClick={() => make("preview")}
+          disabled={!!busy}
+          className="flex h-12 items-center justify-center gap-2 rounded-lg bg-secondary text-[0.95rem] font-medium active:scale-[0.98] disabled:opacity-60"
         >
-          <FileXls className="size-5" />
-          Excel file
+          <Eye className="size-5" />
+          {busy === "preview" ? "Building" : "Preview"}
+        </button>
+        <button
+          type="button"
+          onClick={() => make("download")}
+          disabled={!!busy}
+          className="flex h-12 items-center justify-center gap-2 rounded-lg bg-primary text-[0.95rem] font-medium text-primary-foreground active:scale-[0.98] disabled:opacity-60"
+        >
+          <FilePdf className="size-5" />
+          {busy === "download" ? "Building" : "Download"}
         </button>
       </div>
+      <button
+        type="button"
+        onClick={csv}
+        disabled={!items}
+        className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-lg text-sm font-medium text-muted-foreground active:bg-secondary disabled:opacity-50"
+      >
+        <FileXls className="size-5" />
+        Expense table as Excel
+      </button>
+      {error && <p className="mt-2 text-sm text-bad">{error}</p>}
     </Panel>
   );
 }

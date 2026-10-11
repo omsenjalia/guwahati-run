@@ -5,7 +5,7 @@ Everything here is clicking in a browser except one optional command. Do it once
 ## 1. What's already done
 
 - GitHub: private repo `omsenjalia/guwahati-run` with all the code.
-- Supabase: project created, both SQL files run (`supabase/schema.sql`, `supabase/002_expenses.sql`).
+- Supabase: project created, SQL files run (`supabase/schema.sql`, `supabase/002_expenses.sql`, and `supabase/003_confirmed_trip.sql` for the prep checklist and receipts).
 - `.env` in the repo holds every key the app needs (committed on purpose; the repo is private).
 
 ## 2. Put it online (Vercel, free)
@@ -17,6 +17,20 @@ Everything here is clicking in a browser except one optional command. Do it once
 5. Vercel shows your address, like `guwahati-run-xyz.vercel.app`. That's the app.
 
 From now on, every change pushed to GitHub redeploys automatically.
+
+## 2b. Receipts in GitHub
+
+Bills, tickets, certificates and reports are saved in this repo's `documents/` folder (private). The app does it from the server with a token; phones never see it.
+
+1. In Vercel: **Settings** → **Environment Variables**, add:
+   - `GITHUB_RECEIPTS_TOKEN`: the fine-grained token (this repo only, Contents read and write)
+   - `GITHUB_RECEIPTS_REPO`: `omsenjalia/guwahati-run`
+2. **Deployments** → latest → **⋯** → **Redeploy**.
+3. Check: **Team** → **System status** → **Data sources health** → "Receipts storage" is green.
+
+Commits that only add files under `documents/` don't rebuild the site (`vercel.json`). Because the app commits to `main`, run `git pull` before pushing code from the laptop.
+
+To replace the token (it expires): github.com → **Settings** → **Developer settings** → **Personal access tokens** → **Fine-grained tokens** → the token → **Regenerate token**, then paste the new value into Vercel and `.env.local`, and redeploy.
 
 ## 3. Switch on the automation
 
@@ -60,7 +74,8 @@ Edit `data/trip.ts` on github.com: open the file, tap the **pencil**, change, th
 - `PICKUP`: who collects you at Anand at 01:42 on 4 Nov.
 - `TRANSFERS`: first-metro times (06:20 Ahmedabad, 05:30 Delhi are estimates) and fares.
 - `EVENT_SCHEDULE` and `VENUE_NOTES`: update when the official schedule arrives (tbc items).
-- `GRANT.items`: the ₹35 Anand to Ahmedabad fare is an estimate.
+- `LEGS` L0: Anand to Ahmedabad ticket details (train, PNR, fare) once you have the e-ticket. The ₹35 in `GRANT.items` is an estimate until then.
+- `REPORT.teamName`: used in the report file name.
 
 ## 6. Share with parents
 
@@ -77,13 +92,14 @@ Send parents the Vercel address and the `PARENT_PASSCODE` (from `.env`). They la
 | `NEXT_PUBLIC_SUPABASE_URL` | Database address | Supabase → Project Settings → API |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Phones connect to the database (reads nothing without a team sign-in) | Supabase → API Keys |
 | `SUPABASE_SECRET_KEY` | Background jobs write data. Full access: server only | Supabase → API Keys |
-| `SUPABASE_JWKS_URL` | Not used yet | Supabase |
 | `TEAM_PASSCODE` | Passcode for the 4 of you | You choose |
 | `PARENT_PASSCODE` | Passcode for the parent page | You choose |
 | `AUTH_SECRET` | Signs the login cookie. Changing it signs everyone out | Random |
 | `CALENDAR_TOKEN` | Secret part of the calendar link | Random |
 | `CRON_SECRET` | Proves the 5-minute calls really come from Supabase | Random, also stored in the database by the SQL |
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Push notifications | Generated once |
+| `GITHUB_RECEIPTS_TOKEN` | Saves receipts to GitHub. Server only, never committed (Vercel and `.env.local` only) | GitHub fine-grained token |
+| `GITHUB_RECEIPTS_REPO` | Which repo: `omsenjalia/guwahati-run` | You |
 | `NOTIFY_WEBHOOK_URL` (optional) | Copy of every alert to a webhook, for a future WhatsApp bridge | Later |
 
 To change a passcode: edit `.env` on GitHub **and** the same variable in Vercel (Settings → Environment Variables), then redeploy.
@@ -102,3 +118,5 @@ To change a passcode: edit `.env` on GitHub **and** the same variable in Vercel 
 - [ ] DigiLocker set up on every phone (Aadhaar or driving licence)
 - [ ] Paper backup printed (Team → Paper backup)
 - [ ] HOD approval for the grant ticked in the Grant tab
+- [ ] `supabase/003_confirmed_trip.sql` run, GitHub variables in Vercel, "Receipts storage" green
+- [ ] All 5 e-tickets uploaded (Money → Add receipt → Ticket)

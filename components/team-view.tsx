@@ -7,6 +7,7 @@ import { TEAM, USEFUL_NUMBERS } from "@/data/trip";
 import { Panel, PanelTitle, Skeleton } from "@/components/bits";
 import { AlertsPanel } from "@/components/alerts-panel";
 import { ChecklistPanel } from "@/components/checklist-panel";
+import { PrepPanel } from "@/components/prep-panel";
 import { useNow } from "@/lib/clock";
 import { setMe, useMe } from "@/lib/me";
 import { telLink } from "@/lib/links";
@@ -94,6 +95,7 @@ export function TeamView() {
         </ul>
       </Panel>
 
+      <PrepPanel />
       <ChecklistPanel owner="team" title="Team packing" />
       {me && <ChecklistPanel owner={me} title={`${TEAM.find((p) => p.id === me)?.short}'s packing`} />}
       <ThemePanel />

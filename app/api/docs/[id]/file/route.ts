@@ -1,4 +1,9 @@
 import { documentBytes } from "@/lib/docs-server";
+import { extFor } from "@/lib/documents";
+import { serverDb } from "@/lib/supabase/server";
+
+/** Vercel caps a response at 4.5 MB: bigger files go through a short-lived storage link. */
+const DIRECT_LIMIT = 4 * 1024 * 1024;
 
 /**
  * Streams a document from the private GitHub repo. Team only (proxy.ts);
@@ -10,11 +15,20 @@ export async function GET(request: Request, ctx: RouteContext<"/api/docs/[id]/fi
   try {
     const found = await documentBytes(id);
     if (!found) return new Response("Not found", { status: 404 });
-    const name = found.doc.path.split("/").pop() ?? "file";
+    const { doc, bytes } = found;
+    const name = doc.path.split("/").pop() ?? "file";
     const download = new URL(request.url).searchParams.has("download");
-    return new Response(found.bytes, {
+
+    if (bytes.byteLength > DIRECT_LIMIT) {
+      const db = serverDb();
+      const tmp = `cache/${doc.sha}.${extFor(doc.mime)}`;
+      await db.storage.from("trip-files").upload(tmp, bytes, { contentType: doc.mime, upsert: true });
+      const { data } = await db.storage.from("trip-files").createSignedUrl(tmp, 600, download ? { download: name } : undefined);
+      if (data) return Response.redirect(data.signedUrl, 302);
+    }
+    return new Response(bytes, {
       headers: {
-        "Content-Type": found.doc.mime,
+        "Content-Type": doc.mime,
         "Content-Disposition": `${download ? "attachment" : "inline"}; filename="${name}"`,
         "Cache-Control": "private, max-age=31536000, immutable",
       },

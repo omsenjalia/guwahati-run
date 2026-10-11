@@ -6,17 +6,17 @@ Trip companion PWA for 4 of us: Gujarat to Delhi to Guwahati (IIT Guwahati hacka
 
 ## What it does
 
-- **Now**: next step with countdown, instruction, platform and berth, trip health, plan B when a connection is at risk, metro-or-cab transfer plan, next deadline with a live verdict, check-ins, weather.
+- **Now**: switches by date. Before the trip: countdown, trip status, prep progress, next important date, Guwahati forecast. Travel days: current step with live delay, our seats, next action with leave-by, metro-or-cab plan, journey bar, food stations. Hackathon: submission countdown, rest rotation. Free time: leave-IIT-by. After: trip stats, final report, settle up, recap post.
 - **Timeline**: every leg, transfer, meal and sleep block with live times; Maps, Uber, Ola, Rapido links; subscribable calendar.
-- **Tickets**: per-passenger status and confirmation chance, chart time, coach order on the platform, SMS-139 fallback, plain-English advice.
-- **Money**: shared expenses, who owes whom, bill photos, fares vs target.
-- **Grant**: BVM SSIP reimbursement estimate (both fare rules), document checklist, PDF and Excel claim.
+- **Tickets**: static cards with "Can board" and a Check on IRCTC link. North East Express (the one waitlisted ticket) keeps live status, chance, waitlist graph and Plan B. **Wallet**: every ticket offline, with a full-screen "show to TTE" mode.
+- **Money**: receipts (photo or PDF) saved to the private repo's `documents/` folder, offline upload queue, who owes whom, receipt checklist, rail cost per person.
+- **Grant**: BVM SSIP estimate, document checklist, final PDF report (cover, summary, expenses with receipt numbers, requested vs spent, every receipt attached) and Excel.
 - **Team**: members, alerts, packing lists, guides, journal, paper backup, system status.
 - **Hackathon** (replaces Timeline from 30 Oct evening): countdown, schedule, rest rotation, task board, pitch timer, demo checklist.
 - **SOS**: share location and train details, 112 and 139, nearest hospital, lost-item steps.
 - **Parents**: separate passcode, read-only page with position, arrivals and check-ins.
 
-Fully automatic: Supabase calls `/api/jobs/tick` every 5 minutes. It syncs PNRs (every 30 min, 15 around chart time), live running status, weather and timetables, then evaluates connections, transfers and deadlines, and sends push alerts.
+Fully automatic: Supabase calls `/api/jobs/tick` every 5 minutes. It tracks the North East Express PNR (every 6h, hourly from 26 Oct, every 15 min from 28 Oct 16:00 until the chart), live running status for whichever train we're on, weather and timetables, then evaluates connections, transfers and deadlines, and sends push alerts.
 
 ## The one file you might edit
 
@@ -45,6 +45,9 @@ lib/providers/        Train data sources with failover (ConfirmTkt first)
 lib/jobs/             Tick scheduler and watchers (alerts, deadlines)
 lib/trip-engine.ts    Now/next, health, buffers, chart times
 lib/notify.ts         Single alert pipeline: push now, WhatsApp later
+lib/github.ts         Private repo storage for receipts (server only)
+lib/report-pdf.ts     Final report for the college (pdf-lib)
+documents/            Receipts, tickets, certificates, reports (written by the app)
 public/sw.js          Offline copy and push notifications
 supabase/*.sql        Database setup (run in the SQL editor)
 ```

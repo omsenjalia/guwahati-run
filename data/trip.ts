@@ -87,7 +87,7 @@ export type Leg = {
   /** We get off before the ticket's destination (e.g. booked to Haridwar). */
   ticketTo?: string;
   /** A cancelled earlier booking for this leg: what it cost and what came back. */
-  rebooking?: { oldPaid: number; refunded: number; paidBy: PersonId; refundTo: PersonId };
+  rebooking?: { oldPaid: number; refunded: number; paidBy: PersonId; refundTo: PersonId; cancelledOn: string };
   /** Confirmed berths known at booking. Live chart data overrides this. */
   berths?: Berth[];
   /** Total for 4 passengers, rupees. */
@@ -324,7 +324,7 @@ export const LEGS: Leg[] = [
     ],
     fareTotal: 2359.5,
     paidBy: "oms",
-    rebooking: { oldPaid: 1997.7, refunded: 1740, paidBy: "heet", refundTo: "heet" },
+    rebooking: { oldPaid: 1997.7, refunded: 1740, paidBy: "heet", refundTo: "heet", cancelledOn: "2026-10-10" },
     notes: ["Ticket is to Haridwar; we get off at Delhi Jn."],
   },
   {
@@ -638,6 +638,22 @@ export const REMINDERS = [
   "Garib Rath has no bedding. Carry a bedsheet each.",
   "Arrival at Anand is 01:42 on 4 Nov. Rapido or auto home, stay together.",
 ];
+
+/* --------------------------------------------------------------- report */
+// The final travel report for the college (Grant tab).
+
+export const REPORT = {
+  /** Used in the file name: WhyCode4U_Travel_Report_<team>.pdf */
+  teamName: "GuwahatiRun",
+  college: "Birla Vishvakarma Mahavidyalaya (BVM), Vallabh Vidyanagar",
+  department: "Department of Information Technology",
+  addressedTo: "The Head of Department, Department of Information Technology, BVM",
+  association: "in association with IIT Guwahati",
+  eventDates: "31 October to 1 November 2026",
+  travelDates: "28 October to 4 November 2026",
+  /** Funding requested per student (team total is 4x). */
+  requestedPerStudent: 5000,
+};
 
 /* ---------------------------------------------------------------- grant */
 // BVM SSIP 2.0 "Student Innovation Event Participation Expenses

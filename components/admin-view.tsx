@@ -46,6 +46,7 @@ export function AdminView() {
   return (
     <div className="flex flex-col gap-3">
       <h1 className="text-2xl font-semibold tracking-tight">System</h1>
+      <DataSourcesPanel />
       <JobsPanel />
       <Panel>
         <PanelTitle>Data source self-test</PanelTitle>
@@ -96,7 +97,7 @@ export function AdminView() {
 type JobRun = { id: number; job: string; started_at: string; ok: boolean | null; message: string | null; source: string | null };
 
 const JOBS = [
-  { id: "pnr-sync", label: "PNR sync" },
+  { id: "pnr-sync", label: "North East PNR tracker" },
   { id: "live-status", label: "Live running status" },
   { id: "weather", label: "Weather" },
   { id: "watchers", label: "Connections, deadlines and alerts" },
@@ -112,6 +113,80 @@ async function fetchRuns(): Promise<{ runs?: JobRun[]; note?: string }> {
     .order("started_at", { ascending: false })
     .limit(60);
   return error ? { note: `Database: ${error.message}` } : { runs: data as JobRun[] };
+}
+
+type GithubHealth = { ok: boolean; checkedAt?: number; repo?: string; private?: boolean; lastUpload?: string | null; error?: string };
+
+/**
+ * Data sources health: when each outside source last worked, and the last
+ * error if it's failing now. North East tracker and running status come
+ * from the background job log; GitHub is checked live.
+ */
+function DataSourcesPanel() {
+  const now = useNow();
+  const [runs, setRuns] = useState<JobRun[] | null>(null);
+  const [gh, setGh] = useState<GithubHealth | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    fetchRuns().then((r) => alive && r.runs && setRuns(r.runs));
+    fetch("/api/admin/github", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((j) => alive && setGh(j))
+      .catch((e) => alive && setGh({ ok: false, error: (e as Error).message }));
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const source = (job: string, label: string, provider: string) => {
+    const mine = runs?.filter((r) => r.job === job) ?? [];
+    const lastOk = mine.find((r) => r.ok);
+    const latest = mine[0];
+    return { label, provider, lastOk: lastOk ? Date.parse(lastOk.started_at) : undefined, error: latest && !latest.ok ? latest.message : undefined, known: !!runs };
+  };
+  const rows = [
+    source("pnr-sync", "North East tracker (PNR 2164635217)", "ConfirmTkt"),
+    source("live-status", "Running status (delay, ETA, position)", "ConfirmTkt"),
+    {
+      label: "Receipts storage",
+      provider: gh?.repo ? `GitHub ${gh.repo}${gh.private === false ? " (PUBLIC!)" : ""}` : "GitHub",
+      lastOk: gh?.ok ? gh.checkedAt : undefined,
+      error: gh && !gh.ok ? gh.error : undefined,
+      known: !!gh,
+      note: gh?.lastUpload && now ? `last upload ${ago(Date.parse(gh.lastUpload), now)}` : gh?.ok ? "no uploads yet" : undefined,
+    },
+  ];
+
+  return (
+    <Panel>
+      <PanelTitle>Data sources health</PanelTitle>
+      <ul className="flex flex-col gap-3">
+        {rows.map((r) => (
+          <li key={r.label} className="flex gap-2.5">
+            {!r.known ? (
+              <span className="mt-0.5 size-5 shrink-0 rounded-full border-2 border-input" />
+            ) : r.error ? (
+              <XCircle className="mt-0.5 size-5 shrink-0 text-bad" weight="fill" />
+            ) : r.lastOk ? (
+              <CheckCircle className="mt-0.5 size-5 shrink-0 text-ok" weight="fill" />
+            ) : (
+              <span className="mt-0.5 size-5 shrink-0 rounded-full border-2 border-input" />
+            )}
+            <div className="min-w-0">
+              <p className="font-medium leading-snug">{r.label}</p>
+              <p className="text-sm leading-snug text-muted-foreground">
+                {r.provider}
+                {r.lastOk && now ? `, last worked ${ago(r.lastOk, now)}` : r.known ? ", no success yet" : ""}
+                {"note" in r && r.note ? `, ${r.note}` : ""}
+              </p>
+              {r.error && <p className="text-sm leading-snug break-words text-bad">{r.error}</p>}
+            </div>
+          </li>
+        ))}
+      </ul>
+    </Panel>
+  );
 }
 
 /** System health: latest run of each background job, plus a manual trigger. */

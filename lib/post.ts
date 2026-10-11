@@ -8,7 +8,8 @@ function facts() {
   const trains = LEGS.filter((l) => l.kind === "train");
   const hours = Math.round(trains.reduce((s, l) => s + (ms(l.arrive) - ms(l.depart)), 0) / HOUR);
   const cities = [...new Set(LEGS.flatMap((l) => [PLACES[l.from].city, PLACES[l.to].city]))];
-  return { trains: trains.length, hours, cities };
+  const km = trains.reduce((s, l) => s + (l.km ?? 0), 0);
+  return { trains: trains.length, hours, cities, km };
 }
 
 /** First sentence of up to three journal notes, newest last. */
@@ -26,13 +27,13 @@ export function linkedinPost(entries: Entry[]) {
   const names = TEAM.map((p) => p.name).join(", ");
   const hi = highlights(entries);
   return [
-    `${f.hours} hours on ${f.trains} trains across India, for 25 hours of building.`,
+    `${f.km.toLocaleString("en-IN")} km and ${f.hours} hours on ${f.trains} trains across India, for 25 hours of building.`,
     "",
     `Our team (${names}) from BVM travelled from Gujarat to ${EVENT.venue} for the ${EVENT.name}.`,
     "",
     "What the journey looked like:",
     `- ${f.cities.join(" to ")} and back`,
-    "- Waitlisted tickets that cleared, Tatkal plans we kept ready, and 04:50 arrivals in Delhi",
+    "- A waitlisted ticket we tracked to the last chart, RAC berths we shared, and two 04:50 arrivals in Delhi",
     `- ${EVENT.name}: building through the night with a rest rotation`,
     ...(hi.length ? ["", "Moments we'll remember:", ...hi.map((h) => `- ${h}`)] : []),
     "",
@@ -47,7 +48,7 @@ export function linkedinPost(entries: Entry[]) {
 export function xPost(entries: Entry[]) {
   const f = facts();
   const hi = highlights(entries)[0];
-  const base = `${f.hours}h on ${f.trains} trains, Gujarat to ${EVENT.venue} and back, for 25h of building at ${EVENT.name}.`;
+  const base = `${f.km.toLocaleString("en-IN")} km, ${f.hours}h on ${f.trains} trains, Gujarat to ${EVENT.venue} and back, for 25h of building at ${EVENT.name}.`;
   const extra = hi ? ` ${hi}` : " Built an app to run the trip too.";
   const tags = " #hackathon #buildinpublic";
   const text = base + extra + tags;

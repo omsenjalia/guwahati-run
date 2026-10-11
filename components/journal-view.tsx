@@ -127,10 +127,23 @@ function Composer({ today }: { today: string }) {
 
 function PostPanel({ entries }: { entries: Entry[] }) {
   const [kind, setKind] = useState<"linkedin" | "x">("linkedin");
-  const text = kind === "linkedin" ? linkedinPost(entries) : xPost(entries);
+  // Your edits per platform; the generated text until you change it.
+  const [drafts, setDrafts] = useState<Partial<Record<"linkedin" | "x", string>>>({});
+  const generated = kind === "linkedin" ? linkedinPost(entries) : xPost(entries);
+  const text = drafts[kind] ?? generated;
   return (
-    <Panel>
-      <PanelTitle>Write the post</PanelTitle>
+    <Panel id="post" className="scroll-mt-20">
+      <PanelTitle
+        aside={
+          drafts[kind] !== undefined && (
+            <button type="button" onClick={() => setDrafts((d) => ({ ...d, [kind]: undefined }))} className="text-sm font-medium text-primary">
+              Reset
+            </button>
+          )
+        }
+      >
+        Write the post
+      </PanelTitle>
       <div role="tablist" className="grid grid-cols-2 gap-1 rounded-xl bg-secondary p-1">
         {(["linkedin", "x"] as const).map((k) => (
           <button
@@ -145,9 +158,18 @@ function PostPanel({ entries }: { entries: Entry[] }) {
           </button>
         ))}
       </div>
-      <pre className="mt-3 max-h-80 overflow-y-auto rounded-lg bg-secondary p-3 font-sans text-sm leading-relaxed whitespace-pre-wrap">{text}</pre>
+      <label htmlFor="post-text" className="sr-only">
+        Post text
+      </label>
+      <textarea
+        id="post-text"
+        value={text}
+        onChange={(e) => setDrafts((d) => ({ ...d, [kind]: e.target.value }))}
+        rows={12}
+        className="mt-3 w-full rounded-lg border border-input bg-secondary p-3 text-sm leading-relaxed outline-none focus-visible:border-primary"
+      />
       <p className="mt-1 text-xs text-subtle">
-        {text.length} characters. Built from the trip and your journal: edit it before posting.
+        {text.length} characters{kind === "x" && text.length > 280 ? " (over 280 for X)" : ""}. Built from the trip, its stats and your journal: edit it here, then copy.
       </p>
       <div className="mt-3 grid grid-cols-2 gap-2">
         <button
