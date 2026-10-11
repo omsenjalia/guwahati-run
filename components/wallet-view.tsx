@@ -151,7 +151,7 @@ function TteScreen({ leg, live, onClose }: { leg: Leg; live: LiveState; onClose:
         {PLACES[leg.from].name} to {PLACES[leg.to].name}, {weekdayDate(leg.depart)}
       </p>
       <p className="mt-6 text-sm uppercase tracking-wider text-black/60">PNR</p>
-      <p className="font-mono text-[3.25rem] leading-none font-bold tracking-wider tabular">{leg.pnr}</p>
+      <p className="font-mono text-[2.75rem] leading-none font-bold tracking-wide tabular">{leg.pnr}</p>
       <ul className="mt-8 flex flex-col gap-4">
         {TEAM.filter((p) => leg.passengers?.some((x) => x.person === p.id)).map((p) => {
           const s = seatFor(leg, live, p.id);

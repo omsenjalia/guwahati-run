@@ -65,7 +65,9 @@ function TicketCard({ leg, live, now }: { leg: Leg; live: LiveState; now: number
               <p className="font-mono text-sm text-muted-foreground tabular">{leg.train?.number}</p>
               <p className="text-lg font-semibold leading-tight">{leg.train?.name}</p>
             </div>
-            {!pax.length ? (
+            {!leg.pnr ? (
+              <StatusPill health="amber">Details to add</StatusPill>
+            ) : !pax.length ? (
               <StatusPill health="green">Unreserved</StatusPill>
             ) : boardable ? (
               <StatusPill health="green">✅ Can board</StatusPill>
@@ -161,7 +163,10 @@ function TicketCard({ leg, live, now }: { leg: Leg; live: LiveState; now: number
           {leg.tracked && l?.chartPrepared && <p className={cn("text-xs font-medium", healthText.green)}>Chart prepared. No more checks needed.</p>}
           {leg.fareTotal && (
             <p className="text-sm text-muted-foreground">
-              Fare <span className="font-mono text-foreground tabular">₹{leg.fareTotal.toLocaleString("en-IN")}</span> for 4
+              Fare <span className="font-mono text-foreground tabular">
+                ₹{leg.fareTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>{" "}
+              for 4
             </p>
           )}
           <TicketNotes leg={leg} />

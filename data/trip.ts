@@ -276,8 +276,8 @@ export const DEMO_CHECKLIST = [
 // Passenger order follows the tickets: Om S, Om K, Heet, Sujal (passenger 1-4).
 
 const ORDER: PersonId[] = ["oms", "omk", "heet", "sujal"];
-const seq = (prefix: string, from: number, current = prefix) =>
-  ORDER.map((person, i) => ({ person, booked: `${prefix} ${from + i}`, current: `${current} ${from + i}` }));
+const seq = (prefix: string, from: number) =>
+  ORDER.map((person, i) => ({ person, booked: `${prefix} ${from + i}`, current: `${prefix} ${from + i}` }));
 
 export const LEGS: Leg[] = [
   {
@@ -348,8 +348,14 @@ export const LEGS: Leg[] = [
     arrive: "2026-10-30T16:25:00+05:30",
     travelClass: "3A",
     pnr: "2164635217",
-    bookedStatus: "GNWL 44-47",
-    passengers: seq("GNWL", 44),
+    bookedStatus: "GNWL 81-84",
+    // Last known (11 Oct); the tracker replaces this live.
+    passengers: [
+      { person: "oms", booked: "GNWL 83", current: "GNWL 46" },
+      { person: "omk", booked: "GNWL 82", current: "GNWL 45" },
+      { person: "heet", booked: "GNWL 81", current: "GNWL 44" },
+      { person: "sujal", booked: "GNWL 84", current: "GNWL 47" },
+    ],
     fareTotal: 8275.4,
     paidBy: "heet",
     tracked: true,
