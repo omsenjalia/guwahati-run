@@ -21,7 +21,6 @@ export function claimDocuments(docs: DocRow[], expenses: Expense[]): ClaimDoc[] 
 
   const list: ClaimDoc[] = [
     { id: "invite", label: "Event invitation letter", have: named(/invitation/i).length > 0, detail: "Upload as a Document named \"Invitation letter\"" },
-    { id: "form", label: "Approved application form", have: named(/application/i).length > 0, detail: "Upload as a Document named \"Application form\"" },
     { id: "tickets", label: "Travel tickets", have: tickets === trains.length, detail: `${tickets} of ${trains.length} e-tickets uploaded` },
     { id: "registration", label: "Registration fee receipt", have: regBills > 0, detail: regBills ? `${regBills} file${regBills > 1 ? "s" : ""} attached` : "Attach it to the registration fee in Money" },
     { id: "participation", label: "Proof of participation", have: certs > 0, detail: certs ? `${certs} certificate${certs > 1 ? "s" : ""}` : "Add the certificate after the event" },

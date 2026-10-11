@@ -150,7 +150,7 @@ function HackathonPrep({ now }: { now: number }) {
   return (
     <Panel>
       <PanelTitle aside={<CodeBlock className="size-5 text-subtle" />}>Hackathon</PanelTitle>
-      <p className="text-sm text-muted-foreground">Hacking starts {weekdayDate(EVENT.start)}, {hhmm(EVENT.start)}</p>
+      <p className="text-sm text-muted-foreground">Reporting and start {weekdayDate(EVENT.start)}, {hhmm(EVENT.start)} sharp</p>
       <Countdown to={ms(EVENT.start)} now={now} className="mt-1 block text-2xl" />
       <Link href="/hackathon" className={cn(softButton, "mt-3 w-full")}>
         Open the hackathon board

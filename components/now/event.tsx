@@ -21,12 +21,12 @@ import { cn } from "@/lib/utils";
 const SUBMISSION = EVENT_SCHEDULE.find((s) => /submission/i.test(s.title));
 const JUDGING = EVENT_SCHEDULE.find((s) => /judging/i.test(s.title));
 
-/** Phase C: 30 Oct evening to 1 Nov 11:00. */
+/** Phase C: 30 Oct evening to 1 Nov 10:00. */
 export function HackathonPhase({ now }: { now: number }) {
   const me = useMe();
   const start = ms(EVENT.start);
   const started = now >= start;
-  const target = !started ? { at: start, label: "Hacking starts" } : SUBMISSION && ms(SUBMISSION.at) > now ? { at: ms(SUBMISSION.at), label: "Submission" } : JUDGING && ms(JUDGING.at) > now ? { at: ms(JUDGING.at), label: "Judging" } : { at: ms(EVENT.end), label: "Results" };
+  const target = !started ? { at: start, label: "Reporting and start" } : SUBMISSION && ms(SUBMISSION.at) > now ? { at: ms(SUBMISSION.at), label: "Submission" } : JUDGING && ms(JUDGING.at) > now ? { at: ms(JUDGING.at), label: "Judging" } : { at: ms(EVENT.end), label: "Event ends" };
   const nextItem = EVENT_SCHEDULE.find((s) => ms(s.at) > now);
   const slot = REST_PLAN.find((r) => now >= ms(r.start) && now < ms(r.end));
   const nextSlot = REST_PLAN.find((r) => ms(r.start) > now);

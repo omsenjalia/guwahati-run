@@ -27,7 +27,7 @@ export function HackathonView() {
 
       <Panel className="p-5">
         <p className="text-sm text-muted-foreground">
-          {now < start ? "Hacking starts in" : live ? (submission && ms(submission.at) > now ? "Submission in" : "Ends in") : "Finished"}
+          {now < start ? "Reporting and start in" : live ? (submission && ms(submission.at) > now ? "Submission in" : "Ends in") : "Finished"}
         </p>
         {now < end && (
           <Countdown

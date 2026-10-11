@@ -222,11 +222,12 @@ export const EVENT = {
   name: "WhyCode4U Hackathon Finals",
   venue: "IIT Guwahati",
   place: "IITG" as PlaceId,
-  start: "2026-10-31T10:00:00+05:30",
-  end: "2026-11-01T11:00:00+05:30",
+  // From the shortlist email (6 Oct): reporting/start 31 Oct 9:00 sharp, end 1 Nov 10:00 sharp.
+  start: "2026-10-31T09:00:00+05:30",
+  end: "2026-11-01T10:00:00+05:30",
   /** Hackathon mode (nav swap, schedule) is on during this window. */
   modeStart: "2026-10-30T18:00:00+05:30",
-  modeEnd: "2026-11-01T11:00:00+05:30",
+  modeEnd: "2026-11-01T10:00:00+05:30",
 };
 
 /**
@@ -234,14 +235,13 @@ export const EVENT = {
  * official schedule when it arrives (everything else adjusts automatically).
  */
 export const EVENT_SCHEDULE: { at: string; title: string; tbc?: boolean }[] = [
-  { at: "2026-10-31T09:00:00+05:30", title: "Reporting and registration desk", tbc: true },
-  { at: "2026-10-31T10:00:00+05:30", title: "Hacking starts" },
+  { at: "2026-10-31T09:00:00+05:30", title: "Reporting and start (9:00 sharp)" },
   { at: "2026-10-31T13:00:00+05:30", title: "Lunch", tbc: true },
   { at: "2026-10-31T20:00:00+05:30", title: "Dinner", tbc: true },
   { at: "2026-11-01T08:00:00+05:30", title: "Breakfast", tbc: true },
   { at: "2026-11-01T09:00:00+05:30", title: "Submission deadline", tbc: true },
   { at: "2026-11-01T09:30:00+05:30", title: "Judging and demos", tbc: true },
-  { at: "2026-11-01T11:00:00+05:30", title: "Results and closing" },
+  { at: "2026-11-01T10:00:00+05:30", title: "Event ends (10:00 sharp)" },
 ];
 
 /** Fill in at the venue. */
@@ -617,7 +617,7 @@ export const BLOCKS: Block[] = [
     id: "explore",
     kind: "explore",
     title: "Free time in Guwahati",
-    start: "2026-11-01T11:00:00+05:30",
+    start: "2026-11-01T10:00:00+05:30",
     end: "2026-11-01T16:00:00+05:30",
     place: "KYQ",
     notes: ["Kamakhya Temple is about 5 km from the station (15 to 20 min by cab). Guides has leave-by times."],

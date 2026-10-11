@@ -9,8 +9,8 @@ import { buildSteps, type Step } from "@/lib/trip-engine";
  *
  *   A  before     now to 28 Oct, 2h before the first train
  *   B  travel     28 Oct morning to 30 Oct evening (onward journey)
- *   C  hackathon  30 Oct 18:00 to 1 Nov 11:00
- *   D  return     1 Nov 11:00 to 4 Nov (free time, then the trains home)
+ *   C  hackathon  30 Oct 18:00 to 1 Nov 10:00
+ *   D  return     1 Nov 10:00 to 4 Nov (free time, then the trains home)
  *   E  after      once we're home
  */
 export type Phase = "before" | "travel" | "hackathon" | "return" | "after";

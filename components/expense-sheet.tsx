@@ -26,7 +26,7 @@ const QUICK: { title: string; category: Category }[] = [
 
 const TRAINS = LEGS.filter((l) => l.train);
 /** Event paperwork the college asks for (Grant tab checklist). */
-const DOC_NAMES = ["Invitation letter", "Event schedule", "Application form"];
+const DOC_NAMES = ["Invitation letter", "Event schedule"];
 const chip = (on: boolean) =>
   cn(
     "h-11 rounded-full border px-4 text-[0.95rem] font-medium transition active:scale-[0.98]",

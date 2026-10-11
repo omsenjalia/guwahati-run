@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ArrowSquareOut, Drop, ForkKnife, MapPinArea, Warning } from "@phosphor-icons/react";
 import { EXPLORE, EXPLORE_RETURN_MARGIN_MIN, STATION_GUIDES } from "@/data/guides";
-import { LEGS, PLACES } from "@/data/trip";
+import { EVENT, LEGS, PLACES } from "@/data/trip";
 import { Panel, PanelTitle, Skeleton, StatusPill } from "@/components/bits";
 import { Countdown } from "@/components/leg-bits";
 import { useNow } from "@/lib/clock";
@@ -171,7 +171,7 @@ function Explore({ now }: { now: number }) {
   const live = useLive();
   const train = buildSteps(live).find((s) => s.id === "L3")!;
   const beAtStation = train.start - EXPLORE_RETURN_MARGIN_MIN * MIN;
-  const freeFrom = ms("2026-11-01T11:00:00+05:30");
+  const freeFrom = ms(EVENT.end);
   const late = train.start - train.plannedStart >= 5 * MIN;
   return (
     <>

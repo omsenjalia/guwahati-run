@@ -83,7 +83,7 @@ export type ExploreSpot = {
   mapsQuery: string;
 };
 
-/** For the gap between the finals (11:00) and the 16:55 train on 1 Nov. */
+/** For the gap between the finals (ends 10:00) and the 16:55 train on 1 Nov. */
 export const EXPLORE: ExploreSpot[] = [
   {
     name: "Kamakhya Temple",
