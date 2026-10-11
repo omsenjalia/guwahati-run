@@ -684,11 +684,15 @@ export const GRANT = {
    */
   sleeperFarePerPerson: { L2: 825, L3: 825 } as Partial<Record<LegId, number>>,
   /**
-   * Things to do for the claim that no upload can prove. Everything else on
-   * the college's list (HOD approval, invitation, tickets, bills,
-   * certificate) is ticked automatically from the uploaded documents.
+   * Things for the claim that aren't uploads (the HOD approval is a hard
+   * copy). Everything else on the college's list (invitation, tickets,
+   * bills, certificate) is ticked automatically from the uploaded documents.
    */
-  documents: ["Brief report on learnings from the event", "Confirm no similar reimbursement in the last 6 months"],
+  documents: [
+    "HOD approval (hard copy): attach to the printed report",
+    "Brief report on learnings from the event",
+    "Confirm no similar reimbursement in the last 6 months",
+  ],
 };
 
 /* ------------------------------------------------------------- expenses */

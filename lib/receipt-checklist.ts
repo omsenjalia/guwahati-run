@@ -4,8 +4,8 @@ import type { DocRow } from "@/lib/documents";
 
 /**
  * What the college report needs, and whether each is uploaded yet: the
- * invitation letter and HOD approval, every train ticket and the
- * registration fee. Cab or metro bills can still be added as receipts.
+ * invitation letter, every train ticket and the registration fee. (The HOD
+ * approval is a hard copy, so it's on the Grant tab's manual list.) Cab or metro bills can still be added as receipts.
  */
 export type Expected = { id: string; label: string; have: boolean; hint: string };
 
@@ -31,5 +31,5 @@ export function expectedReceipts(docs: DocRow[], expenses: Expense[]): Expected[
     have: docs.some((d) => d.kind === "document" && match.test(d.title ?? "")),
     hint: `Add document, named "${label}"`,
   });
-  return [paper("doc-invitation", "Invitation letter", /invitation/i), paper("doc-hod", "HOD approval", /hod|approval/i), ...tickets, registration];
+  return [paper("doc-invitation", "Invitation letter", /invitation/i), ...tickets, registration];
 }

@@ -20,7 +20,6 @@ export function claimDocuments(docs: DocRow[], expenses: Expense[]): ClaimDoc[] 
   const localBills = local.filter((e) => docs.some((d) => d.expense_id === e.id)).length;
 
   const list: ClaimDoc[] = [
-    { id: "hod", label: "Prior approval from HOD", have: named(/hod|approval/i).length > 0, detail: "Upload as a Document named \"HOD approval\"" },
     { id: "invite", label: "Event invitation letter", have: named(/invitation/i).length > 0, detail: "Upload as a Document named \"Invitation letter\"" },
     { id: "form", label: "Approved application form", have: named(/application/i).length > 0, detail: "Upload as a Document named \"Application form\"" },
     { id: "tickets", label: "Travel tickets", have: tickets === trains.length, detail: `${tickets} of ${trains.length} e-tickets uploaded` },
