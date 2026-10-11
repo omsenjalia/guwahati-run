@@ -11,7 +11,8 @@ import { dayMonth, stamp } from "@/lib/time";
  * The final travel report for the college, A4 and black-and-white friendly:
  *   1 cover   2 trip summary   3 expense table   4 requested vs spent
  *   appendix: every receipt by reference number (images 2 per page, PDFs
- *   merged page by page), then certificates. Page numbers on every page.
+ *   merged page by page, untouched), then certificates. Page numbers on
+ *   the report's own pages only.
  */
 
 const A4: [number, number] = [595.28, 841.89];
@@ -136,8 +137,8 @@ export async function buildReport({ expenses, docs, summary, now = Date.now() }:
   tripSummary(w, summary?.trim() || defaultSummary());
   expenseTable(w, rows, totals);
   requestedVsSpent(w, totals);
-  await appendix(w, rows, docs);
-  numberPages(pdf);
+  const originals = await appendix(w, rows, docs);
+  numberPages(pdf, originals);
   return { bytes: await pdf.save(), rows, totals };
 }
 
@@ -241,50 +242,66 @@ async function fetchAll(list: DocRow[]) {
   return out;
 }
 
+/**
+ * Every document and bill as it is. Pages from original PDFs (e-tickets,
+ * emails) are copied untouched: no labels, no footer. Photos go on report
+ * pages with their reference above them. The first appendix page is an
+ * index of references and the page each starts on.
+ * Returns the copied original pages, so page numbering can skip them.
+ */
 async function appendix(w: Writer, rows: ReportRow[], docs: DocRow[]) {
+  const originals = new Set<PDFPage>();
   const referenced = rows.filter((r) => r.ref);
   const certificates = docs.filter((d) => d.kind === "certificate");
   const papers = docs.filter((d) => d.kind === "document");
   const byId = (id: string) => docs.find((d) => d.id === id)!;
   const wanted = [...papers, ...referenced.flatMap((r) => r.docIds.map(byId)), ...certificates];
-  if (!wanted.length) return;
+  if (!wanted.length) return originals;
   const files = await fetchAll(wanted);
 
-  w.newPage();
+  const indexPage = w.newPage();
   w.text("Appendix: documents and receipts", { size: 18, bold: true, gap: 4 });
-  w.text("Event documents first (D-01...), then receipts in reference order (R-01...). Train tickets are the IRCTC e-tickets; other bills are photos taken at the time.", { size: 9, color: GREY, gap: 8 });
+  w.text(
+    "Original documents are attached exactly as received (e-tickets, emails), without any marks. Photos of bills are shown under their reference.",
+    { size: 9, color: GREY, gap: 10 },
+  );
+  const indexTop = w.y;
 
-  // The first file shares the title page, placed right under the title.
-  let slot = 1;
-  let firstTop: number | undefined = w.y - 6;
   const items = [
-    ...papers.map((d, i) => ({ doc: d, label: `D-${String(i + 1).padStart(2, "0")}  ${d.title ?? "Document"}` })),
+    ...papers.map((d, i) => ({ doc: d, ref: `D-${String(i + 1).padStart(2, "0")}`, what: d.title ?? "Document" })),
     ...referenced.flatMap((r) =>
       r.docIds.map((id, i) => ({
         doc: byId(id),
-        label: `${r.ref}${r.docIds.length > 1 ? ` (${i + 1} of ${r.docIds.length})` : ""}  ${r.category}, ${money(r.amount)}, ${dayMonth(`${r.date}T12:00:00+05:30`)}`,
+        ref: `${r.ref}${r.docIds.length > 1 ? ` (${i + 1}/${r.docIds.length})` : ""}`,
+        what: `${r.label}, ${money(r.amount)}, ${dayMonth(`${r.date}T12:00:00+05:30`)}`,
       })),
     ),
-    ...certificates.map((d) => ({ doc: d, label: `Certificate: ${d.title ?? ""}` })),
+    ...certificates.map((d) => ({ doc: d, ref: "Certificate", what: d.title ?? "" })),
   ];
-  for (const { doc, label } of items) {
+  const index: { ref: string; what: string; page: number }[] = [];
+  let slot = 2; // photos start on a fresh page after the index
+
+  for (const { doc, ref, what } of items) {
+    const label = `${ref}  ${what}`;
     const bytes = files.get(doc.id);
     if (!bytes) {
       ({ slot } = placeNote(w, slot, label, `Couldn't fetch this file. It's in GitHub at ${doc.path}.`));
+      index.push({ ref, what, page: w.doc.getPageCount() });
       continue;
     }
     if (doc.mime === "application/pdf") {
       try {
         const src = await PDFDocument.load(bytes, { ignoreEncryption: true });
         const pages = await w.doc.copyPages(src, src.getPageIndices());
-        firstTop = undefined;
+        index.push({ ref, what, page: w.doc.getPageCount() + 1 });
         for (const p of pages) {
           w.doc.addPage(p);
-          stampLabel(w, p, label);
+          originals.add(p);
         }
-        slot = 2; // next image starts on a new page
+        slot = 2; // next photo starts on a new page
       } catch {
         ({ slot } = placeNote(w, slot, label, `This PDF couldn't be merged (it may be protected). It's in GitHub at ${doc.path}.`));
+        index.push({ ref, what, page: w.doc.getPageCount() });
       }
       continue;
     }
@@ -294,21 +311,33 @@ async function appendix(w: Writer, rows: ReportRow[], docs: DocRow[]) {
         w.newPage();
         slot = 0;
       }
-      const top = firstTop ?? (slot === 0 ? A4[1] - M : (A4[1] - M) / 2 + M / 2 - 10);
-      const height = firstTop !== undefined ? firstTop - M - 50 : (A4[1] - 2 * M) / 2 - 30;
-      if (firstTop !== undefined) slot = 1; // took the whole title page
-      firstTop = undefined;
+      const top = slot === 0 ? A4[1] - M : (A4[1] - M) / 2 + M / 2 - 10;
+      const height = (A4[1] - 2 * M) / 2 - 30;
       w.page.drawText(pdfSafe(label), { x: M, y: top - 11, size: 10, font: w.bold, color: INK });
+      // The photo itself is placed unchanged, scaled to fit.
       const scale = Math.min((A4[0] - 2 * M) / img.width, height / img.height);
       const iw = img.width * scale;
       const ih = img.height * scale;
       w.page.drawImage(img, { x: M + (A4[0] - 2 * M - iw) / 2, y: top - 20 - ih, width: iw, height: ih });
-      w.page.drawRectangle({ x: M + (A4[0] - 2 * M - iw) / 2, y: top - 20 - ih, width: iw, height: ih, borderColor: RULE, borderWidth: 0.5 });
+      index.push({ ref, what, page: w.doc.getPageCount() });
       slot++;
     } catch {
       ({ slot } = placeNote(w, slot, label, `This image format couldn't be embedded. It's in GitHub at ${doc.path}.`));
+      index.push({ ref, what, page: w.doc.getPageCount() });
     }
   }
+
+  // Fill in the index now that every page number is known.
+  const end = { page: w.page, y: w.y };
+  w.page = indexPage;
+  w.y = indexTop;
+  w.table(
+    [{ title: "Ref", width: 64 }, { title: "Document" }, { title: "Page", width: 44, align: "right" }],
+    index.map((x) => [x.ref, x.what, String(x.page)]),
+  );
+  w.page = end.page;
+  w.y = end.y;
+  return originals;
 }
 
 function placeNote(w: Writer, slot: number, label: string, note: string) {
@@ -322,23 +351,15 @@ function placeNote(w: Writer, slot: number, label: string, note: string) {
   return { slot: slot + 1 };
 }
 
-/** Reference label on a merged PDF page, on a white band so it reads on any background. */
-function stampLabel(w: Writer, page: PDFPage, label: string) {
-  const { height } = page.getSize();
-  const text = pdfSafe(label);
-  const tw = w.bold.widthOfTextAtSize(text, 9);
-  page.drawRectangle({ x: 14, y: height - 24, width: tw + 12, height: 16, color: rgb(1, 1, 1), borderColor: INK, borderWidth: 0.6 });
-  page.drawText(text, { x: 20, y: height - 19.5, size: 9, font: w.bold, color: INK });
-}
-
-function numberPages(pdf: PDFDocument) {
+/** Page numbers on the report's own pages only; original documents stay unmarked. */
+function numberPages(pdf: PDFDocument, originals: Set<PDFPage>) {
   const pages = pdf.getPages();
   const font = pdf.embedStandardFont(StandardFonts.Helvetica);
   pages.forEach((p, i) => {
+    if (originals.has(p)) return;
     const { width } = p.getSize();
-    const text = `${EVENT.name} travel report  |  Page ${i + 1} of ${pages.length}`;
+    const text = `Page ${i + 1} of ${pages.length}`;
     const tw = font.widthOfTextAtSize(text, 8);
-    p.drawRectangle({ x: (width - tw) / 2 - 4, y: 14, width: tw + 8, height: 12, color: rgb(1, 1, 1) });
-    p.drawText(text, { x: (width - tw) / 2, y: 17, size: 8, font, color: GREY });
+    p.drawText(text, { x: (width - tw) / 2, y: 22, size: 8, font, color: GREY });
   });
 }
