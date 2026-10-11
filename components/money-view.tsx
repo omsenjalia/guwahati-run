@@ -196,7 +196,7 @@ function ExpenseList({
           <h3 className="px-4 py-1 text-xs font-medium text-muted-foreground">{weekdayDate(`${day}T12:00:00+05:30`)}</h3>
           <ul>
             {list.map((e) => (
-              <ExpenseRow key={e.id} e={e} doc={docs.find((d) => d.expense_id === e.id)} onEdit={onEdit} onView={onView} />
+              <ExpenseRow key={e.id} e={e} docs={docs.filter((d) => d.expense_id === e.id)} onEdit={onEdit} onView={onView} />
             ))}
           </ul>
         </section>
@@ -219,12 +219,29 @@ function Thumb({ doc, onView }: { doc: DocRow; onView: (d: DocRow) => void }) {
   );
 }
 
-function ExpenseRow({ e, doc, onEdit, onView }: { e: Expense; doc?: DocRow; onEdit: (e: Expense, d?: DocRow) => void; onView: (d: DocRow) => void }) {
+function ExpenseRow({ e, docs, onEdit, onView }: { e: Expense; docs: DocRow[]; onEdit: (e: Expense, d?: DocRow) => void; onView: (d: DocRow) => void }) {
+  const doc = docs[0];
   const settlement = e.category === "settlement";
   const splitAll = e.split_between.length === TEAM.length;
   return (
     <li className="flex items-center gap-3 px-4 py-2">
-      {doc ? <Thumb doc={doc} onView={onView} /> : <span className="size-11 shrink-0" />}
+      {doc ? (
+        <span className="relative shrink-0">
+          <Thumb doc={doc} onView={onView} />
+          {docs.length > 1 && (
+            <button
+              type="button"
+              aria-label={`View bill 2 of ${docs.length}`}
+              onClick={() => onView(docs[1])}
+              className="absolute -right-1.5 -bottom-1.5 flex size-5 items-center justify-center rounded-full bg-primary text-[0.65rem] font-bold text-primary-foreground"
+            >
+              +{docs.length - 1}
+            </button>
+          )}
+        </span>
+      ) : (
+        <span className="size-11 shrink-0" />
+      )}
       <div className="min-w-0 flex-1">
         <p className={cn("truncate text-[0.95rem]", settlement && "text-muted-foreground")}>{e.title}</p>
         <p className="truncate text-xs text-muted-foreground">
@@ -242,11 +259,12 @@ function ExpenseRow({ e, doc, onEdit, onView }: { e: Expense; doc?: DocRow; onEd
         type="button"
         aria-label={`Delete ${e.title}`}
         onClick={async () => {
-          const what = doc ? " and its bill (from GitHub too)" : "";
+          const what = docs.length ? ` and its ${docs.length > 1 ? `${docs.length} bills` : "bill"} (from GitHub too)` : "";
           if (!window.confirm(`Delete "${e.title}" (${rupees(e.amount)})${what} for everyone?`)) return;
           try {
-            if (doc) await deleteDoc(doc.id);
-            else await deleteExpense(e.id);
+            // Deleting the bills removes the expense with the last one.
+            for (const d of docs) await deleteDoc(d.id);
+            if (!docs.length) await deleteExpense(e.id);
             toast.success("Deleted");
           } catch (err) {
             toast.error((err as Error).message);

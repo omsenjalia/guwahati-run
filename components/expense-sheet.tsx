@@ -200,7 +200,7 @@ function SheetForm({ mode, onClose }: { mode: SheetMode; onClose: () => void }) 
         )}
 
         {mode.type !== "settle" && (
-          <FilePicker file={file} onFile={setFile} required={kind !== "receipt"} replacing={hasDoc} />
+          <FilePicker file={file} onFile={setFile} required={kind !== "receipt"} another={hasDoc} />
         )}
 
         {mode.type !== "settle" && kind === "ticket" && (
@@ -340,15 +340,15 @@ function SheetForm({ mode, onClose }: { mode: SheetMode; onClose: () => void }) 
   );
 }
 
-function FilePicker({ file, onFile, required, replacing }: { file: File | null; onFile: (f: File | null) => void; required: boolean; replacing: boolean }) {
+function FilePicker({ file, onFile, required, another }: { file: File | null; onFile: (f: File | null) => void; required: boolean; another: boolean }) {
   const isPdf = file && (file.type === "application/pdf" || /\.pdf$/i.test(file.name));
-  if (replacing) {
-    return <p className="rounded-lg bg-secondary px-3 py-2.5 text-sm text-muted-foreground">Bill attached. Delete the expense to replace it.</p>;
-  }
   return (
     <div className="flex flex-col gap-2">
       <span className="text-sm font-medium">
-        Photo or PDF {!required && <span className="font-normal text-muted-foreground">(the bill, for the grant)</span>}
+        {another ? "Add another bill" : "Photo or PDF"}{" "}
+        <span className="font-normal text-muted-foreground">
+          {another ? "(e.g. the payment screenshot)" : !required ? "(the bill, for the grant)" : ""}
+        </span>
       </span>
       <label className="flex h-14 cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-input bg-card px-3 text-[0.95rem]">
         {isPdf ? <FilePdf className="size-5" /> : <Camera className="size-5" />}

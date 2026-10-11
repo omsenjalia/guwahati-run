@@ -250,7 +250,8 @@ export const EVENT_SCHEDULE: { at: string; title: string; tbc?: boolean }[] = [
 export const VENUE_NOTES = {
   wifi: "Ask at the registration desk",
   power: "Bring the extension board; claim a table near a socket early",
-  food: "See schedule. Keep water and snacks at the table",
+  food: "Included in our fee: 5 meals (2 breakfasts, 1 lunch, 2 dinners, from dinner on 30 Oct). Keep water and snacks at the table",
+  stay: "Included in our fee: IIT Guwahati hostel on the night of 30 Oct",
   help: "",
 };
 
@@ -272,11 +273,8 @@ export const DEMO_CHECKLIST = [
 ];
 
 /* ----------------------------------------------------------------- legs */
-// Passenger order follows the tickets: Om S, Om K, Heet, Sujal (passenger 1-4).
-
-const ORDER: PersonId[] = ["oms", "omk", "heet", "sujal"];
-const seq = (prefix: string, from: number) =>
-  ORDER.map((person, i) => ({ person, booked: `${prefix} ${from + i}`, current: `${prefix} ${from + i}` }));
+// Each leg lists passengers in the order printed on its e-ticket (passenger 1-4).
+// The North East tracker matches live statuses to people by this order.
 
 export const LEGS: Leg[] = [
   {
@@ -363,11 +361,11 @@ export const LEGS: Leg[] = [
     travelClass: "3A",
     pnr: "2164635217",
     bookedStatus: "GNWL 81-84",
-    // Last known (11 Oct); the tracker replaces this live.
+    // Ticket order. Last known status (11 Oct); the tracker replaces it live.
     passengers: [
-      { person: "oms", booked: "GNWL 81", current: "GNWL 44" },
+      { person: "heet", booked: "GNWL 81", current: "GNWL 44" },
       { person: "omk", booked: "GNWL 82", current: "GNWL 45" },
-      { person: "heet", booked: "GNWL 83", current: "GNWL 46" },
+      { person: "oms", booked: "GNWL 83", current: "GNWL 46" },
       { person: "sujal", booked: "GNWL 84", current: "GNWL 47" },
     ],
     fareTotal: 8275.4,
@@ -395,8 +393,13 @@ export const LEGS: Leg[] = [
     arrive: "2026-11-03T04:50:00+05:30",
     travelClass: "3A",
     pnr: "6210810899",
-    bookedStatus: "RAC 38-41",
-    passengers: seq("RAC", 38),
+    bookedStatus: "WL 7-10",
+    passengers: [
+      { person: "heet", booked: "WL 7", current: "RAC 38" },
+      { person: "oms", booked: "WL 8", current: "RAC 39" },
+      { person: "omk", booked: "WL 9", current: "RAC 40" },
+      { person: "sujal", booked: "WL 10", current: "RAC 41" },
+    ],
     fareTotal: 8477.2,
     paidBy: "heet",
     notes: ["Often runs late. The app watches the 3 Nov Delhi connection automatically."],
@@ -423,11 +426,11 @@ export const LEGS: Leg[] = [
     travelClass: "3A",
     pnr: "2164636496",
     bookedStatus: "CNF",
-    passengers: ORDER.map((person) => ({ person, booked: "CNF", current: "CNF" })),
+    passengers: (["heet", "omk", "oms", "sujal"] as const).map((person) => ({ person, booked: "CNF", current: "CNF" })),
     berths: [
-      { person: "oms", coach: "G8", berth: 18, type: "Middle" },
+      { person: "heet", coach: "G8", berth: 18, type: "Middle" },
       { person: "omk", coach: "G8", berth: 19, type: "Upper" },
-      { person: "heet", coach: "G8", berth: 21, type: "Middle" },
+      { person: "oms", coach: "G8", berth: 21, type: "Middle" },
       { person: "sujal", coach: "G8", berth: 22, type: "Upper" },
     ],
     fareTotal: 3995.4,
@@ -613,6 +616,7 @@ export const BLOCKS: Block[] = [
     start: "2026-10-30T17:45:00+05:30",
     end: "2026-10-31T09:30:00+05:30",
     place: "IITG",
+    notes: ["Hostel room and dinner are included in our fee (team Visonaris, WC4U2026-18). Carry the fee receipt."],
   },
   {
     id: "hackathon",
@@ -664,7 +668,9 @@ export const REMINDERS = [
 
 export const REPORT = {
   /** Used in the file name: WhyCode4U_Travel_Report_<team>.pdf */
-  teamName: "GuwahatiRun",
+  teamName: "Visonaris",
+  /** From the WhyCode4U fee receipt. */
+  registrationId: "WC4U2026-18",
   college: "Birla Vishvakarma Mahavidyalaya (BVM), Vallabh Vidyanagar",
   department: "Department of Information Technology",
   addressedTo: "The Head of Department, Department of Information Technology, BVM",
@@ -750,7 +756,7 @@ export const GRANT = {
 // expenses in the app (Money tab), not here.
 
 export const INITIAL_EXPENSES = [
-  { title: "Hackathon registration fee", amount: 3600, paid_by: "oms", category: "registration", spent_on: "2026-10-07" },
+  { title: "Hackathon registration fee", amount: 3600, paid_by: "oms", category: "registration", spent_on: "2026-10-07", note: "UPI UTR 628085234718, receipt WC4U2026-18" },
   { title: "Train tickets: North East, Brahmaputra, Garib Rath", amount: 21193.41, paid_by: "heet", category: "train", spent_on: "2026-10-07" },
   { title: "Yoga Exp rebooking: cancellation charge", amount: 257.7, paid_by: "heet", category: "train", spent_on: "2026-10-10", note: "Paid ₹1,997.70, refunded ₹1,740.00" },
   { title: "19031 Yoga Express (PNR 8154913954)", amount: 2359.5, paid_by: "oms", category: "train", spent_on: "2026-10-10" },

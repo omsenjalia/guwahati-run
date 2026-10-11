@@ -27,7 +27,8 @@ export type ReportRow = {
   shares: Record<PersonId, number>;
   /** What the SSIP policy reimburses for this row, for all 4 (sleeper rate for 3A). */
   eligible: number;
-  docId?: string;
+  /** Bills proving this row (e.g. a fee receipt and its payment screenshot). */
+  docIds: string[];
 };
 
 const even = (amount: number, among: PersonId[] = PEOPLE) =>
@@ -38,7 +39,7 @@ export function reportRows(expenses: Expense[], docs: DocRow[]): ReportRow[] {
 
   for (const leg of LEGS.filter((l) => l.train && l.fareTotal)) {
     const item = GRANT.items.find((i) => i.leg === leg.id);
-    const ticket = docs.find((d) => d.kind === "ticket" && d.leg_id === leg.id);
+    const tickets = docs.filter((d) => d.kind === "ticket" && d.leg_id === leg.id);
     rows.push({
       date: leg.depart.slice(0, 10),
       category: "Train",
@@ -47,7 +48,7 @@ export function reportRows(expenses: Expense[], docs: DocRow[]): ReportRow[] {
       amount: leg.fareTotal!,
       shares: even(leg.fareTotal!),
       eligible: item?.economyPerPerson !== undefined ? item.economyPerPerson * 4 : leg.fareTotal!,
-      docId: ticket?.id,
+      docIds: tickets.map((d) => d.id),
     });
     if (leg.rebooking) {
       const loss = rebookingLoss(leg);
@@ -59,6 +60,7 @@ export function reportRows(expenses: Expense[], docs: DocRow[]): ReportRow[] {
         amount: loss,
         shares: even(loss),
         eligible: loss,
+        docIds: [],
       });
     }
   }
@@ -66,7 +68,7 @@ export function reportRows(expenses: Expense[], docs: DocRow[]): ReportRow[] {
   for (const e of expenses) {
     if (e.category === "settlement") continue;
     if (e.created_by === "setup" && e.category === "train") continue; // shown per ticket above
-    const doc = docs.find((d) => d.kind === "receipt" && d.expense_id === e.id);
+    const bills = docs.filter((d) => d.kind === "receipt" && d.expense_id === e.id);
     const grant = CATEGORIES.find((c) => c.id === e.category)?.grant ?? false;
     rows.push({
       date: e.spent_on,
@@ -76,13 +78,13 @@ export function reportRows(expenses: Expense[], docs: DocRow[]): ReportRow[] {
       amount: e.amount,
       shares: even(e.amount, e.split_between.length ? e.split_between : PEOPLE),
       eligible: grant ? e.amount : 0,
-      docId: doc?.id,
+      docIds: bills.map((d) => d.id),
     });
   }
 
   rows.sort((a, b) => a.date.localeCompare(b.date));
   let n = 0;
-  for (const r of rows) if (r.docId) r.ref = `R-${String(++n).padStart(2, "0")}`;
+  for (const r of rows) if (r.docIds.length) r.ref = `R-${String(++n).padStart(2, "0")}`;
   return rows;
 }
 

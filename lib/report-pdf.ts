@@ -153,6 +153,7 @@ function cover(w: Writer, now: number) {
   w.text("Submitted to", { size: 9, color: GREY });
   w.text(REPORT.addressedTo, { size: 12, gap: 16 });
   w.text("Team", { size: 9, color: GREY });
+  w.text(`${REPORT.teamName} (registration ${REPORT.registrationId})`, { size: 12, bold: true });
   for (const p of TEAM) w.text(`${p.name}`, { size: 12 });
   w.y -= 16;
   w.text("College", { size: 9, color: GREY });
@@ -248,9 +249,10 @@ async function fetchAll(list: DocRow[]) {
 }
 
 async function appendix(w: Writer, rows: ReportRow[], docs: DocRow[]) {
-  const referenced = rows.filter((r) => r.ref && r.docId);
+  const referenced = rows.filter((r) => r.ref);
   const certificates = docs.filter((d) => d.kind === "certificate");
-  const wanted = [...referenced.map((r) => docs.find((d) => d.id === r.docId)!), ...certificates];
+  const byId = (id: string) => docs.find((d) => d.id === id)!;
+  const wanted = [...referenced.flatMap((r) => r.docIds.map(byId)), ...certificates];
   if (!wanted.length) return;
   const files = await fetchAll(wanted);
 
@@ -260,7 +262,12 @@ async function appendix(w: Writer, rows: ReportRow[], docs: DocRow[]) {
 
   let slot = 1; // the appendix title page takes the top half
   const items = [
-    ...referenced.map((r) => ({ doc: docs.find((d) => d.id === r.docId)!, label: `${r.ref}  ${r.category}, ${money(r.amount)}, paid by ${r.paidBy}, ${dayMonth(`${r.date}T12:00:00+05:30`)}` })),
+    ...referenced.flatMap((r) =>
+      r.docIds.map((id, i) => ({
+        doc: byId(id),
+        label: `${r.ref}${r.docIds.length > 1 ? ` (${i + 1} of ${r.docIds.length})` : ""}  ${r.category}, ${money(r.amount)}, paid by ${r.paidBy}, ${dayMonth(`${r.date}T12:00:00+05:30`)}`,
+      })),
+    ),
     ...certificates.map((d) => ({ doc: d, label: `Certificate: ${d.title ?? ""}` })),
   ];
   for (const { doc, label } of items) {

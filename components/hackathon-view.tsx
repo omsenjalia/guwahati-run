@@ -83,6 +83,8 @@ export function HackathonView() {
           <dd>{VENUE_NOTES.power}</dd>
           <dt className="text-muted-foreground">Food</dt>
           <dd>{VENUE_NOTES.food}</dd>
+          <dt className="text-muted-foreground">Stay</dt>
+          <dd>{VENUE_NOTES.stay}</dd>
           {VENUE_NOTES.help && (
             <>
               <dt className="text-muted-foreground">Help</dt>
