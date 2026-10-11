@@ -1,9 +1,9 @@
-import { FALLBACK_TRAINS, LEGS, PLACES } from "@/data/trip";
+import { FALLBACK_TRAINS, LEGS, NE_ALTERNATIVES, PLACES } from "@/data/trip";
 import { getAvailability, getLiveRunningStatus, getPnrStatus, AllProvidersFailed } from "@/lib/providers/index.ts";
 import { istDateKey } from "@/lib/time";
 
 /**
- * Calls every provider with our real PNRs and trains and reports what came
+ * Calls every provider with the tracked PNR and our trains and reports what came
  * back. Team-only (the proxy requires the team passcode cookie).
  */
 
@@ -35,7 +35,7 @@ export async function GET() {
   const today = istDateKey(Date.now());
 
   const pnrChecks = trains
-    .filter((l) => l.pnr)
+    .filter((l) => l.pnr && l.tracked)
     .map((l) =>
       timed("PNR", `${l.train!.number} ${l.train!.name}`, async () => {
         const r = await getPnrStatus(l.pnr!);
@@ -75,8 +75,8 @@ export async function GET() {
   });
 
   const availQueries = [
-    { trainNo: "19031", from: "SBIB", to: "DLI", date: "28-10-2026", travelClass: "SL", quota: "GN" as const },
     { trainNo: "12506", from: "ANVT", to: "KYQ", date: "29-10-2026", travelClass: "3A", quota: "GN" as const },
+    ...NE_ALTERNATIVES.trains.map((t) => ({ trainNo: t.number, from: t.from, to: t.to, date: dmy(NE_ALTERNATIVES.date), travelClass: "3A", quota: "GN" as const })),
     { trainNo: FALLBACK_TRAINS.L4.number, from: "NZM", to: "ANND", date: "03-11-2026", travelClass: "3A", quota: "GN" as const },
   ];
   const availChecks = availQueries.map((q) =>

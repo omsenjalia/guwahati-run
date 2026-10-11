@@ -79,21 +79,31 @@ export function parseStatus(raw: string | undefined): ParsedStatus {
   return { kind: "UNKNOWN", label: raw ?? "" };
 }
 
+/**
+ * Per-passenger status. Only the tracked ticket (North East) takes live PNR
+ * data; every other ticket shows the status written in data/trip.ts.
+ */
 export function legPassengers(leg: Leg, live: LiveState) {
-  const l = live.legs[leg.id];
+  const l = leg.tracked ? live.legs[leg.id] : undefined;
   return (leg.passengers ?? []).map((p) => {
     const lp = l?.passengers?.find((x) => x.person === p.person);
     return {
       person: p.person,
       booked: lp?.booked ?? p.booked,
-      current: lp?.current ?? p.booked,
+      current: lp?.current ?? p.current ?? p.booked,
       confirmChance: lp?.confirmChance,
     };
   });
 }
 
 export function legBerths(leg: Leg, live: LiveState) {
-  return live.legs[leg.id]?.berths ?? leg.berths ?? [];
+  return (leg.tracked ? live.legs[leg.id]?.berths : undefined) ?? leg.berths ?? [];
+}
+
+/** True once a ticket needs no more watching: everyone can board. */
+export function canBoard(leg: Leg, live: LiveState) {
+  const kinds = legPassengers(leg, live).map((p) => parseStatus(p.current).kind);
+  return kinds.length > 0 && kinds.some((k) => k === "CNF" || k === "RAC") && !kinds.includes("CAN");
 }
 
 /** Health of one reserved leg from its passengers' current statuses. */
@@ -131,32 +141,30 @@ export function legSituation(leg: Leg, live: LiveState): Situation {
           kind: "waitlisted",
           health: "red",
           title: "Still waitlisted after the chart",
-          advice: "A fully waitlisted e-ticket is cancelled automatically and refunded. Use the Tatkal ticket or plan B.",
+          advice: "A fully waitlisted e-ticket is cancelled and refunded automatically. Use the Tatkal ticket or one of the alternatives in Plan B.",
         }
       : {
           kind: "waitlisted",
           health: "amber",
           title: "Waitlisted",
-          advice: `The chart comes out around ${chartAt}.${odds} Keep the Tatkal deadline in mind in case it doesn't clear.`,
+          advice: `The chart comes out around ${chartAt}.${odds} Plan B below shows what to do if it doesn't clear.`,
         };
   }
   if (n("WL")) {
     return {
       kind: "partial",
-      health: charted ? "red" : "amber",
-      title: `${seated} of ${pax.length} have a seat`,
-      advice: charted
-        ? "Partly confirmed after the chart. Check the current IRCTC rule for waitlisted names on a partly confirmed e-ticket before boarding, and book Tatkal or plan B for the rest."
-        : `Partly confirmed so far. The chart around ${chartAt} decides the rest.${odds}`,
+      health: "green",
+      title: `${seated} of ${pax.length} have a seat: all 4 can board`,
+      advice: `When even one passenger on the PNR is confirmed or RAC, everyone on it can board and sit with them.${charted ? "" : ` The chart around ${chartAt} decides the rest.${odds}`}`,
     };
   }
   if (n("RAC")) {
     return {
       kind: "rac",
-      health: "amber",
-      title: `RAC for ${n("RAC")} of ${pax.length}`,
+      health: "green",
+      title: `RAC for ${n("RAC")} of ${pax.length}: can board`,
       advice:
-        "RAC means two people share one side-lower berth: sit by day, take turns lying down at night. You can board. After the train leaves, ask the TTE for any vacant berth; RAC gets upgraded first.",
+        "RAC means two people share one side-lower berth: sit by day, take turns lying down at night. After the train leaves, ask the TTE for any vacant berth; RAC gets upgraded first.",
     };
   }
   return { kind: "confirmed", health: "green", title: "All confirmed", advice: "" };

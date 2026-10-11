@@ -77,12 +77,23 @@ export type Leg = {
   pnr?: string;
   /** Exactly as booked, e.g. "PQWL 24-27". */
   bookedStatus?: string;
-  /** Per-passenger booked status in booking order. */
-  passengers?: { person: PersonId; booked: string }[];
+  /**
+   * Per-passenger status in ticket order (passenger 1 first). `current` is
+   * the status as last checked by hand; only `tracked` legs update live.
+   */
+  passengers?: { person: PersonId; booked: string; current?: string }[];
+  /** True for the one ticket the app still polls (North East Express). */
+  tracked?: boolean;
+  /** We get off before the ticket's destination (e.g. booked to Haridwar). */
+  ticketTo?: string;
+  /** A cancelled earlier booking for this leg: what it cost and what came back. */
+  rebooking?: { oldPaid: number; refunded: number; paidBy: PersonId; refundTo: PersonId };
   /** Confirmed berths known at booking. Live chart data overrides this. */
   berths?: Berth[];
   /** Total for 4 passengers, rupees. */
   fareTotal?: number;
+  /** Who paid for this ticket. */
+  paidBy?: PersonId;
   notes?: string[];
 };
 
@@ -115,7 +126,7 @@ export type TransferOption = {
   walkMin: number;
 };
 
-export type DeadlineId = "D1" | "D2" | "D3" | "D4" | "D5" | "D6";
+export type DeadlineId = "ne-tatkal" | "ne-chart" | "bp-late" | "gr-chart";
 
 export type Deadline = {
   id: DeadlineId;
@@ -144,26 +155,6 @@ export type Block = {
 
 export const TEAM: Person[] = [
   {
-    id: "heet",
-    name: "Heet",
-    short: "Heet",
-    age: 17,
-    gender: "M",
-    phone: "",
-    guardian: { name: "", relation: "", phone: "" },
-    role: "",
-  },
-  {
-    id: "omk",
-    name: "Om Kumar",
-    short: "Om K",
-    age: 18,
-    gender: "M",
-    phone: "",
-    guardian: { name: "", relation: "", phone: "" },
-    role: "",
-  },
-  {
     id: "oms",
     name: "Om Senjalia",
     short: "Om S",
@@ -177,8 +168,28 @@ export const TEAM: Person[] = [
     },
   },
   {
+    id: "omk",
+    name: "Omkumar Vaghela",
+    short: "Om K",
+    age: 18,
+    gender: "M",
+    phone: "",
+    guardian: { name: "", relation: "", phone: "" },
+    role: "",
+  },
+  {
+    id: "heet",
+    name: "Heet Gajera",
+    short: "Heet",
+    age: 17,
+    gender: "M",
+    phone: "",
+    guardian: { name: "", relation: "", phone: "" },
+    role: "",
+  },
+  {
     id: "sujal",
-    name: "Sujal",
+    name: "Sujal Khatri",
     short: "Sujal",
     age: 18,
     gender: "M",
@@ -188,7 +199,7 @@ export const TEAM: Person[] = [
   },
 ];
 
-/** Has an Aadhaar-verified IRCTC account. Shown on every Tatkal deadline. */
+/** Has an Aadhaar-verified IRCTC account. Books North East Tatkal on 28 Oct if needed. */
 export const TATKAL_BOOKER: PersonId = "oms";
 
 /* -------------------------------------------------------------- places */
@@ -260,12 +271,11 @@ export const DEMO_CHECKLIST = [
 ];
 
 /* ----------------------------------------------------------------- legs */
-// Passenger order is assumed to follow the team order above (the same order as
-// the Garib Rath berths). The PNR sync replaces these with the real per-passenger data.
+// Passenger order follows the tickets: Om S, Om K, Heet, Sujal (passenger 1-4).
 
-const ORDER: PersonId[] = ["heet", "omk", "oms", "sujal"];
-const seq = (prefix: string, from: number) =>
-  ORDER.map((person, i) => ({ person, booked: `${prefix} ${from + i}` }));
+const ORDER: PersonId[] = ["oms", "omk", "heet", "sujal"];
+const seq = (prefix: string, from: number, current = prefix) =>
+  ORDER.map((person, i) => ({ person, booked: `${prefix} ${from + i}`, current: `${current} ${from + i}` }));
 
 export const LEGS: Leg[] = [
   {
@@ -278,7 +288,7 @@ export const LEGS: Leg[] = [
     depart: "2026-10-28T06:55:00+05:30",
     arrive: "2026-10-28T08:20:00+05:30",
     travelClass: "UR",
-    notes: ["Unreserved. Buy tickets in the UTS app before reaching the platform."],
+    notes: ["Ticket details to be added when the e-ticket is uploaded."],
   },
   {
     id: "L0b",
@@ -299,10 +309,19 @@ export const LEGS: Leg[] = [
     depart: "2026-10-28T11:25:00+05:30",
     arrive: "2026-10-29T04:50:00+05:30",
     travelClass: "SL",
-    pnr: "8942993403",
-    bookedStatus: "PQWL 24-27",
-    passengers: seq("PQWL", 24),
-    fareTotal: 1997.7,
+    pnr: "8154913954",
+    bookedStatus: "WL 15-18",
+    ticketTo: "Haridwar (HW)",
+    passengers: [
+      { person: "oms", booked: "WL 15", current: "RAC 78" },
+      { person: "omk", booked: "WL 17", current: "RAC 80" },
+      { person: "heet", booked: "WL 16", current: "RAC 79" },
+      { person: "sujal", booked: "WL 18", current: "RAC 81" },
+    ],
+    fareTotal: 2359.5,
+    paidBy: "oms",
+    rebooking: { oldPaid: 1997.7, refunded: 1740, paidBy: "heet", refundTo: "heet" },
+    notes: ["Ticket is to Haridwar; we get off at Delhi Jn."],
   },
   {
     id: "L1b",
@@ -324,9 +343,11 @@ export const LEGS: Leg[] = [
     arrive: "2026-10-30T16:25:00+05:30",
     travelClass: "3A",
     pnr: "2164635217",
-    bookedStatus: "WL 44-47",
-    passengers: seq("WL", 44),
+    bookedStatus: "GNWL 44-47",
+    passengers: seq("GNWL", 44),
     fareTotal: 8275.4,
+    paidBy: "heet",
+    tracked: true,
   },
   {
     id: "L2b",
@@ -351,6 +372,7 @@ export const LEGS: Leg[] = [
     bookedStatus: "RAC 38-41",
     passengers: seq("RAC", 38),
     fareTotal: 8477.2,
+    paidBy: "heet",
     notes: ["Often runs late. The app watches the 3 Nov Delhi connection automatically."],
   },
   {
@@ -374,20 +396,30 @@ export const LEGS: Leg[] = [
     travelClass: "3A",
     pnr: "2164636496",
     bookedStatus: "CNF",
-    passengers: ORDER.map((person) => ({ person, booked: "CNF" })),
+    passengers: ORDER.map((person) => ({ person, booked: "CNF", current: "CNF" })),
     berths: [
-      { person: "heet", coach: "G8", berth: 18, type: "Middle" },
+      { person: "oms", coach: "G8", berth: 18, type: "Middle" },
       { person: "omk", coach: "G8", berth: 19, type: "Upper" },
-      { person: "oms", coach: "G8", berth: 21, type: "Middle" },
+      { person: "heet", coach: "G8", berth: 21, type: "Middle" },
       { person: "sujal", coach: "G8", berth: 22, type: "Upper" },
     ],
     fareTotal: 3995.4,
+    paidBy: "heet",
     notes: [
       "Garib Rath usually has no bedding. Carry a bedsheet each.",
       "Arrives Anand at 01:42. Rapido or auto home, stay together.",
     ],
   },
 ];
+
+/** Money lost on a cancelled earlier booking (paid minus refund). */
+export const rebookingLoss = (leg: Leg) => (leg.rebooking ? leg.rebooking.oldPaid - leg.rebooking.refunded : 0);
+
+/** One person's rail cost for a leg: fare plus any cancellation loss, split 4 ways. */
+export function legCostPerPerson(id: LegId) {
+  const leg = LEGS.find((l) => l.id === id)!;
+  return ((leg.fareTotal ?? 0) + rebookingLoss(leg)) / 4;
+}
 
 /* ---------------------------------------------------------- connections */
 
@@ -480,50 +512,50 @@ export const FALLBACK_TRAINS = {
 };
 
 export const IRCTC_BOOK_URL = "https://www.irctc.co.in/nget/train-search";
+/** IRCTC's own PNR enquiry page, for checking a static ticket by hand. */
+export const IRCTC_PNR_URL = "https://www.indianrail.gov.in/enquiry/PNR/PnrEnquiry.html?locale=en";
+
+/**
+ * If 12506 is fully waitlisted after its chart: other Delhi to Guwahati
+ * trains on 29 Oct. Times and seats are fetched live (Plan B card).
+ */
+export const NE_ALTERNATIVES = {
+  date: "2026-10-29",
+  trains: [
+    { number: "12424", name: "Dibrugarh Rajdhani", from: "NDLS", fromName: "New Delhi", to: "GHY", toName: "Guwahati" },
+    { number: "15657", name: "Brahmaputra Express", from: "DLI", fromName: "Delhi Jn", to: "KYQ", toName: "Kamakhya" },
+    { number: "15910", name: "Avadh Assam Express", from: "DLI", fromName: "Delhi Jn", to: "GHY", toName: "Guwahati" },
+  ],
+  classes: ["3A", "SL"],
+  flightsUrl: "https://www.google.com/travel/flights?q=Flights%20from%20DEL%20to%20GAU%20on%202026-10-29%20one%20way",
+};
 
 /* ------------------------------------------------------------ deadlines */
 
 export const DEADLINES: Deadline[] = [
   {
-    id: "D1",
-    at: "2026-10-27T11:00:00+05:30",
-    title: "Tatkal (SL) opens for 19031 Yoga Exp",
-    condition: "PQWL is still high (confirmation chance low).",
-    action: "Book Tatkal SL for 28 Oct, Sabarmati to Delhi.",
-    leg: "L1",
-    owner: "oms",
-    link: { label: "Open IRCTC", href: IRCTC_BOOK_URL },
-  },
-  {
-    id: "D2",
-    at: "2026-10-27T21:00:00+05:30",
-    title: "Chart for 19031 Yoga Exp",
-    condition: "All 4 still waitlisted after charting.",
-    action: "Ticket auto-cancels (₹60/person deducted). Switch to the Tatkal ticket or plan B.",
-    leg: "L1",
-    owner: "oms",
-  },
-  {
-    id: "D3",
+    id: "ne-tatkal",
     at: "2026-10-28T10:00:00+05:30",
-    title: "Tatkal (AC) opens for 12506 North East Exp",
-    condition: "WL is still above about 15-20.",
-    action: "Book Tatkal 3A for 29 Oct, Anand Vihar to Kamakhya.",
+    title: "NE Tatkal decision (only if still WL)",
+    condition: "Confirmation chance is under about 70% or GNWL is still above about 15-20.",
+    action:
+      "Book Tatkal 3A for all 4 for 29 Oct, Anand Vihar to Kamakhya. We'll be in Ahmedabad that morning (Yoga leaves 11:25), so book from there.",
     leg: "L2",
     owner: "oms",
     link: { label: "Open IRCTC", href: IRCTC_BOOK_URL },
   },
   {
-    id: "D4",
+    id: "ne-chart",
     at: "2026-10-28T21:00:00+05:30",
     title: "Chart for 12506 North East Exp",
-    condition: "Any of us still waitlisted after charting.",
-    action: "Use the Tatkal ticket. If none, decide the onward plan now.",
+    condition: "All 4 still waitlisted after charting.",
+    action:
+      "The ticket auto-cancels and refunds. Use the Tatkal ticket, or pick another Delhi to Guwahati option for 29 Oct. If even 1 of us is confirmed or RAC, all 4 can board.",
     leg: "L2",
     owner: "oms",
   },
   {
-    id: "D5",
+    id: "bp-late",
     at: "2026-11-02T10:00:00+05:30",
     title: "Decide: is 15658 Brahmaputra 3h+ late?",
     condition: "Live running status shows 3 hours or more delay.",
@@ -534,7 +566,7 @@ export const DEADLINES: Deadline[] = [
     link: { label: "Open IRCTC", href: IRCTC_BOOK_URL },
   },
   {
-    id: "D6",
+    id: "gr-chart",
     at: "2026-11-02T21:00:00+05:30",
     title: "Chart for 12215 Garib Rath",
     condition: "We switched to 12918.",
@@ -543,10 +575,6 @@ export const DEADLINES: Deadline[] = [
     owner: "oms",
   },
 ];
-
-/** Applies to every onward leg. Evaluated automatically by the deadline watcher. */
-export const CASCADE_RULE =
-  "If one onward leg fails and its backup fails too, cancel the other onward leg early.";
 
 /* --------------------------------------------------------------- blocks */
 
@@ -627,16 +655,23 @@ export const GRANT = {
   /** Larger events may get more, case by case, up to this per event. */
   maxPerEventCaseByCase: 50000,
   items: [
-    { id: "g-L0", leg: "L0", kind: "train", label: "Anand to Ahmedabad (unreserved)", paidPerPerson: 35, note: "UTS fare, approx." },
+    { id: "g-L0", leg: "L0", kind: "train", label: "Anand to Ahmedabad", paidPerPerson: legCostPerPerson("L0") || 35, note: "Estimate until the ticket is uploaded" },
     { id: "g-L0b", leg: "L0b", kind: "local", label: "Kalupur to Sabarmati (metro)", paidPerPerson: 30 },
-    { id: "g-L1", leg: "L1", kind: "train", label: "19031 Yoga Express (SL)", paidPerPerson: 1997.7 / 4 },
+    {
+      id: "g-L1",
+      leg: "L1",
+      kind: "train",
+      label: "19031 Yoga Express (SL)",
+      paidPerPerson: legCostPerPerson("L1"),
+      note: "Includes ₹257.70 lost when the first booking was cancelled",
+    },
     { id: "g-L1b", leg: "L1b", kind: "local", label: "Delhi Jn to Anand Vihar (metro or cab)", paidPerPerson: 45 },
     {
       id: "g-L2",
       leg: "L2",
       kind: "train",
       label: "12506 North East Express (3A)",
-      paidPerPerson: 8275.4 / 4,
+      paidPerPerson: legCostPerPerson("L2"),
       economyPerPerson: 825,
       note: "Booked 3A; claimed at the sleeper fare (₹825)",
     },
@@ -647,12 +682,12 @@ export const GRANT = {
       leg: "L3",
       kind: "train",
       label: "15658 Brahmaputra Express (3A)",
-      paidPerPerson: 8477.2 / 4,
+      paidPerPerson: legCostPerPerson("L3"),
       economyPerPerson: 825,
       note: "Booked 3A; claimed at the sleeper fare (₹825)",
     },
     { id: "g-L3b", leg: "L3b", kind: "local", label: "Delhi Jn to Sarai Rohilla (shared auto)", paidPerPerson: 37.5 },
-    { id: "g-L4", leg: "L4", kind: "train", label: "12215 BDTS Garib Rath (3A)", paidPerPerson: 3995.4 / 4, note: "3A is the only class on Garib Rath" },
+    { id: "g-L4", leg: "L4", kind: "train", label: "12215 BDTS Garib Rath (3A)", paidPerPerson: legCostPerPerson("L4"), note: "3A is the only class on Garib Rath" },
     { id: "g-reg", kind: "fee", label: "Registration fee", paidPerPerson: 900, note: "Approved" },
   ] as GrantItem[],
   documents: [
@@ -673,7 +708,9 @@ export const GRANT = {
 
 export const INITIAL_EXPENSES = [
   { title: "Hackathon registration fee", amount: 3600, paid_by: "oms", category: "registration", spent_on: "2026-10-07" },
-  { title: "Train tickets (all 4 PNRs)", amount: 23191.11, paid_by: "heet", category: "tickets", spent_on: "2026-10-07" },
+  { title: "Train tickets: North East, Brahmaputra, Garib Rath", amount: 21193.41, paid_by: "heet", category: "train", spent_on: "2026-10-07" },
+  { title: "Yoga Exp rebooking: cancellation charge", amount: 257.7, paid_by: "heet", category: "train", spent_on: "2026-10-10", note: "Paid ₹1,997.70, refunded ₹1,740.00" },
+  { title: "19031 Yoga Express (PNR 8154913954)", amount: 2359.5, paid_by: "oms", category: "train", spent_on: "2026-10-10" },
 ] as const;
 
 /* -------------------------------------------------------------- packing */

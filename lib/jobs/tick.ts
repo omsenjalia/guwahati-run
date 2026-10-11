@@ -2,7 +2,9 @@
  * The background brain. Supabase's scheduler calls /api/jobs/tick every
  * 5 minutes; this decides which jobs are due and runs them:
  *
- *   PNR sync      every 30 min; every 15 min within 90 min of chart time
+ *   PNR sync      North East Express only: every 6h until 25 Oct, hourly
+ *                 from 26 Oct, every 15 min from 28 Oct 16:00 until the
+ *                 chart is out. Stops once charted (it becomes a static card).
  *   Live status   every tick (5 min) from 3h before departure to 1h after arrival
  *   Weather       every 3h
  *
@@ -10,7 +12,7 @@
  * in job_runs for the system health panel.
  */
 import * as trip from "@/data/trip";
-import { LEGS, PLACES, TEAM, type Berth, type Leg, type PersonId } from "@/data/trip";
+import { LEGS, PLACES, type Berth, type Leg, type PersonId } from "@/data/trip";
 import { AllProvidersFailed, getLiveRunningStatus, getPnrStatus } from "@/lib/providers/index.ts";
 import type { LegLive, PassengerLive } from "@/lib/live-types";
 import { notify } from "@/lib/notify";
@@ -24,7 +26,6 @@ import { fetchWeatherMany } from "@/lib/weather";
 export type JobName = "seed" | "pnr-sync" | "live-status" | "weather" | "watchers" | "schedules";
 type JobResult = { job: JobName; ok: boolean; message: string; source?: string; details?: unknown };
 
-const ORDER: PersonId[] = TEAM.map((p) => p.id);
 const BERTH_TYPES: Record<string, Berth["type"]> = {
   LB: "Lower",
   MB: "Middle",
@@ -35,11 +36,14 @@ const BERTH_TYPES: Record<string, Berth["type"]> = {
 
 /* ------------------------------------------------------------ schedule */
 
-export function pnrInterval(leg: Leg, now: number): number | null {
+export function pnrInterval(leg: Leg, now: number, live?: LegLive): number | null {
+  if (!leg.tracked) return null;
+  if (live?.chartPrepared) return null; // final: berths known, nothing left to watch
   const depart = ms(leg.depart);
   if (now > depart + 30 * MIN) return null; // already on board
-  if (Math.abs(now - chartTime(leg.depart)) <= 90 * MIN) return 15 * MIN;
-  return 30 * MIN;
+  if (now >= ms("2026-10-28T16:00:00+05:30")) return 15 * MIN;
+  if (now >= ms("2026-10-26T00:00:00+05:30")) return HOUR;
+  return 6 * HOUR;
 }
 
 export function liveDue(leg: Leg, now: number, live?: LegLive) {
@@ -67,9 +71,9 @@ export async function runTick(opts: { force?: JobName[]; now?: number } = {}) {
 
   // PNR sync
   const pnrLegs = LEGS.filter((l) => {
-    if (!l.pnr) return false;
+    if (!l.pnr || !l.tracked) return false;
     if (force.has("pnr-sync")) return true;
-    const interval = pnrInterval(l, now);
+    const interval = pnrInterval(l, now, live.get(l.id));
     return interval !== null && isDue(live.get(l.id)?.pnrUpdatedAt, interval, now);
   });
   if (pnrLegs.length) results.push(await logged("pnr-sync", () => syncPnrs(pnrLegs, live)));
@@ -176,15 +180,17 @@ async function syncPnrs(legs: Leg[], live: Map<string, LegLive>) {
     try {
       const r = await getPnrStatus(leg.pnr!);
       source = r.source;
+      // Passenger 1-4 on the ticket, in the order written in data/trip.ts.
+      const order: PersonId[] = (leg.passengers ?? []).map((p) => p.person);
       const passengers: PassengerLive[] = r.data.passengers.map((p) => ({
-        person: ORDER[p.number - 1] ?? ORDER[0],
+        person: order[p.number - 1] ?? order[0],
         booked: p.booking,
         current: p.current,
         confirmChance: p.confirmChance,
       }));
       const berths: Berth[] = r.data.passengers.flatMap((p) =>
         p.coach && p.berth
-          ? [{ person: ORDER[p.number - 1], coach: p.coach, berth: p.berth, type: BERTH_TYPES[p.berthCode ?? ""] ?? "Lower" }]
+          ? [{ person: order[p.number - 1], coach: p.coach, berth: p.berth, type: BERTH_TYPES[p.berthCode ?? ""] ?? "Lower" }]
           : [],
       );
       const next: LegLive = {

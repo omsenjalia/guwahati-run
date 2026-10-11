@@ -1,5 +1,5 @@
 /**
- * The backup rules from the brief, evaluated against live data.
+ * The backup rules still in force, evaluated against live data.
  * Pure: the deadline watcher job and every phone use the same code.
  */
 import { CONNECTIONS, DEADLINES, LEGS, type Deadline } from "@/data/trip";
@@ -37,40 +37,32 @@ export function evaluate(d: Deadline, live: LiveState, now: number): Verdict {
   const charted = live.legs[leg.id]?.chartPrepared ?? false;
 
   switch (d.id) {
-    case "D1": // Tatkal SL for 19031
-    case "D3": {
-      // Tatkal AC for 12506
+    case "ne-tatkal": {
+      // AC Tatkal for 12506, 28 Oct 10:00. Only matters while still waitlisted.
       if (now > at + 2 * HOUR) return v("passed", "Tatkal window has passed.");
+      if (sit.kind !== "waitlisted") return v("ok", `No action: ${sit.title.toLowerCase()}.`);
       const wl = maxWl(leg.id, live);
       const chance = minChance(leg.id, live);
-      const threshold = d.id === "D1" ? 20 : 15;
-      if (wl === 0) return v("ok", "No action: everyone has a seat or RAC.");
-      const risky = wl > threshold || (chance !== undefined && chance < 70);
+      const risky = wl > 15 || (chance !== undefined && chance < 70);
       const odds = chance !== undefined ? `, ${chance}% chance` : "";
-      if (!risky) return v("ok", `No action: WL ${wl}${odds} is likely to clear.`);
-      // Only call it "action needed" in the last 24h; waitlists move a lot before that.
+      if (!risky) return v("ok", `No action: GNWL ${wl}${odds} is likely to clear.`);
+      // Only call it "action needed" on the morning itself; waitlists move a lot before that.
       return now < at - 24 * HOUR
-        ? v("upcoming", `Likely needed: still WL ${wl}${odds}. Decided automatically on ${stamp(at - 24 * HOUR)}.`)
-        : v("action", `Still waitlisted (up to WL ${wl}${odds}). Book Tatkal when it opens at ${hhmm(at)}.`);
+        ? v("upcoming", `Likely needed: still GNWL ${wl}${odds}. Decided on the morning of 28 Oct.`)
+        : v("action", `Still GNWL ${wl}${odds}. Book Tatkal for all 4 when it opens at ${hhmm(at)}.`);
     }
-    case "D2": // chart for 19031
-    case "D4": {
-      // chart for 12506
+    case "ne-chart": {
       if (!charted) {
         return now < at
           ? v("upcoming", `Chart expected around ${stamp(chartTime(leg.depart))}. ${sit.title}.`)
           : v("upcoming", "Chart is late. Still checking every 15 minutes.");
       }
-      if (sit.kind === "waitlisted" || sit.kind === "partial") {
-        const other = d.id === "D2" ? "12506 North East Exp" : "15658 Brahmaputra Exp";
-        return v(
-          "action",
-          `${sit.title} after the chart. Use the Tatkal ticket or plan B. If there's no backup, cancel ${other} early for a better refund.`,
-        );
+      if (sit.kind === "waitlisted") {
+        return v("action", "All 4 still waitlisted after the chart: the ticket auto-cancels and refunds. Use the Tatkal ticket or the Plan B alternatives.");
       }
       return v("ok", `Chart done: ${sit.title.toLowerCase()}.`);
     }
-    case "D5": {
+    case "bp-late": {
       // Brahmaputra 3h+ late on 2 Nov
       const l = live.legs.L3;
       if (now < at - 6 * HOUR) return v("upcoming", "Checked automatically on 2 Nov from 04:00.");
@@ -81,10 +73,10 @@ export function evaluate(d: Deadline, live: LiveState, now: number): Verdict {
         ? v("action", `15658 is running ${duration(delay * MIN)} late. ${CONNECTIONS[1].planB.text}`)
         : v("ok", `No action: 15658 is ${delay > 0 ? `${duration(delay * MIN)} late` : "on time"}${l.lastStation ? ` near ${l.lastStation}` : ""}.`);
     }
-    case "D6": {
-      const d5 = evaluate(DEADLINES.find((x) => x.id === "D5")!, live, now);
+    case "gr-chart": {
+      const late = evaluate(DEADLINES.find((x) => x.id === "bp-late")!, live, now);
       if (now > at) return v("passed", "Garib Rath chart time has passed.");
-      return d5.status === "action"
+      return late.status === "action"
         ? v("action", "Brahmaputra is 3h+ late. If you booked 12918, cancel 12215 before its chart.")
         : v("ok", "No action unless we switch to 12918.");
     }
