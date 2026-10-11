@@ -351,9 +351,9 @@ export const LEGS: Leg[] = [
     bookedStatus: "GNWL 81-84",
     // Last known (11 Oct); the tracker replaces this live.
     passengers: [
-      { person: "oms", booked: "GNWL 83", current: "GNWL 46" },
+      { person: "oms", booked: "GNWL 81", current: "GNWL 44" },
       { person: "omk", booked: "GNWL 82", current: "GNWL 45" },
-      { person: "heet", booked: "GNWL 81", current: "GNWL 44" },
+      { person: "heet", booked: "GNWL 83", current: "GNWL 46" },
       { person: "sujal", booked: "GNWL 84", current: "GNWL 47" },
     ],
     fareTotal: 8275.4,
