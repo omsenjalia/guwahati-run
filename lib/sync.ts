@@ -92,6 +92,11 @@ function subscribe() {
       patch((s) => ({ ...s, legs: { ...s.legs, [row.leg_id]: rowToLeg(row) } }));
     })
     .on("postgres_changes", { event: "*", schema: "public", table: "app_state" }, (p) => {
+      if (p.eventType === "DELETE") {
+        const key = (p.old as Partial<StateRow>)?.key;
+        if (key) patch((s) => ({ ...s, state: Object.fromEntries(Object.entries(s.state).filter(([k]) => k !== key)) }));
+        return;
+      }
       const row = p.new as StateRow;
       if (!row?.key) return;
       patch((s) => ({ ...s, state: { ...s.state, [row.key]: row.value } }));

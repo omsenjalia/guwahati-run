@@ -8,6 +8,8 @@
  *                 the ticket we won't use once one of them clears.
  *   Live status   every tick (5 min) from 3h before departure to 1h after arrival
  *   Weather       every 3h
+ *   Watches       extra PNRs / waitlist routes added on the Tickets page:
+ *                 every 2h, every 30 min in the last 2 days (lib/watches.ts)
  *
  * Every job writes to Supabase (phones get it via Realtime) and logs a row
  * in job_runs for the system health panel.
@@ -19,13 +21,14 @@ import { AllProvidersFailed, getLiveRunningStatus, getPnrStatus } from "@/lib/pr
 import type { LegLive, PassengerLive } from "@/lib/live-types";
 import { notify } from "@/lib/notify";
 import { runWatchers } from "@/lib/jobs/watchers";
+import { syncWatches } from "@/lib/jobs/watch-sync";
 import type { StopTime } from "@/lib/meal-planner";
 import { serverDb } from "@/lib/supabase/server";
 import { HOUR, MIN, istDateKey, ms } from "@/lib/time";
 import { parseStatus } from "@/lib/trip-engine";
 import { fetchWeatherMany } from "@/lib/weather";
 
-export type JobName = "seed" | "pnr-sync" | "live-status" | "weather" | "watchers" | "schedules";
+export type JobName = "seed" | "pnr-sync" | "live-status" | "weather" | "watchers" | "schedules" | "watches";
 type JobResult = { job: JobName; ok: boolean; message: string; source?: string; details?: unknown };
 
 const BERTH_TYPES: Record<string, Berth["type"]> = {
@@ -88,6 +91,10 @@ export async function runTick(opts: { force?: JobName[]; now?: number } = {}) {
   );
   if (liveLegs.length) results.push(await logged("live-status", () => syncLive(liveLegs, live)));
 
+  // Extra PNRs and waitlist routes (only logged when something was due)
+  const extra = await logged("watches", async () => (await syncWatches(now, force.has("watches"))) ?? { ok: true, message: "none due" });
+  if (extra.message !== "none due") results.push(extra);
+
   // Timetables for the meal planner (once a day)
   const { data: sch } = await db.from("app_state").select("updated_at").eq("key", "schedules").maybeSingle();
   if (force.has("schedules") || isDue(sch ? Date.parse(sch.updated_at) : undefined, 24 * HOUR, now)) {
@@ -125,7 +132,8 @@ async function logged(job: JobName, fn: () => Promise<Omit<JobResult, "job">>): 
   } catch (e) {
     r = { job, ok: false, message: e instanceof Error ? e.message : String(e) };
   }
-  if (job !== "seed" || !r.ok || r.message !== "unchanged") {
+  const quiet = (job === "seed" && r.message === "unchanged") || (job === "watches" && r.message === "none due");
+  if (!r.ok || !quiet) {
     await serverDb()
       .from("job_runs")
       .insert({

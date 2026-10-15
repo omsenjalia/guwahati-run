@@ -102,6 +102,7 @@ const JOBS = [
   { id: "weather", label: "Weather" },
   { id: "watchers", label: "Connections, deadlines and alerts" },
   { id: "schedules", label: "Train timetables (meal planner)" },
+  { id: "watches", label: "Extra PNRs and waitlist routes" },
   { id: "seed", label: "Trip data seed" },
 ];
 

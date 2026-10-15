@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { ArrowSquareOut, ChatText, IdentificationCard, Info, Wallet, Warning } from "@phosphor-icons/react";
 import { BACKUPS, IRCTC_PNR_URL, LEGS, TEAM, type Leg } from "@/data/trip";
@@ -8,6 +9,7 @@ import { CoachStrip, Route, TimeRange, personName } from "@/components/leg-bits"
 import { ChoiceBanner, NePlanB } from "@/components/plan-b";
 import { storedChoice } from "@/lib/ticket-choice";
 import { PnrHistory } from "@/components/pnr-history";
+import { WatchButtons, WatchList, WatchSheet } from "@/components/watch-list";
 import { smsLink } from "@/lib/links";
 import { useNow } from "@/lib/clock";
 import { useLive } from "@/lib/live-store";
@@ -20,6 +22,7 @@ import { cn } from "@/lib/utils";
 export function TicketsView() {
   const now = useNow();
   const live = useLive();
+  const [adding, setAdding] = useState<"pnr" | "route" | null>(null);
   if (now === null) return <Skeleton className="h-96" />;
   const trains = LEGS.filter((l) => l.kind === "train");
   return (
@@ -34,6 +37,7 @@ export function TicketsView() {
           Wallet
         </Link>
       </div>
+      <WatchButtons onAdd={setAdding} />
       {trains.map((leg) => (
         <TicketCard key={leg.id} leg={leg} live={live} now={now} />
       ))}
@@ -41,6 +45,8 @@ export function TicketsView() {
       {BACKUPS.map((leg) => (
         <TicketCard key={leg.id} leg={leg} live={live} now={now} />
       ))}
+      <WatchList live={live} now={now} />
+      <WatchSheet mode={adding} onClose={() => setAdding(null)} />
     </div>
   );
 }

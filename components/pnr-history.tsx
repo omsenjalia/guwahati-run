@@ -51,7 +51,12 @@ export function PnrHistory({ legId }: { legId: LegId }) {
   }, [legId, key]);
 
   if (!rows?.length) return null;
-  const points = rows.map((r) => ({ t: Date.parse(r.fetched_at), wl: worstWl(r) }));
+  return <WlGraph points={rows.map((r) => ({ t: Date.parse(r.fetched_at), wl: worstWl(r) }))} />;
+}
+
+/** Step graph of the waitlist number over time (0 = seated / available). */
+export function WlGraph({ points }: { points: { t: number; wl: number }[] }) {
+  if (!points.length) return null;
   const first = points[0];
   const last = points[points.length - 1];
 
