@@ -44,7 +44,7 @@ export function Route({ leg, className }: { leg: Leg; className?: string }) {
 
 export function TimeRange({ start, end }: { start: number; end: number }) {
   return (
-    <span className="font-mono tabular">
+    <span className="tabular">
       {stamp(start)} <span className="opacity-50">to</span> {stamp(end)}
     </span>
   );
@@ -55,15 +55,26 @@ export function Countdown({ to, now, className }: { to: number; now: number; cla
   const diff = to - now;
   const { days, hours, minutes, seconds } = countdownParts(diff);
   const pad = (n: number) => String(n).padStart(2, "0");
-  const text =
-    diff <= 0
-      ? "Now"
-      : days > 0
-        ? `${days}d ${pad(hours)}h ${pad(minutes)}m`
-        : `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+  // Units are set smaller and quieter than the digits, so the number reads first.
+  const unit = (n: number | string, u: string) => (
+    <>
+      {n}
+      <span className="ml-[0.08em] mr-[0.3em] text-[0.55em] font-medium text-muted-foreground last:mr-0">{u}</span>
+    </>
+  );
   return (
-    <span className={cn("font-mono font-semibold tracking-tight tabular", className)} aria-live="off">
-      {text}
+    <span className={cn("tabular font-semibold tracking-tight", className)} aria-live="off">
+      {diff <= 0 ? (
+        "Now"
+      ) : days > 0 ? (
+        <>
+          {unit(days, "d")}
+          {unit(pad(hours), "h")}
+          {unit(pad(minutes), "m")}
+        </>
+      ) : (
+        `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`
+      )}
     </span>
   );
 }
@@ -84,12 +95,12 @@ export function CoachStrip({ order, mine }: { order: string; mine: string[] }) {
       <p className="text-xs text-muted-foreground">
         Coach order on the platform{where && <span className="text-foreground">. Ours are {where}</span>}
       </p>
-      <ol className="-mx-4 mt-1.5 flex gap-1 overflow-x-auto px-4 pb-1" aria-label="Coach order, engine first">
+      <ol className="-mx-5 mt-1.5 flex gap-1 overflow-x-auto px-5 pb-1" aria-label="Coach order, engine first">
         {coaches.map((c, i) => (
           <li
             key={`${c}-${i}`}
             className={cn(
-              "flex h-8 min-w-9 shrink-0 items-center justify-center rounded-md px-1.5 font-mono text-xs tabular",
+              "flex h-8 min-w-9 shrink-0 items-center justify-center rounded-md px-1.5 tabular text-xs",
               ours.has(c) ? "bg-primary font-semibold text-primary-foreground" : c === "L" ? "bg-foreground/80 text-background" : "bg-secondary text-muted-foreground",
             )}
           >

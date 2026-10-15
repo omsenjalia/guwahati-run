@@ -24,7 +24,7 @@ export function GrantView() {
   const g = grantEstimate(reportRows(items, docs ?? []));
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-5">
       <h1 className="text-2xl font-semibold tracking-tight">Grant</h1>
 
       <p className="-mt-1 px-1 text-sm text-muted-foreground">
@@ -33,7 +33,7 @@ export function GrantView() {
 
       <Panel className="p-5">
         <p className="text-sm text-muted-foreground">Expected grant per student</p>
-        <p className="mt-1 font-mono text-[2.5rem] font-semibold leading-none tabular">{rupees(g.grant)}</p>
+        <p className="mt-1 tabular text-[2.5rem] font-semibold leading-none">{rupees(g.grant)}</p>
         <p className="mt-2 text-sm text-muted-foreground">
           {g.capped
             ? `Capped at the ${rupees(GRANT.capPerStudent)} limit. Eligible costs are ${rupees(g.eligible)}.`
@@ -62,7 +62,7 @@ export function GrantView() {
                     {[l.note, l.hasBill ? undefined : "no bill yet"].filter(Boolean).join(" · ")}
                   </p>
                 </div>
-                <div className="shrink-0 text-right font-mono tabular">
+                <div className="shrink-0 text-right tabular">
                   <p className="text-[0.95rem] font-semibold">{rupees(l.claim)}</p>
                   {reduced && <p className="text-xs text-muted-foreground line-through">{rupees(l.paid)}</p>}
                 </div>
@@ -71,7 +71,7 @@ export function GrantView() {
           })}
           <li className="flex items-center justify-between gap-3 border-t pt-3">
             <span className="text-sm text-muted-foreground">Eligible total</span>
-            <span className="font-mono font-semibold tabular">{rupees(g.eligible)}</span>
+            <span className="tabular font-semibold">{rupees(g.eligible)}</span>
           </li>
         </ul>
         <p className="mt-3 text-xs leading-relaxed text-subtle">
@@ -80,7 +80,7 @@ export function GrantView() {
       </Panel>
 
       {g.capped && (
-        <Panel className="border-primary/30">
+        <Panel className="ring-1 ring-primary/30">
           <PanelTitle aside={<Lightbulb className="size-5 text-primary" />}>Worth asking</PanelTitle>
           <p className="text-[0.95rem] leading-relaxed">
             Our costs exceed the {rupees(GRANT.capPerStudent)} cap. The policy lets the institution give more for larger events,
@@ -107,7 +107,7 @@ function ClaimDocsPanel({ items, docs }: { items: Expense[]; docs: DocRow[] }) {
   const done = list.filter((d) => d.have).length;
   return (
     <Panel>
-      <PanelTitle aside={<span className="font-mono text-sm text-muted-foreground tabular">{done}/{list.length}</span>}>Documents for the claim</PanelTitle>
+      <PanelTitle aside={<span className="tabular text-sm text-muted-foreground">{done}/{list.length}</span>}>Documents for the claim</PanelTitle>
       <ul className="flex flex-col gap-2.5">
         {list.map((d) => (
           <li key={d.id} className="flex items-start gap-2.5">
@@ -246,7 +246,7 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: str
   return (
     <div>
       <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className={cn("mt-0.5 font-mono text-[1.05rem] font-semibold tabular", tone)}>{value}</dd>
+      <dd className={cn("mt-0.5 tabular text-[1.05rem] font-semibold", tone)}>{value}</dd>
     </div>
   );
 }

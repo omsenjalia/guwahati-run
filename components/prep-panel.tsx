@@ -29,10 +29,10 @@ export function PrepPanel() {
 
   return (
     <Panel id="prep" className="scroll-mt-20">
-      <PanelTitle aside={<span className="font-mono text-sm text-muted-foreground tabular">{p.done}/{p.total} done</span>}>
+      <PanelTitle aside={<span className="tabular text-sm text-muted-foreground">{p.done}/{p.total} done</span>}>
         Prep checklist
       </PanelTitle>
-      <ul className="flex flex-col gap-3">
+      <ul className="flex flex-col gap-4">
         {sorted.map((item) => {
           const overdue = !item.done && !!item.due && item.due < today;
           return (
@@ -57,14 +57,14 @@ export function PrepPanel() {
                   </button>
                 )}
                 {item.due && (
-                  <span className={cn("shrink-0 pt-0.5 font-mono text-xs tabular", overdue ? "font-semibold text-bad" : "text-muted-foreground")}>
+                  <span className={cn("shrink-0 pt-0.5 tabular text-xs", overdue ? "font-semibold text-bad" : "text-muted-foreground")}>
                     {overdue ? "overdue " : "by "}
                     {dayMonth(`${item.due}T12:00:00+05:30`)}
                   </span>
                 )}
               </div>
               {item.per_person && (
-                <div className="mt-1.5 grid grid-cols-4 gap-1.5">
+                <div className="mt-2 flex flex-wrap gap-1.5">
                   {TEAM.map((person) => {
                     const on = item.done_people?.includes(person.id) ?? false;
                     return (
@@ -75,9 +75,9 @@ export function PrepPanel() {
                         aria-label={`${person.short}: ${item.label}`}
                         onClick={() => togglePerson(item, person.id, EVERYONE)}
                         className={cn(
-                          "inline-flex h-10 items-center justify-center gap-1 rounded-lg border text-sm font-medium transition active:scale-[0.98]",
-                          on ? "border-ok/50 bg-ok-soft text-ok" : "bg-secondary",
-                          person.id === me && !on && "border-primary/60",
+                          "inline-flex h-9 items-center justify-center gap-1 rounded-full border px-3 text-[0.8rem] font-medium transition active:scale-[0.97]",
+                          on ? "border-transparent bg-ok-soft text-ok" : "border-input text-muted-foreground",
+                          person.id === me && !on && "border-primary/70 text-foreground",
                         )}
                       >
                         {on && <Check className="size-3.5" weight="bold" />}

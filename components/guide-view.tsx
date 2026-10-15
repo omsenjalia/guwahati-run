@@ -25,7 +25,7 @@ export function GuideView() {
   const [tab, setTab] = useState<Tab>("stations");
   if (now === null) return <Skeleton className="h-96" />;
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-5">
       <h1 className="text-2xl font-semibold tracking-tight">Guides</h1>
       <div role="tablist" className="grid grid-cols-3 gap-1 rounded-xl bg-secondary p-1">
         {TABS.map((t) => (
@@ -57,7 +57,7 @@ function Stations() {
         const p = PLACES[g.id];
         return (
           <Panel key={g.id}>
-            <PanelTitle aside={<span className="font-mono text-sm text-muted-foreground">{p.code}</span>}>{p.name}</PanelTitle>
+            <PanelTitle aside={<span className="tabular text-sm text-muted-foreground">{p.code}</span>}>{p.name}</PanelTitle>
             <dl className="grid grid-cols-[5rem_1fr] gap-x-3 gap-y-2 text-[0.95rem] leading-snug">
               <dt className="text-muted-foreground">Exit</dt>
               <dd>{g.exit}</dd>
@@ -94,7 +94,7 @@ function Food({ now }: { now: number }) {
   const { meals, water } = planMeals(live);
   if (!meals.length) {
     return (
-      <Panel className="border-dashed bg-transparent">
+      <Panel className="border border-dashed bg-transparent shadow-none">
         <p className="text-[0.95rem] text-muted-foreground">Train timetables haven&apos;t synced yet. They update daily.</p>
       </Panel>
     );
@@ -117,7 +117,7 @@ function Food({ now }: { now: number }) {
                   <p className="font-semibold">
                     {m.meal} <span className="font-normal text-muted-foreground">at {m.station}</span>
                   </p>
-                  <span className="font-mono text-sm tabular">{stamp(m.at)}</span>
+                  <span className="tabular text-sm">{stamp(m.at)}</span>
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {leg.train?.name}, {m.haltMin} min halt. Order by {hhmm(m.orderBy)}.
@@ -153,7 +153,7 @@ function Food({ now }: { now: number }) {
               .map((w) => (
                 <li key={`${w.legId}-${w.at}`} className="flex justify-between gap-3">
                   <span>{w.station}</span>
-                  <span className="font-mono text-sm text-muted-foreground tabular">
+                  <span className="tabular text-sm text-muted-foreground">
                     {stamp(w.at)}, {w.haltMin} min
                   </span>
                 </li>
@@ -180,7 +180,7 @@ function Explore({ now }: { now: number }) {
         <p className="text-[0.95rem] leading-snug">
           From {hhmm(freeFrom)} until the Brahmaputra Express at {hhmm(train.start)}
           {late && <span className="text-warn"> (running late, was {hhmm(train.plannedStart)})</span>}. Be at Kamakhya by{" "}
-          <span className="font-mono font-semibold tabular">{hhmm(beAtStation)}</span> with bags.
+          <span className="tabular font-semibold">{hhmm(beAtStation)}</span> with bags.
         </p>
         <p className="mt-2 text-xs text-subtle">Leave-by times move automatically if the train is late.</p>
       </Panel>
@@ -198,15 +198,15 @@ function Explore({ now }: { now: number }) {
             <dl className="mt-3 grid grid-cols-3 gap-2 text-sm">
               <div>
                 <dt className="text-xs text-muted-foreground">Spend</dt>
-                <dd className="font-mono font-semibold tabular">{e.stayMin} min</dd>
+                <dd className="tabular font-semibold">{e.stayMin} min</dd>
               </div>
               <div>
                 <dt className="text-xs text-muted-foreground">To Kamakhya</dt>
-                <dd className="font-mono font-semibold tabular">{e.toKyqMin} min</dd>
+                <dd className="tabular font-semibold">{e.toKyqMin} min</dd>
               </div>
               <div>
                 <dt className="text-xs text-muted-foreground">Leave by</dt>
-                <dd className="font-mono font-semibold tabular">{hhmm(leaveBy)}</dd>
+                <dd className="tabular font-semibold">{hhmm(leaveBy)}</dd>
               </div>
             </dl>
             <a

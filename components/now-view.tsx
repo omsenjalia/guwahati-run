@@ -20,7 +20,7 @@ export function NowView() {
   const phase = phaseAt(now);
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-5">
       {phase === "before" && <BeforeTrip now={now} live={live} />}
       {phase === "travel" && <TravelDay now={now} live={live} direction="out" />}
       {phase === "hackathon" && <HackathonPhase now={now} />}

@@ -30,13 +30,18 @@ export async function fetchWeatherMany(places: Place[]): Promise<Weather[]> {
     todayMax: Math.round(j.daily.temperature_2m_max[0]),
     todayMin: Math.round(j.daily.temperature_2m_min[0]),
     rainChance: j.daily.precipitation_probability_max[0] ?? 0,
-    days: (j.daily.time as string[]).map((date, d) => ({
-      date,
-      max: Math.round(j.daily.temperature_2m_max[d]),
-      min: Math.round(j.daily.temperature_2m_min[d]),
-      rainChance: j.daily.precipitation_probability_max[d] ?? 0,
-      code: j.daily.weather_code[d],
-    })),
+    // The last forecast day sometimes comes back with blank temperatures; skip those.
+    days: (j.daily.time as string[]).flatMap((date, d) =>
+      j.daily.temperature_2m_max[d] == null || j.daily.temperature_2m_min[d] == null
+        ? []
+        : [{
+            date,
+            max: Math.round(j.daily.temperature_2m_max[d]),
+            min: Math.round(j.daily.temperature_2m_min[d]),
+            rainChance: j.daily.precipitation_probability_max[d] ?? 0,
+            code: j.daily.weather_code[d],
+          }],
+    ),
     fetchedAt,
   }));
 }

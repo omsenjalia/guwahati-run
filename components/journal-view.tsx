@@ -21,23 +21,23 @@ export function JournalView() {
   for (const e of entries ?? []) days.set(e.day, [...(days.get(e.day) ?? []), e]);
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-5">
       <h1 className="text-2xl font-semibold tracking-tight">Journal</h1>
       <Composer today={istDateKey(now)} />
 
       {!entries ? (
         <Skeleton className="h-48" />
       ) : entries.length === 0 ? (
-        <Panel className="border-dashed bg-transparent">
+        <Panel className="border border-dashed bg-transparent shadow-none">
           <p className="text-[0.95rem] text-muted-foreground">Nothing yet. Add a photo or a line about today: it all ends up in the recap.</p>
         </Panel>
       ) : (
         [...days.entries()].map(([day, list]) => (
           <Panel key={day} className="p-0">
-            <h2 className="px-4 pt-4 text-[0.95rem] font-semibold">{weekdayDate(`${day}T12:00:00+05:30`)}</h2>
+            <h2 className="px-5 pt-5 text-base font-semibold tracking-tight">{weekdayDate(`${day}T12:00:00+05:30`)}</h2>
             <ul className="mt-2 flex flex-col">
               {list.map((e) => (
-                <li key={e.id} className="border-t px-4 py-3 first:border-t-0">
+                <li key={e.id} className="border-t px-5 py-3.5 first:border-t-0">
                   {e.photo_path &&
                     (urls[e.photo_path] ? (
                       // eslint-disable-next-line @next/next/no-img-element -- private signed URLs, no optimisation needed

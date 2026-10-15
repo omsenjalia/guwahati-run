@@ -76,7 +76,7 @@ function TravelHero({ state, now, live }: { state: NowState; now: number; live: 
         <div className="mt-3">
           <Countdown to={state.countdownTo} now={now} className="text-[2.5rem] leading-none" />
           <p className="mt-1.5 text-sm text-muted-foreground">
-            {state.countdownLabel} <span className="font-mono tabular text-foreground">{stamp(state.countdownTo)}</span>
+            {state.countdownLabel} <span className="tabular text-foreground">{stamp(state.countdownTo)}</span>
           </p>
         </div>
       )}
@@ -136,7 +136,7 @@ function NextAction({ plan, now }: { plan: TransferPlan; now: number }) {
   const to = PLACES[leg.to].short;
   const how = plan.mode === "metro" ? `metro to ${to}` : `${plan.route.toLowerCase()} to ${to}`;
   return (
-    <Panel className="border-primary/30">
+    <Panel className="ring-1 ring-primary/30">
       <PanelTitle>Next action</PanelTitle>
       <p className="text-[1.05rem] font-semibold leading-snug">
         Get off at {from}, then {how}
@@ -155,7 +155,7 @@ function OurSeats({ leg, live }: { leg: Leg; live: LiveState }) {
   const pax = legPassengers(leg, live);
   return (
     <Panel>
-      <PanelTitle aside={<span className="font-mono text-sm text-muted-foreground tabular">{leg.train?.number}</span>}>
+      <PanelTitle aside={<span className="tabular text-sm text-muted-foreground">{leg.train?.number}</span>}>
         Our seats
       </PanelTitle>
       <ul className="grid grid-cols-2 gap-2">
@@ -165,7 +165,7 @@ function OurSeats({ leg, live }: { leg: Leg; live: LiveState }) {
           return (
             <li key={p.person} className={cn("rounded-lg bg-secondary px-3 py-2.5", p.person === me && "ring-2 ring-primary/50")}>
               <p className="text-xs text-muted-foreground">{personName(p.person)}</p>
-              <p className={cn("font-mono text-lg font-semibold tabular", s.kind === "WL" && !b && "text-warn")}>
+              <p className={cn("tabular text-lg font-semibold", s.kind === "WL" && !b && "text-warn")}>
                 {b ? `${b.coach}/${b.berth}` : s.label}
               </p>
               {b && <p className="text-xs text-muted-foreground">{b.type}</p>}
@@ -192,9 +192,15 @@ function JourneyBar({ steps, now, direction }: { steps: Step[]; now: number; dir
   const marks = [0, ...legs.map((l) => (acc += l.km ?? 0) / total)];
   const where = journeyProgress(steps, now, direction);
   const atStops = direction === "out" ? [marks[0], marks[1], marks[2], marks[3]] : [marks[0], marks[1], marks[2]];
+  const labelled = new Set<number>([0, atStops.length - 1]);
+  atStops.forEach((m, i) => {
+    if (i === 0 || i === atStops.length - 1) return;
+    const near = atStops.some((o, j) => j !== i && (labelled.has(j) || j > i) && Math.abs(o - m) < 0.15);
+    if (!near) labelled.add(i);
+  });
   return (
     <Panel>
-      <PanelTitle aside={<span className="font-mono text-sm text-muted-foreground tabular">{Math.round(where * total)} / {total} km</span>}>
+      <PanelTitle aside={<span className="tabular text-sm text-muted-foreground">{Math.round(where * total)} / {total} km</span>}>
         Journey
       </PanelTitle>
       <div className="relative mx-2 mt-2 h-2 rounded-full bg-secondary">
@@ -214,7 +220,8 @@ function JourneyBar({ steps, now, direction }: { steps: Step[]; now: number; dir
       </div>
       <div className="relative mt-3 h-4 text-xs text-muted-foreground">
         {atStops.map((m, i) => (
-          <span
+          // Stops very close together (Anand, Ahmedabad) would overlap: label only the far one.
+          labelled.has(i) && <span
             key={stops[i]}
             className={cn("absolute whitespace-nowrap", i === 0 ? "left-0" : i === atStops.length - 1 ? "right-0" : "-translate-x-1/2")}
             style={i === 0 || i === atStops.length - 1 ? undefined : { left: `${m * 100}%` }}
@@ -247,7 +254,7 @@ function FoodStations({ leg, live, now }: { leg: Leg; live: LiveState; now: numb
                 {m.haltMin} min halt · order by {hhmm(m.orderBy)}
               </span>
             </span>
-            <span className="shrink-0 font-mono text-sm tabular">{hhmm(m.at)}</span>
+            <span className="shrink-0 tabular text-sm">{hhmm(m.at)}</span>
           </li>
         ))}
       </ul>

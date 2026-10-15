@@ -40,7 +40,7 @@ export function HackathonPhase({ now }: { now: number }) {
         <p className="mt-3 text-sm text-muted-foreground">{target.label} in</p>
         <Countdown to={target.at} now={now} className="text-[2.75rem] leading-none" />
         <p className="mt-1.5 text-sm text-muted-foreground">
-          <span className="font-mono tabular text-foreground">{stamp(target.at)}</span>
+          <span className="tabular text-foreground">{stamp(target.at)}</span>
         </p>
         <dl className="mt-4 grid grid-cols-2 gap-2 border-t pt-4">
           <Fact label="Submission" value={SUBMISSION ? `${stamp(SUBMISSION.at)}${SUBMISSION.tbc ? " (tbc)" : ""}` : "tbc"} />
@@ -48,7 +48,7 @@ export function HackathonPhase({ now }: { now: number }) {
         </dl>
         {nextItem && (
           <p className="mt-3 text-[0.95rem]">
-            Next: <span className="font-semibold">{nextItem.title}</span> at <span className="font-mono tabular">{hhmm(nextItem.at)}</span>
+            Next: <span className="font-semibold">{nextItem.title}</span> at <span className="tabular">{hhmm(nextItem.at)}</span>
             {nextItem.tbc && <span className="text-muted-foreground"> (tbc)</span>}
           </p>
         )}
@@ -72,7 +72,7 @@ export function HackathonPhase({ now }: { now: number }) {
         <ul className="flex flex-col gap-1.5">
           {REST_PLAN.map((r) => (
             <li key={r.start} className={cn("flex justify-between gap-3 text-sm", ms(r.end) <= now && "text-subtle line-through")}>
-              <span className="font-mono tabular">
+              <span className="tabular">
                 {hhmm(r.start)}-{hhmm(r.end)}
               </span>
               <span>{r.resting.map(personName).join(", ")}</span>
@@ -102,7 +102,7 @@ function Fact({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg bg-secondary px-3 py-2.5">
       <dt className="text-[0.7rem] text-muted-foreground">{label}</dt>
-      <dd className="mt-0.5 font-mono text-sm font-semibold tabular">{value}</dd>
+      <dd className="mt-0.5 tabular text-sm font-semibold">{value}</dd>
     </div>
   );
 }
@@ -123,7 +123,7 @@ export function FreeTime({ now, live }: { now: number; live: LiveState }) {
       <Panel className="p-5">
         <p className="text-sm font-medium text-muted-foreground">Free time in Guwahati · train {L3.train?.number} at {hhmm(depart)}</p>
         <p className="mt-3 text-sm text-muted-foreground">Leave IIT by</p>
-        <p className="font-mono text-[2.75rem] font-semibold leading-none tabular">{hhmm(leaveIit)}</p>
+        <p className="tabular text-[2.75rem] font-semibold leading-none">{hhmm(leaveIit)}</p>
         <p className="mt-1.5 text-sm text-muted-foreground">
           <Countdown to={leaveIit} now={now} className="text-sm text-foreground" /> left
           {late && <span className="text-warn"> · train running late, times adjusted</span>}
@@ -140,7 +140,7 @@ export function FreeTime({ now, live }: { now: number; live: LiveState }) {
         <PanelTitle aside={<MapPinArea className="size-5 text-subtle" />}>Last stop: Kamakhya Temple</PanelTitle>
         <p className="text-[0.95rem] leading-snug">
           It&apos;s close to the station (about {TEMPLE.toKyqMin} min by cab), so it&apos;s the natural last stop with bags. Leave the
-          temple by <span className="font-mono font-semibold tabular">{hhmm(leaveTemple)}</span>.
+          temple by <span className="tabular font-semibold">{hhmm(leaveTemple)}</span>.
         </p>
         <p className="mt-2 text-sm text-muted-foreground">{TEMPLE.why}</p>
         <a
@@ -167,7 +167,7 @@ export function ArrivalReminder() {
       <PanelTitle>Home stretch</PanelTitle>
       <p className="text-[0.95rem] leading-snug">
         {L4.train?.name} reaches {PLACES.ANND.short} at{" "}
-        <span className="font-mono font-semibold tabular">
+        <span className="tabular font-semibold">
           {weekdayDate(L4.arrive)} {hhmm(L4.arrive)}
         </span>
         .
@@ -195,7 +195,7 @@ export function AfterTrip({ live }: { live: LiveState }) {
   return (
     <>
       <Panel className="p-5">
-        <p className="text-2xl font-semibold tracking-tight">Trip complete 🎉</p>
+        <p className="text-2xl font-semibold tracking-tight">Trip complete</p>
         <p className="mt-1 text-sm text-muted-foreground">
           {EVENT.name} @ {EVENT.venue}
         </p>
@@ -228,7 +228,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg bg-secondary px-3 py-2.5">
       <dt className="text-[0.7rem] text-muted-foreground">{label}</dt>
-      <dd className="mt-0.5 font-mono text-[1.05rem] font-semibold tabular">{value}</dd>
+      <dd className="mt-0.5 tabular text-[1.05rem] font-semibold">{value}</dd>
     </div>
   );
 }

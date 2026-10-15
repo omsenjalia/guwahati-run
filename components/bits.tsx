@@ -12,7 +12,7 @@ import type { Health } from "@/lib/trip-engine";
 
 export function Panel({ className, children, ...rest }: React.ComponentProps<"section">) {
   return (
-    <section className={cn("rounded-2xl border bg-card p-4", className)} {...rest}>
+    <section className={cn("panel rounded-2xl bg-card p-5", className)} {...rest}>
       {children}
     </section>
   );
@@ -20,8 +20,8 @@ export function Panel({ className, children, ...rest }: React.ComponentProps<"se
 
 export function PanelTitle({ children, aside }: { children: ReactNode; aside?: ReactNode }) {
   return (
-    <div className="mb-3 flex items-baseline justify-between gap-3">
-      <h2 className="text-[0.95rem] font-semibold">{children}</h2>
+    <div className="mb-4 flex items-baseline justify-between gap-3">
+      <h2 className="text-base font-semibold tracking-tight">{children}</h2>
       {aside}
     </div>
   );
@@ -139,7 +139,7 @@ export function CopyChip({ value, label, className }: { value: string; label?: s
         }
       }}
       className={cn(
-        "inline-flex h-11 items-center gap-2 rounded-lg bg-secondary px-3 font-mono text-[0.95rem] tracking-wide tabular transition active:scale-[0.98]",
+        "inline-flex h-11 items-center gap-2 rounded-lg bg-secondary px-3 tabular text-[0.95rem] tracking-wide transition active:scale-[0.98]",
         className,
       )}
       aria-label={`Copy ${label ?? ""} ${value}`}

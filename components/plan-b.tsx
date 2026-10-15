@@ -32,14 +32,14 @@ export function NePlanB({ live, now, compact }: { live: LiveState; now: number; 
   const tatkalOpen = now < tatkalAt + 2 * HOUR;
 
   return (
-    <Panel className={cn(charted ? "border-bad/50 bg-bad-soft" : "border-warn/40")}>
+    <Panel className={cn(charted ? "ring-1 ring-bad/50 bg-bad-soft" : "ring-1 ring-warn/40")}>
       <PanelTitle aside={<StatusPill health={charted ? "red" : "amber"}>{charted ? "Act now" : "Plan B ready"}</StatusPill>}>
         Plan B: 12506 North East
       </PanelTitle>
 
-      <p className="mb-3 rounded-lg bg-secondary px-3 py-2.5 text-sm leading-snug">
+      <p className="mb-3 text-sm leading-snug text-pretty">
         Backup booked: <span className="font-semibold">{BACKUP.train!.number} {BACKUP.train!.name}</span>, Delhi Jn {hhmm(BACKUP.depart)},{" "}
-        <span className="font-mono tabular">{statusSummary(BACKUP, live)}</span>. Whichever clears first, we take; North East if both do.
+        <span className="tabular">{statusSummary(BACKUP, live)}</span>. Whichever clears first, we take; North East if both do.
       </p>
 
       {!charted && tatkalOpen && (
@@ -48,7 +48,7 @@ export function NePlanB({ live, now, compact }: { live: LiveState; now: number; 
             <p className="font-semibold">Tatkal decision, {stamp(tatkalAt)}</p>
             <Countdown to={tatkalAt} now={now} className="text-sm" />
           </div>
-          <p className="rounded-lg bg-secondary px-3 py-2.5 text-[0.95rem] leading-snug">{verdict.message}</p>
+          <p className="text-[0.95rem] leading-snug text-pretty">{verdict.message}</p>
           {!compact && (
             <p className="text-sm leading-snug text-muted-foreground">
               Rule: if the chance is under about 70% or GNWL is still above about 15-20 that morning, book AC Tatkal for all 4.
@@ -110,7 +110,7 @@ export function ChoiceBanner({ live }: { live: LiveState }) {
   }
   const t = choiceText(choice);
   return (
-    <Panel className="border-bad/40 bg-bad-soft">
+    <Panel className="ring-1 ring-bad/40 bg-bad-soft">
       <PanelTitle aside={<StatusPill health="red">Action</StatusPill>}>{t.title}</PanelTitle>
       <p className="text-[0.95rem] leading-snug">{t.action}</p>
       <a
@@ -164,16 +164,16 @@ export function Alternatives() {
         <div key={t.number} className="rounded-lg bg-card px-3 py-2.5">
           <div className="flex items-baseline justify-between gap-2">
             <p className="font-semibold">
-              <span className="font-mono tabular">{t.number}</span> {t.name}
+              <span className="tabular">{t.number}</span> {t.name}
             </p>
-            {t.depart && <span className="font-mono text-sm tabular">{hhmm(t.depart)}</span>}
+            {t.depart && <span className="tabular text-sm">{hhmm(t.depart)}</span>}
           </div>
           <p className="text-sm text-muted-foreground">
             {t.from} to {t.to}
             {t.arrive ? `, arrives ${stamp(t.arrive)}` : ""}
           </p>
           {t.classes.length > 0 ? (
-            <p className="mt-1 font-mono text-sm tabular">
+            <p className="mt-1 tabular text-sm">
               {t.classes
                 .map((c) => `${c.travelClass} ${c.status}${c.confirmChance !== undefined ? ` (${c.confirmChance}%)` : ""}`)
                 .join(" · ")}

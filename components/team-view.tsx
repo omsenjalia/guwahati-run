@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSyncExternalStore } from "react";
-import { Check, Phone, Moon, Sun, DeviceMobile } from "@phosphor-icons/react";
+import { BookOpenText, CaretRight, Check, DeviceMobile, MapTrifold, Moon, Phone, Printer, Sun } from "@phosphor-icons/react";
 import { TEAM, USEFUL_NUMBERS } from "@/data/trip";
 import { Panel, PanelTitle, Skeleton } from "@/components/bits";
 import { AlertsPanel } from "@/components/alerts-panel";
@@ -13,13 +13,19 @@ import { setMe, useMe } from "@/lib/me";
 import { telLink } from "@/lib/links";
 import { cn } from "@/lib/utils";
 
+const MORE = [
+  { href: "/journal", label: "Trip journal and post", Icon: BookOpenText },
+  { href: "/guide", label: "Station guides, meals and explore", Icon: MapTrifold },
+  { href: "/print", label: "Paper backup (print or PDF)", Icon: Printer },
+];
+
 export function TeamView() {
   const me = useMe();
   // Phone-only state (localStorage) renders after mount to avoid hydration mismatches.
   const mounted = useNow() !== null;
   if (!mounted) return <Skeleton className="h-96" />;
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-5">
       <h1 className="text-2xl font-semibold tracking-tight">Team</h1>
 
       <Panel>
@@ -31,12 +37,13 @@ export function TeamView() {
               type="button"
               onClick={() => setMe(p.id)}
               aria-pressed={me === p.id}
+              aria-label={p.name}
               className={cn(
-                "flex h-12 items-center justify-between rounded-lg border px-3 text-[0.95rem] font-medium transition active:scale-[0.98]",
-                me === p.id ? "border-primary bg-accent text-accent-foreground" : "bg-secondary",
+                "flex h-12 items-center justify-between rounded-lg border px-4 text-[0.95rem] font-medium transition active:scale-[0.98]",
+                me === p.id ? "border-primary bg-accent text-accent-foreground" : "border-transparent bg-secondary",
               )}
             >
-              {p.name}
+              {p.name.split(" ")[0]}
               {me === p.id && <Check className="size-4" weight="bold" />}
             </button>
           ))}
@@ -70,9 +77,7 @@ export function TeamView() {
                 >
                   <Phone className="size-5" />
                 </a>
-              ) : (
-                <span className="text-xs text-subtle">No number</span>
-              )}
+              ) : null}
             </li>
           ))}
         </ul>
@@ -87,7 +92,7 @@ export function TeamView() {
                 href={telLink(n.number)}
                 className="flex h-full min-h-14 flex-col justify-center rounded-lg bg-secondary px-3 py-2 active:scale-[0.98]"
               >
-                <span className="font-mono text-lg font-semibold tabular">{n.number}</span>
+                <span className="tabular text-lg font-semibold">{n.number}</span>
                 <span className="text-xs leading-tight text-muted-foreground">{n.label}</span>
               </a>
             </li>
@@ -99,24 +104,19 @@ export function TeamView() {
       <ChecklistPanel owner="team" title="Team packing" />
       {me && <ChecklistPanel owner={me} title={`${TEAM.find((p) => p.id === me)?.short}'s packing`} />}
       <ThemePanel />
-      <Link
-        href="/journal"
-        className="flex h-12 items-center justify-center rounded-2xl border bg-card text-[0.95rem] font-medium active:scale-[0.98]"
-      >
-        Trip journal and post
-      </Link>
-      <Link
-        href="/guide"
-        className="flex h-12 items-center justify-center rounded-2xl border bg-card text-[0.95rem] font-medium active:scale-[0.98]"
-      >
-        Station guides, meals and explore
-      </Link>
-      <Link
-        href="/print"
-        className="flex h-12 items-center justify-center rounded-2xl border bg-card text-[0.95rem] font-medium active:scale-[0.98]"
-      >
-        Paper backup (print or PDF)
-      </Link>
+      <Panel className="p-0">
+        <ul className="divide-y">
+          {MORE.map(({ href, label, Icon }) => (
+            <li key={href}>
+              <Link href={href} className="flex min-h-14 items-center gap-3 px-5 text-[0.95rem] font-medium transition-colors active:bg-secondary">
+                <Icon className="size-5 shrink-0 text-muted-foreground" />
+                <span className="flex-1">{label}</span>
+                <CaretRight className="size-4 text-subtle" />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </Panel>
       <Link href="/admin" className="py-3 text-center text-sm text-subtle underline-offset-4 hover:underline">
         System status and data self-test
       </Link>
@@ -160,7 +160,7 @@ function ThemePanel() {
   return (
     <Panel>
       <PanelTitle>Display</PanelTitle>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-1 rounded-xl bg-secondary p-1">
         {opts.map(({ id, label, Icon }) => (
           <button
             key={id}
@@ -168,8 +168,8 @@ function ThemePanel() {
             onClick={() => set(id)}
             aria-pressed={theme === id}
             className={cn(
-              "flex h-12 items-center justify-center gap-2 rounded-lg border text-sm font-medium active:scale-[0.98]",
-              theme === id ? "border-primary bg-accent text-accent-foreground" : "bg-secondary",
+              "flex h-10 items-center justify-center gap-2 rounded-lg text-sm font-medium transition",
+              theme === id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground",
             )}
           >
             <Icon className="size-4" />

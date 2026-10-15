@@ -33,7 +33,7 @@ export function WalletView() {
   const start = Math.max(0, TICKETS.findIndex((l) => ms(l.arrive) > now));
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-5">
       <div className="flex items-center gap-2">
         <Link href="/tickets" aria-label="Back to tickets" className="-ml-2 inline-flex size-11 items-center justify-center rounded-lg active:bg-secondary">
           <ArrowLeft className="size-5" />
@@ -100,21 +100,21 @@ function TicketFace({ leg, live }: { leg: Leg; live: LiveState }) {
     <>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="font-mono text-sm text-muted-foreground tabular">
+          <p className="tabular text-sm text-muted-foreground">
             {leg.train?.number} · {leg.travelClass}
             {leg.backupFor && <span className="ml-1.5 font-sans font-semibold text-primary">Backup</span>}
           </p>
           <p className="text-lg font-semibold leading-tight">{leg.train?.name}</p>
         </div>
         <span className={cn("shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold", ok ? "bg-ok-soft text-ok" : "bg-warn-soft text-warn")}>
-          {ok ? "✅ Can board" : "Waitlisted"}
+          {ok ? "Can board" : "Waitlisted"}
         </span>
       </div>
       <p className="mt-2 text-[0.95rem]">
         {PLACES[leg.from].short} to {PLACES[leg.to].short}
         {leg.ticketTo && <span className="block text-xs text-muted-foreground">Ticket is to {leg.ticketTo}; we get off at {PLACES[leg.to].short}.</span>}
       </p>
-      <p className="font-mono text-sm tabular text-muted-foreground">
+      <p className="tabular text-sm text-muted-foreground">
         {weekdayDate(leg.depart)} · {stamp(leg.depart).split(" ").pop()} to {stamp(leg.arrive)}
       </p>
       <div className="mt-3">
@@ -126,7 +126,7 @@ function TicketFace({ leg, live }: { leg: Leg; live: LiveState }) {
           return (
             <li key={p.id} className="flex items-baseline justify-between gap-2 py-1.5">
               <span className="text-[0.95rem]">{personName(p.id)}</span>
-              <span className="font-mono text-[0.95rem] font-semibold tabular">
+              <span className="tabular text-[0.95rem] font-semibold">
                 {s.main}
                 {s.sub && <span className="ml-1.5 text-xs font-normal text-muted-foreground">{s.sub}</span>}
               </span>
@@ -152,14 +152,14 @@ function TteScreen({ leg, live, onClose }: { leg: Leg; live: LiveState; onClose:
         {PLACES[leg.from].name} to {PLACES[leg.to].name}, {weekdayDate(leg.depart)}
       </p>
       <p className="mt-6 text-sm uppercase tracking-wider text-black/60">PNR</p>
-      <p className="font-mono text-[2.75rem] leading-none font-bold tracking-wide tabular">{leg.pnr}</p>
+      <p className="tabular text-[2.75rem] leading-none font-bold tracking-wide">{leg.pnr}</p>
       <ul className="mt-8 flex flex-col gap-4">
         {TEAM.filter((p) => leg.passengers?.some((x) => x.person === p.id)).map((p) => {
           const s = seatFor(leg, live, p.id);
           return (
             <li key={p.id} className="flex items-baseline justify-between gap-3 border-b border-black/15 pb-3">
               <span className="text-2xl font-semibold">{fullName(p.id)}</span>
-              <span className="shrink-0 font-mono text-3xl font-bold tabular">{s.main}</span>
+              <span className="shrink-0 tabular text-3xl font-bold">{s.main}</span>
             </li>
           );
         })}

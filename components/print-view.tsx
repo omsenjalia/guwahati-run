@@ -57,7 +57,7 @@ export function PrintView() {
               const l = leg ? live.legs[leg.id] : undefined;
               return (
                 <tr key={s.id} className="border-b border-zinc-200 align-top">
-                  <td className="py-1 pr-2 font-mono whitespace-nowrap">
+                  <td className="py-1 pr-2 tabular whitespace-nowrap">
                     {stamp(s.start)}
                     <br />
                     <span className="text-zinc-600">to {hhmm(s.end)}</span>
@@ -71,7 +71,7 @@ export function PrintView() {
                     {leg ? `${PLACES[leg.from].name} to ${PLACES[leg.to].name}` : s.place ? PLACES[s.place].name : ""}
                     {l?.platform && <div className="text-zinc-600">Platform {l.platform}</div>}
                   </td>
-                  <td className="py-1 font-mono">
+                  <td className="py-1 tabular">
                     {leg?.pnr ?? ""}
                     {leg?.pnr && <div>{statusSummary(leg, live)}</div>}
                   </td>
@@ -88,7 +88,7 @@ export function PrintView() {
           <ul className="mt-1">
             {DEADLINES.map((d) => (
               <li key={d.id} className="border-b border-zinc-200 py-0.5">
-                <span className="font-mono">{stamp(ms(d.at))}</span> {d.title}
+                <span className="tabular">{stamp(ms(d.at))}</span> {d.title}
               </li>
             ))}
           </ul>
@@ -122,11 +122,11 @@ export function PrintView() {
           <ul className="mt-1">
             {USEFUL_NUMBERS.map((n) => (
               <li key={n.number}>
-                <span className="font-mono font-bold">{n.number}</span> {n.label}
+                <span className="tabular font-bold">{n.number}</span> {n.label}
               </li>
             ))}
             <li>
-              PNR by SMS: text <span className="font-mono">PNR &lt;number&gt;</span> to <b>139</b>
+              PNR by SMS: text <span className="tabular">PNR &lt;number&gt;</span> to <b>139</b>
             </li>
           </ul>
           {LEGS.some((l) => l.berths?.length) && (

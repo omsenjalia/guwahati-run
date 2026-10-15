@@ -59,7 +59,7 @@ export function ParentView() {
   const arrivalLive = nextArrival?.leg ? data?.legs[nextArrival.leg.id] : undefined;
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-5">
       <h1 className="text-2xl font-semibold tracking-tight">Where the team is</h1>
       <p className="text-sm text-muted-foreground">Heet, Om Kumar, Om Senjalia and Sujal. Times are IST.</p>
 
@@ -74,7 +74,7 @@ export function ParentView() {
           </p>
         )}
         {shown && phase !== "post-trip" && (
-          <p className="mt-1 font-mono text-sm text-muted-foreground tabular">
+          <p className="mt-1 tabular text-sm text-muted-foreground">
             {stamp(shown.start)} to {stamp(shown.end)}
           </p>
         )}
@@ -84,7 +84,7 @@ export function ParentView() {
         <Panel>
           <PanelTitle>Next arrival</PanelTitle>
           <p className="text-lg font-semibold">{PLACES[nextArrival.to].name}</p>
-          <p className="font-mono text-muted-foreground tabular">
+          <p className="tabular text-muted-foreground">
             {weekdayDate(nextArrival.end)}, {hhmm(nextArrival.end)}
           </p>
           {nextArrival.end - nextArrival.plannedEnd > 10 * 60000 && (

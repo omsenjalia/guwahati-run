@@ -96,7 +96,7 @@ export function SosView() {
 
   const call = "flex h-16 flex-col items-center justify-center rounded-xl text-center active:scale-[0.98]";
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-5">
       <h1 className="text-2xl font-semibold tracking-tight">SOS</h1>
 
       <button
@@ -150,9 +150,7 @@ export function SosView() {
                   <a href={telLink(p.phone)} className="inline-flex h-10 items-center rounded-lg bg-secondary px-3 text-sm font-medium">
                     Call
                   </a>
-                ) : (
-                  <span className="text-xs text-subtle">No number</span>
-                )}
+                ) : null}
                 {p.guardian.phone && (
                   <a href={telLink(p.guardian.phone)} className="inline-flex h-10 items-center rounded-lg bg-secondary px-3 text-sm font-medium">
                     Parent
@@ -166,7 +164,7 @@ export function SosView() {
           {USEFUL_NUMBERS.filter((n) => n.number !== "112" && n.number !== "139").map((n) => (
             <li key={n.number}>
               <a href={telLink(n.number)} className="inline-flex h-10 items-center gap-2 rounded-lg bg-secondary px-3 text-sm">
-                <span className="font-mono font-semibold">{n.number}</span>
+                <span className="tabular font-semibold">{n.number}</span>
                 {n.label}
               </a>
             </li>

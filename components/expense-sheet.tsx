@@ -250,7 +250,7 @@ function SheetForm({ mode, onClose }: { mode: SheetMode; onClose: () => void }) 
                 value={amount}
                 onChange={(e) => setAmount(e.target.value.replace(/[^\d.,]/g, ""))}
                 placeholder="0"
-                className={cn(field, "h-14 font-mono text-2xl tabular")}
+                className={cn(field, "h-14 tabular text-2xl")}
               />
             </div>
 

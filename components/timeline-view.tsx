@@ -50,7 +50,7 @@ export function TimelineView({ calendarPath }: { calendarPath?: string }) {
 
   if (now === null) {
     return (
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-5">
         <Skeleton className="h-12" />
         <Skeleton className="h-96" />
       </div>
@@ -119,7 +119,7 @@ function StepRow({
   if (step.minor) {
     return (
       <div className={cn("flex min-h-10 items-center gap-3 pl-1", past && "opacity-45")}>
-        <span className="w-12 shrink-0 font-mono text-xs text-subtle tabular">{hhmm(step.start)}</span>
+        <span className="w-12 shrink-0 tabular text-xs text-subtle">{hhmm(step.start)}</span>
         <Icon className="size-4 shrink-0 text-subtle" />
         <span className="text-sm text-muted-foreground">{step.title}</span>
       </div>
@@ -129,23 +129,24 @@ function StepRow({
   return (
     <div className={cn("flex gap-3 py-1.5", past && "opacity-45")}>
       <div className="w-12 shrink-0 pt-3.5 pl-1">
-        <p className="font-mono text-sm font-semibold tabular">{hhmm(step.start)}</p>
-        {shifted && <p className="font-mono text-xs text-subtle line-through tabular">{hhmm(step.plannedStart)}</p>}
+        <p className="tabular text-sm font-semibold">{hhmm(step.start)}</p>
+        {shifted && <p className="tabular text-xs text-subtle line-through">{hhmm(step.plannedStart)}</p>}
       </div>
-      <Panel className={cn("min-w-0 flex-1 p-3.5", current && "border-primary/50 bg-accent/40")}>
+      <Panel className={cn("min-w-0 flex-1 p-4", current && "ring-1 ring-primary/50")}>
         <div className="flex items-start gap-2.5">
           <Icon className={cn("mt-0.5 size-5 shrink-0", current ? "text-primary" : "text-muted-foreground")} />
           <div className="min-w-0 flex-1">
             <p className="font-semibold leading-snug">{step.title}</p>
             {leg && leg.kind !== "transfer" && <Route leg={leg} className="text-sm text-muted-foreground" />}
-            {leg?.kind === "transfer" && <p className="text-sm text-muted-foreground">{leg.modeHint}</p>}
+            {/* The plan below spells out the route; the hint is only for when there's no plan. */}
+            {leg?.kind === "transfer" && !(plan && !past) && <p className="text-sm text-muted-foreground">{leg.modeHint}</p>}
             {step.block && step.kind !== "event" && (
               <p className="text-sm text-muted-foreground">{PLACES[step.block.place].name}</p>
             )}
             <p className="mt-1 text-xs text-subtle">
-              until <span className="font-mono tabular">{hhmm(step.end)}</span>
+              until <span className="tabular">{hhmm(step.end)}</span>
               {step.approx && " (approx.)"}
-              {leg?.pnr && <span className="ml-2 font-mono tabular">{statusSummary(leg, live)}</span>}
+              {leg?.pnr && <span className="ml-2 tabular">{statusSummary(leg, live)}</span>}
             </p>
             {step.block?.notes?.map((n) => (
               <p key={n} className="mt-1.5 text-sm">
@@ -175,9 +176,9 @@ function TransferLinks({ from, to, road }: { from: keyof typeof PLACES; to: keyo
   const a = PLACES[from];
   const b = PLACES[to];
   const isAndroid = /android/i.test(navigator.userAgent);
-  const link = "inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-secondary text-sm font-medium active:scale-[0.98]";
+  const link = "inline-flex h-10 items-center justify-center gap-1 rounded-lg bg-secondary text-sm font-medium transition active:scale-[0.98]";
   return (
-    <div className="mt-3 grid grid-cols-2 gap-2">
+    <div className="mt-3 grid grid-cols-4 gap-1.5">
       <a className={link} href={mapsLink(a, b, road ? "driving" : "transit")} target="_blank" rel="noreferrer">
         <MapPinArea className="size-4" /> Maps
       </a>

@@ -77,7 +77,7 @@ export function WlGraph({ points }: { points: { t: number; wl: number }[] }) {
     <div>
       <div className="flex items-baseline justify-between gap-3">
         <p className="text-xs text-muted-foreground">Waitlist movement</p>
-        <p className="font-mono text-xs tabular text-muted-foreground">
+        <p className="tabular text-xs text-muted-foreground">
           {first.wl ? `WL ${first.wl}` : "seated"} to <span className="font-semibold text-foreground">{last.wl ? `WL ${last.wl}` : "seated"}</span>
         </p>
       </div>

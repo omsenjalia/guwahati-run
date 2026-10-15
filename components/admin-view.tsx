@@ -44,7 +44,7 @@ export function AdminView() {
   const passed = result?.checks.filter((c) => c.ok).length ?? 0;
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-5">
       <h1 className="text-2xl font-semibold tracking-tight">System</h1>
       <DataSourcesPanel />
       <JobsPanel />

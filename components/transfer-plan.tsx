@@ -11,7 +11,7 @@ export function TransferPlanCard({ plan, now, className }: { plan: TransferPlan;
   const Icon = plan.mode === "metro" ? Subway : Car;
   const late = plan.leaveBy !== undefined && now > plan.leaveBy;
   return (
-    <div className={cn("rounded-lg bg-secondary p-3", className)}>
+    <div className={cn("border-t pt-3", className)}>
       <div className="flex items-center justify-between gap-2">
         <p className="flex items-center gap-2 font-semibold">
           <Icon className="size-5 text-primary" weight="bold" />
@@ -38,18 +38,18 @@ export function TransferPlanCard({ plan, now, className }: { plan: TransferPlan;
           {plan.interchange ? `. Change at ${plan.interchange}.` : ""}
         </p>
       )}
-      <dl className="mt-2 grid grid-cols-3 gap-2 text-sm">
+      <dl className="mt-3 grid grid-cols-3 gap-2 text-sm">
         <div>
           <dt className="text-xs text-muted-foreground">{plan.leaveBy !== undefined ? "Leave by" : "Start"}</dt>
-          <dd className="font-mono font-semibold tabular">{hhmm(plan.leaveBy ?? plan.start)}</dd>
+          <dd className="tabular font-semibold">{hhmm(plan.leaveBy ?? plan.start)}</dd>
         </div>
         <div>
           <dt className="text-xs text-muted-foreground">Takes</dt>
-          <dd className="font-mono font-semibold tabular">{plan.minutes} min</dd>
+          <dd className="tabular font-semibold">{plan.minutes} min</dd>
         </div>
         <div>
           <dt className="text-xs text-muted-foreground">Cost, 4 of us</dt>
-          <dd className="font-mono font-semibold tabular">~₹{plan.costTotal}</dd>
+          <dd className="tabular font-semibold">~₹{plan.costTotal}</dd>
         </div>
       </dl>
       <p className="mt-2 text-xs text-subtle">{plan.reason}</p>

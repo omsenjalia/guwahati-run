@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowSquareOut, ChatText, IdentificationCard, Info, Wallet, Warning } from "@phosphor-icons/react";
+import { ArrowSquareOut, ChatText, CheckCircle, IdentificationCard, Info, Wallet, Warning } from "@phosphor-icons/react";
 import { BACKUPS, IRCTC_PNR_URL, LEGS, TEAM, type Leg } from "@/data/trip";
 import { CopyChip, LiveStamp, Panel, Skeleton, StatusPill, healthText } from "@/components/bits";
 import { CoachStrip, Route, TimeRange, personName } from "@/components/leg-bits";
@@ -26,7 +26,7 @@ export function TicketsView() {
   if (now === null) return <Skeleton className="h-96" />;
   const trains = LEGS.filter((l) => l.kind === "train");
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-5">
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold tracking-tight">Tickets</h1>
         <Link
@@ -72,11 +72,11 @@ function TicketCard({ leg, live, now }: { leg: Leg; live: LiveState; now: number
   return (
     <>
       <Panel id={leg.id} className={cn("scroll-mt-20 p-0", done && "opacity-55")}>
-        <div className="p-4">
+        <div className="p-5">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               {leg.backupFor && <p className="text-xs font-semibold text-primary">Backup for 12506 North East</p>}
-              <p className="font-mono text-sm text-muted-foreground tabular">{leg.train?.number}</p>
+              <p className="tabular text-sm text-muted-foreground">{leg.train?.number}</p>
               <p className="text-lg font-semibold leading-tight">{leg.train?.name}</p>
             </div>
             {dropped ? (
@@ -86,7 +86,10 @@ function TicketCard({ leg, live, now }: { leg: Leg; live: LiveState; now: number
             ) : !pax.length ? (
               <StatusPill health="green">Unreserved</StatusPill>
             ) : boardable ? (
-              <StatusPill health="green">✅ Can board</StatusPill>
+              <StatusPill health="green">
+                <CheckCircle weight="fill" className="mr-1 size-4" />
+                Can board
+              </StatusPill>
             ) : (
               <StatusPill health={legHealth(leg, live)}>{watching ? "Tracking" : undefined}</StatusPill>
             )}
@@ -102,9 +105,9 @@ function TicketCard({ leg, live, now }: { leg: Leg; live: LiveState; now: number
           <table className="w-full border-t text-[0.95rem]">
             <thead>
               <tr className="text-left text-xs text-muted-foreground">
-                <th className="py-2 pl-4 font-medium">Name</th>
+                <th className="py-2 pl-5 font-medium">Name</th>
                 <th className="py-2 font-medium">Booked</th>
-                <th className="py-2 pr-4 text-right font-medium">{watching ? "Now" : "Seat"}</th>
+                <th className="py-2 pr-5 text-right font-medium">{watching ? "Now" : "Seat"}</th>
               </tr>
             </thead>
             <tbody>
@@ -113,10 +116,10 @@ function TicketCard({ leg, live, now }: { leg: Leg; live: LiveState; now: number
                 const cur = parseStatus(p.current);
                 return (
                   <tr key={p.person} className={cn(p.person === me && "bg-accent/40")}>
-                    <td className="py-2.5 pl-4 font-medium">{personName(p.person)}</td>
-                    <td className="py-2.5 font-mono text-muted-foreground tabular">{parseStatus(p.booked).label}</td>
-                    <td className="py-2.5 pr-4 text-right">
-                      <span className={cn("font-mono font-semibold tabular", berth ? "text-ok" : KIND_TONE[cur.kind])}>
+                    <td className="py-2.5 pl-5 font-medium">{personName(p.person)}</td>
+                    <td className="py-2.5 tabular text-muted-foreground">{parseStatus(p.booked).label}</td>
+                    <td className="py-2.5 pr-5 text-right">
+                      <span className={cn("tabular font-semibold", berth ? "text-ok" : KIND_TONE[cur.kind])}>
                         {berth ? `${berth.coach}/${berth.berth}` : cur.label}
                       </span>
                       {berth && <span className="block text-xs text-muted-foreground">{berth.type}</span>}
@@ -131,7 +134,7 @@ function TicketCard({ leg, live, now }: { leg: Leg; live: LiveState; now: number
           </table>
         )}
 
-        <div className="flex flex-col gap-3 border-t p-4">
+        <div className="flex flex-col gap-3 border-t p-5">
           {!done && watching && <SituationNote leg={leg} live={live} />}
           {watching && <PnrHistory legId={leg.id} />}
           {l?.coachPosition && !done && <CoachStrip order={l.coachPosition} mine={berths.map((b) => b.coach)} />}
@@ -151,7 +154,7 @@ function TicketCard({ leg, live, now }: { leg: Leg; live: LiveState; now: number
                 <div className="text-right">
                   {!done && (
                     <p className="text-xs text-muted-foreground">
-                      Chart <span className="font-mono tabular">{stamp(chartTime(leg.depart))}</span>
+                      Chart <span className="tabular">{stamp(chartTime(leg.depart))}</span>
                     </p>
                   )}
                   <LiveStamp updatedAt={l?.pnrUpdatedAt ?? l?.updatedAt} stale={l?.stale} />
@@ -162,7 +165,7 @@ function TicketCard({ leg, live, now }: { leg: Leg; live: LiveState; now: number
                   target="_blank"
                   rel="noreferrer"
                   onClick={() => navigator.clipboard?.writeText(leg.pnr!).catch(() => {})}
-                  className="inline-flex items-center gap-1 text-sm font-medium text-primary"
+                  className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-sm font-medium text-primary"
                 >
                   Check on IRCTC
                   <ArrowSquareOut className="size-3.5" />
@@ -173,7 +176,7 @@ function TicketCard({ leg, live, now }: { leg: Leg; live: LiveState; now: number
           {leg.tracked && l?.chartPrepared && <p className={cn("text-xs font-medium", healthText.green)}>Chart prepared. No more checks needed.</p>}
           {leg.fareTotal && (
             <p className="text-sm text-muted-foreground">
-              Fare <span className="font-mono text-foreground tabular">
+              Fare <span className="tabular text-foreground">
                 ₹{leg.fareTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>{" "}
               for 4

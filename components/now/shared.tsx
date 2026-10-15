@@ -14,7 +14,10 @@ import { canBoard, type Step, type tripHealth } from "@/lib/trip-engine";
 import { cn } from "@/lib/utils";
 
 export const linkButton =
-  "inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[0.95rem] font-medium text-primary-foreground active:scale-[0.98]";
+  "inline-flex h-11 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg bg-primary px-4 text-[0.95rem] font-medium text-primary-foreground transition active:scale-[0.98]";
+/** Quiet "go to" link at the foot of a card (instead of another full-width button). */
+export const moreLink =
+  "-mb-1 mt-4 inline-flex min-h-11 items-center gap-1 self-start text-[0.95rem] font-medium text-primary active:opacity-70";
 export const softButton =
   "inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-secondary px-4 text-[0.95rem] font-medium active:scale-[0.98]";
 
@@ -43,23 +46,21 @@ export function DeadlinePanel({ now, live }: { now: number; live: LiveState }) {
   const verdict = evaluate(d, live, now);
   const pill = VERDICT_PILL[verdict.status];
   return (
-    <Panel className={cn(verdict.status === "action" && "border-bad/50", soon && verdict.status !== "action" && "border-warn/40")}>
+    <Panel className={cn(verdict.status === "action" && "ring-1 ring-bad/50", soon && verdict.status !== "action" && "ring-1 ring-warn/40")}>
       <PanelTitle aside={<Countdown to={at} now={now} className={cn("text-[0.95rem]", soon && "text-warn")} />}>
         Next important date
       </PanelTitle>
-      <p className="text-[1.05rem] font-semibold leading-snug">
-        <span className="font-mono tabular">
-          {weekdayDate(at)} {hhmm(at)}
-        </span>{" "}
-        · {d.title}
+      <p className="tabular text-sm text-muted-foreground">
+        {weekdayDate(at)}, {hhmm(at)}
       </p>
-      <div className="mt-3 flex flex-col gap-2 rounded-lg bg-secondary px-3 py-2.5">
-        <StatusPill health={pill.health} className="self-start">
+      <p className="mt-0.5 text-[1.05rem] font-semibold leading-snug text-pretty">{d.title}</p>
+      <div className="mt-4 flex items-start gap-3 border-t pt-4">
+        <StatusPill health={pill.health} className="mt-px">
           {pill.label}
         </StatusPill>
-        <p className="text-[0.95rem] leading-snug">{verdict.message || d.condition}</p>
+        <p className="text-[0.95rem] leading-snug text-pretty">{verdict.message || d.condition}</p>
       </div>
-      <div className="mt-3 flex items-center justify-between gap-3">
+      <div className="mt-4 flex items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
           Owner: <span className="font-medium text-foreground">{personName(d.owner)}</span>
           {d.owner === TATKAL_BOOKER && d.link ? " (Tatkal booker)" : ""}
@@ -86,7 +87,7 @@ export function ConnectionPlanB({ health, now }: { health: ReturnType<typeof tri
       {risky.map((c) => {
         const cfg = CONNECTIONS.find((x) => x.id === c.id)!;
         return (
-          <Panel key={c.id} className={cn(c.health === "red" ? "border-bad/50 bg-bad-soft" : "border-warn/40 bg-warn-soft")}>
+          <Panel key={c.id} className={cn(c.health === "red" ? "ring-1 ring-bad/50 bg-bad-soft" : "ring-1 ring-warn/40 bg-warn-soft")}>
             <PanelTitle aside={<StatusPill health={c.health}>{duration(Math.max(0, c.bufferMin) * 60000)} spare</StatusPill>}>
               Plan B: {c.label}
             </PanelTitle>
@@ -139,7 +140,7 @@ function WeatherCell({ id }: { id?: PlaceId }) {
       <p className="text-xs text-muted-foreground">{PLACES[id].city}</p>
       {w ? (
         <>
-          <p className="mt-0.5 font-mono text-2xl font-semibold tabular">{w.tempC}°</p>
+          <p className="mt-0.5 tabular text-2xl font-semibold">{w.tempC}°</p>
           <p className="text-sm text-muted-foreground">
             {describeWeather(w.code)}, {w.todayMin}-{w.todayMax}°
             {w.rainChance >= 30 && <span className="text-warn"> Rain {w.rainChance}%</span>}
@@ -170,7 +171,7 @@ export function ForecastPanel({ place, days, title }: { place: PlaceId; days: st
               <p className="text-xs text-muted-foreground">{weekdayDate(`${date}T12:00:00+05:30`)}</p>
               {f ? (
                 <>
-                  <p className="mt-0.5 font-mono text-lg font-semibold tabular">
+                  <p className="mt-0.5 tabular text-lg font-semibold">
                     {f.min}-{f.max}°
                   </p>
                   <p className="text-xs leading-snug text-muted-foreground">

@@ -22,7 +22,7 @@ export function HackathonView() {
   const nextItem = EVENT_SCHEDULE.find((s) => ms(s.at) > now);
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-5">
       <h1 className="text-2xl font-semibold tracking-tight">Hackathon</h1>
 
       <Panel className="p-5">
@@ -61,7 +61,7 @@ export function HackathonView() {
             const past = t < now;
             return (
               <li key={s.at + s.title} className={cn("flex gap-3 py-1.5", past && "opacity-45")}>
-                <span className="w-24 shrink-0 font-mono text-sm tabular">
+                <span className="w-24 shrink-0 tabular text-sm">
                   {weekdayDate(t).split(",")[0]} {hhmm(t)}
                 </span>
                 <span className="text-[0.95rem]">
@@ -137,7 +137,7 @@ function RestPanel({ now }: { now: number }) {
       <ol className="mt-3 grid grid-cols-2 gap-2 text-sm">
         {REST_PLAN.map((s) => (
           <li key={s.start} className={cn("rounded-lg bg-secondary px-3 py-2", s === current && "ring-1 ring-primary")}>
-            <span className="font-mono tabular">
+            <span className="tabular">
               {hhmm(ms(s.start))}-{hhmm(ms(s.end))}
             </span>
             <span className="block text-muted-foreground">{s.resting.map(personName).join(", ")}</span>
@@ -185,7 +185,7 @@ function BoardPanel() {
             onClick={() => setCol(c.id)}
             className={cn("h-10 rounded-lg text-sm font-medium", col === c.id ? "bg-card shadow-sm" : "text-muted-foreground")}
           >
-            {c.label} <span className="font-mono text-xs text-subtle">{cards?.filter((x) => x.status === c.id).length ?? 0}</span>
+            {c.label} <span className="tabular text-xs text-subtle">{cards?.filter((x) => x.status === c.id).length ?? 0}</span>
           </button>
         ))}
       </div>
@@ -282,7 +282,7 @@ function PitchTimer() {
       <PanelTitle aside={left <= 30 && left > 0 ? <StatusPill health="amber">Wrap up</StatusPill> : left === 0 ? <StatusPill health="red">Time</StatusPill> : null}>
         Pitch timer
       </PanelTitle>
-      <p className={cn("text-center font-mono text-6xl font-semibold tabular", left <= 30 && "text-warn", left === 0 && "text-bad")}>
+      <p className={cn("text-center tabular text-6xl font-semibold", left <= 30 && "text-warn", left === 0 && "text-bad")}>
         {mm}:{ss}
       </p>
       <div className="mt-3 grid grid-cols-3 gap-2">

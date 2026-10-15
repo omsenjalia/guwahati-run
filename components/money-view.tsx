@@ -32,7 +32,7 @@ export function MoneyView() {
   if (!mounted) return <Skeleton className="h-96" />;
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-5">
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold tracking-tight">Money</h1>
         <Button onClick={() => setSheet({ type: "add" })} className="rounded-full">
@@ -44,7 +44,7 @@ export function MoneyView() {
       <QueueBadge />
 
       {error && (
-        <Panel className="border-bad/40 bg-bad-soft">
+        <Panel className="ring-1 ring-bad/40 bg-bad-soft">
           <p className="text-sm">
             Expenses aren&apos;t set up yet. Run <span className="font-mono">supabase/002_expenses.sql</span> in Supabase.
           </p>
@@ -78,7 +78,7 @@ function QueueBadge() {
   if (!queue.length) return null;
   const failed = queue.filter((q) => q.error);
   return (
-    <Panel className={cn("py-3", failed.length ? "border-bad/40" : "border-warn/40")}>
+    <Panel className={cn("py-3", failed.length ? "ring-1 ring-bad/40" : "ring-1 ring-warn/40")}>
       <div className="flex items-center gap-3">
         <CloudArrowUp className={cn("size-6 shrink-0", failed.length ? "text-bad" : "text-warn")} />
         <p className="min-w-0 flex-1 text-[0.95rem] font-medium">
@@ -116,12 +116,12 @@ function SummaryPanel({ items, docs }: { items: Expense[]; docs: DocRow[] }) {
       <PanelTitle aside={<span className={cn("text-sm", withBill < items.length ? "text-warn" : "text-ok")}>{withBill} of {rows.length} with a bill</span>}>
         Spent so far
       </PanelTitle>
-      <p className="font-mono text-[2rem] leading-none font-semibold tabular">{rupees2(total)}</p>
+      <p className="tabular text-[2rem] leading-none font-semibold">{rupees2(total)}</p>
       <ul className="mt-3 flex flex-col gap-1.5">
         {byCat.map((c) => (
           <li key={c.id} className="flex items-baseline justify-between gap-3 text-sm">
             <span className="text-muted-foreground">{c.label}</span>
-            <span className="font-mono tabular">{rupees2(c.sum)}</span>
+            <span className="tabular">{rupees2(c.sum)}</span>
           </li>
         ))}
       </ul>
@@ -145,7 +145,7 @@ function ExpenseList({
 }) {
   if (!items.length) {
     return (
-      <Panel className="border-dashed bg-transparent">
+      <Panel className="border border-dashed bg-transparent shadow-none">
         <p className="text-[0.95rem] text-muted-foreground">No expenses yet. Tap Add receipt after paying for anything shared.</p>
       </Panel>
     );
@@ -155,10 +155,10 @@ function ExpenseList({
 
   return (
     <Panel className="p-0">
-      <h2 className="px-4 pt-4 text-[0.95rem] font-semibold">Expenses</h2>
+      <h2 className="px-5 pt-5 text-base font-semibold tracking-tight">Expenses</h2>
       {[...days.entries()].map(([day, list]) => (
         <section key={day} className="mt-2">
-          <h3 className="px-4 py-1 text-xs font-medium text-muted-foreground">{weekdayDate(`${day}T12:00:00+05:30`)}</h3>
+          <h3 className="px-5 py-1 text-xs font-medium text-muted-foreground">{weekdayDate(`${day}T12:00:00+05:30`)}</h3>
           <ul>
             {list.map((e) => (
               <ExpenseRow key={e.id} e={e} docs={docs.filter((d) => d.expense_id === e.id)} onEdit={onEdit} onView={onView} />
@@ -187,7 +187,7 @@ function Thumb({ doc, onView }: { doc: DocRow; onView: (d: DocRow) => void }) {
 function ExpenseRow({ e, docs, onEdit, onView }: { e: Expense; docs: DocRow[]; onEdit: (e: Expense, d?: DocRow) => void; onView: (d: DocRow) => void }) {
   const doc = docs[0];
   return (
-    <li className="flex items-center gap-3 px-4 py-2">
+    <li className="flex items-center gap-3 px-5 py-2">
       {doc ? (
         <span className="relative shrink-0">
           <Thumb doc={doc} onView={onView} />
@@ -213,7 +213,7 @@ function ExpenseRow({ e, docs, onEdit, onView }: { e: Expense; docs: DocRow[]; o
           {!docs.length && <span className="text-warn"> · no bill</span>}
         </p>
       </div>
-      <span className="font-mono text-[0.95rem] font-semibold tabular">{rupees(e.amount)}</span>
+      <span className="tabular text-[0.95rem] font-semibold">{rupees(e.amount)}</span>
       <button type="button" aria-label={`Edit ${e.title}`} onClick={() => onEdit(e, doc)} className="inline-flex size-10 items-center justify-center rounded-lg text-subtle active:bg-secondary">
         <PencilSimple className="size-5" />
       </button>
@@ -248,7 +248,7 @@ function ChecklistPanel({ items, docs, onAdd }: { items: Expense[]; docs: DocRow
   const missing = list.filter((x) => !x.have);
   return (
     <Panel>
-      <PanelTitle aside={<span className="font-mono text-sm text-muted-foreground tabular">{list.length - missing.length}/{list.length}</span>}>
+      <PanelTitle aside={<span className="tabular text-sm text-muted-foreground">{list.length - missing.length}/{list.length}</span>}>
         Receipts for the report
       </PanelTitle>
       {missing.length ? (
@@ -367,7 +367,7 @@ function FaresPanel() {
           <div key={w.name}>
             <div className="flex items-baseline justify-between gap-3">
               <p className="text-sm font-medium">{w.name}</p>
-              <span className="font-mono text-sm font-semibold tabular">{rupees2(w.legs.reduce((s, l) => s + cost(l.id), 0))}</span>
+              <span className="tabular text-sm font-semibold">{rupees2(w.legs.reduce((s, l) => s + cost(l.id), 0))}</span>
             </div>
             <ul className="mt-1.5 flex flex-col gap-1.5">
               {w.legs.map((l) => (
@@ -376,7 +376,7 @@ function FaresPanel() {
                     <Route leg={l} />
                     {rebookingLoss(l) > 0 && <span className="block text-xs">incl. {rupees2(rebookingLoss(l))} cancellation loss</span>}
                   </span>
-                  <span className="font-mono tabular">{rupees2(cost(l.id))}</span>
+                  <span className="tabular">{rupees2(cost(l.id))}</span>
                 </li>
               ))}
             </ul>

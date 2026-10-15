@@ -94,7 +94,7 @@ function WatchCard({ w, now }: { w: Watch; now: number }) {
 
   return (
     <Panel id={`w-${w.id}`} className={cn("scroll-mt-20 p-0", done && "opacity-55")}>
-      <div className="p-4">
+      <div className="p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-xs font-semibold text-primary">{route ? "Waitlist without a ticket" : "Extra PNR"}</p>
@@ -110,8 +110,8 @@ function WatchCard({ w, now }: { w: Watch; now: number }) {
       </div>
 
       {w.kind === "route" && w.data && (
-        <div className="flex items-baseline justify-between gap-3 border-t px-4 py-3">
-          <span className={cn("font-mono text-lg font-semibold tabular", KIND_TONE[parseStatus(w.data.status).kind])}>{w.data.status}</span>
+        <div className="flex items-baseline justify-between gap-3 border-t px-5 py-3.5">
+          <span className={cn("tabular text-lg font-semibold", KIND_TONE[parseStatus(w.data.status).kind])}>{w.data.status}</span>
           {w.data.confirmChance !== undefined && (
             <span className="text-sm text-muted-foreground">
               {w.data.confirmChance}% chance{w.data.verdict ? ` · ${w.data.verdict}` : ""}
@@ -124,9 +124,9 @@ function WatchCard({ w, now }: { w: Watch; now: number }) {
         <table className="w-full border-t text-[0.95rem]">
           <thead>
             <tr className="text-left text-xs text-muted-foreground">
-              <th className="py-2 pl-4 font-medium">#</th>
+              <th className="py-2 pl-5 font-medium">#</th>
               <th className="py-2 font-medium">Booked</th>
-              <th className="py-2 pr-4 text-right font-medium">Now</th>
+              <th className="py-2 pr-5 text-right font-medium">Now</th>
             </tr>
           </thead>
           <tbody>
@@ -135,10 +135,10 @@ function WatchCard({ w, now }: { w: Watch; now: number }) {
               const seat = p.coach && p.berth ? `${p.coach}/${p.berth}` : undefined;
               return (
                 <tr key={p.number}>
-                  <td className="py-2.5 pl-4 font-medium">{p.number}</td>
-                  <td className="py-2.5 font-mono text-muted-foreground tabular">{parseStatus(p.booking).label}</td>
-                  <td className="py-2.5 pr-4 text-right">
-                    <span className={cn("font-mono font-semibold tabular", seat ? "text-ok" : KIND_TONE[cur.kind])}>{seat ?? cur.label}</span>
+                  <td className="py-2.5 pl-5 font-medium">{p.number}</td>
+                  <td className="py-2.5 tabular text-muted-foreground">{parseStatus(p.booking).label}</td>
+                  <td className="py-2.5 pr-5 text-right">
+                    <span className={cn("tabular font-semibold", seat ? "text-ok" : KIND_TONE[cur.kind])}>{seat ?? cur.label}</span>
                     {p.confirmChance !== undefined && !seat && <span className="block text-xs text-muted-foreground">{p.confirmChance}% chance</span>}
                   </td>
                 </tr>
@@ -148,7 +148,7 @@ function WatchCard({ w, now }: { w: Watch; now: number }) {
         </table>
       )}
 
-      <div className="flex flex-col gap-3 border-t p-4">
+      <div className="flex flex-col gap-3 border-t p-5">
         {w.error && <p className="rounded-lg bg-warn-soft px-3 py-2.5 text-sm leading-snug">Last check failed: {w.error}</p>}
         {w.history.length > 0 && <WlGraph points={w.history} />}
         {w.kind === "pnr" && w.data?.chartPrepared && <p className="text-xs font-medium text-ok">Chart prepared. No more checks needed.</p>}
@@ -232,22 +232,22 @@ function WatchForm({ mode, onClose }: { mode: Mode; onClose: () => void }) {
         {mode === "pnr" ? (
           <div className="flex flex-col gap-2">
             <label htmlFor="w-pnr" className="text-sm font-medium">PNR number</label>
-            <input id="w-pnr" inputMode="numeric" autoComplete="off" maxLength={12} placeholder="10 digits" value={pnr} onChange={(e) => setPnr(e.target.value)} className={cn(field, "font-mono tabular")} />
+            <input id="w-pnr" inputMode="numeric" autoComplete="off" maxLength={12} placeholder="10 digits" value={pnr} onChange={(e) => setPnr(e.target.value)} className={cn(field, "tabular")} />
           </div>
         ) : (
           <>
             <div className="flex flex-col gap-2">
               <label htmlFor="w-train" className="text-sm font-medium">Train number</label>
-              <input id="w-train" inputMode="numeric" autoComplete="off" maxLength={5} placeholder="e.g. 12506" value={trainNo} onChange={(e) => setTrainNo(e.target.value)} className={cn(field, "font-mono tabular")} />
+              <input id="w-train" inputMode="numeric" autoComplete="off" maxLength={5} placeholder="e.g. 12506" value={trainNo} onChange={(e) => setTrainNo(e.target.value)} className={cn(field, "tabular")} />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-2">
                 <label htmlFor="w-from" className="text-sm font-medium">From station</label>
-                <input id="w-from" list="w-codes" autoCapitalize="characters" autoComplete="off" placeholder="e.g. ANVT" value={from} onChange={(e) => setFrom(e.target.value.toUpperCase())} className={cn(field, "font-mono uppercase")} />
+                <input id="w-from" list="w-codes" autoCapitalize="characters" autoComplete="off" placeholder="e.g. ANVT" value={from} onChange={(e) => setFrom(e.target.value.toUpperCase())} className={cn(field, "tabular uppercase")} />
               </div>
               <div className="flex flex-col gap-2">
                 <label htmlFor="w-to" className="text-sm font-medium">To station</label>
-                <input id="w-to" list="w-codes" autoCapitalize="characters" autoComplete="off" placeholder="e.g. KYQ" value={to} onChange={(e) => setTo(e.target.value.toUpperCase())} className={cn(field, "font-mono uppercase")} />
+                <input id="w-to" list="w-codes" autoCapitalize="characters" autoComplete="off" placeholder="e.g. KYQ" value={to} onChange={(e) => setTo(e.target.value.toUpperCase())} className={cn(field, "tabular uppercase")} />
               </div>
               <datalist id="w-codes">
                 {CODES.map((c) => (
