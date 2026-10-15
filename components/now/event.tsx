@@ -190,7 +190,7 @@ export function AfterTrip({ live }: { live: LiveState }) {
   const trains = buildSteps(live).filter((s) => s.kind === "train");
   const km = LEGS.reduce((t, l) => t + (l.km ?? 0), 0);
   const hours = Math.round(trains.reduce((t, s) => t + (s.end - s.start), 0) / HOUR);
-  const total = items ? reportTotals(reportRows(items, docs ?? [])).total : null;
+  const total = items ? reportTotals(reportRows(items, docs ?? null)).total : null;
 
   return (
     <>

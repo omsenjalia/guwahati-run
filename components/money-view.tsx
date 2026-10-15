@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useNow } from "@/lib/clock";
 import { categoryLabel, type Expense } from "@/lib/expenses";
-import { reportRows, reportTotals } from "@/lib/report-data";
+import { fareCounts, reportRows, reportTotals } from "@/lib/report-data";
 import { docFileUrl, type DocRow } from "@/lib/documents";
 import { deleteDoc, discardUpload, processQueue, useDocuments, useUploadQueue } from "@/lib/receipts";
 import { expectedReceipts } from "@/lib/receipt-checklist";
@@ -56,14 +56,14 @@ export function MoneyView() {
         <Skeleton className="h-48" />
       ) : items ? (
         <>
-          <SummaryPanel items={items} docs={docs ?? []} />
+          <SummaryPanel items={items} docs={docs ?? null} />
           <ExpenseList items={items} docs={docs ?? []} onEdit={(expense, doc) => setSheet({ type: "edit", expense, doc })} onView={setViewing} />
           <ChecklistPanel items={items} docs={docs} onAdd={(kind) => setSheet({ type: "add", kind })} />
           <DocumentsPanel docs={docs ?? []} onView={setViewing} />
         </>
       ) : null}
 
-      <FaresPanel />
+      <FaresPanel docs={docs ?? null} />
 
       <ExpenseSheet mode={sheet} onClose={() => setSheet(null)} />
       <Viewer doc={viewing} onClose={() => setViewing(null)} />
@@ -106,7 +106,7 @@ function QueueBadge() {
 /* ------------------------------------------------------------- summary */
 
 /** What the trip has cost so far (same numbers as the report), and how many have a bill. */
-function SummaryPanel({ items, docs }: { items: Expense[]; docs: DocRow[] }) {
+function SummaryPanel({ items, docs }: { items: Expense[]; docs: DocRow[] | null }) {
   const rows = reportRows(items, docs);
   const { total, byCategory } = reportTotals(rows);
   const withBill = rows.filter((r) => r.docIds.length).length;
@@ -304,7 +304,9 @@ function DocumentsPanel({ docs, onView }: { docs: DocRow[]; onView: (d: DocRow) 
               type="button"
               aria-label={`Delete ${d.title}`}
               onClick={async () => {
-                if (!window.confirm(`Delete "${d.title}" from GitHub for everyone?`)) return;
+                const fare = d.kind === "ticket" ? LEGS.find((l) => l.id === d.leg_id)?.fareTotal : undefined;
+                const also = fare ? ` Its ${rupees2(fare)} fare will also come off Money, the grant and the report.` : "";
+                if (!window.confirm(`Delete "${d.title}" from GitHub for everyone?${also}`)) return;
                 try {
                   await deleteDoc(d.id);
                   toast.success("Deleted");
@@ -349,11 +351,11 @@ function Viewer({ doc, onClose }: { doc: DocRow | null; onClose: () => void }) {
 /* --------------------------------------------------------------- fares */
 
 /** Train fares each way for all 4 of us, from the ticket data (incl. the Yoga cancellation loss). */
-function FaresPanel() {
+function FaresPanel({ docs }: { docs: DocRow[] | null }) {
   const fareLegs = LEGS.filter((l) => l.train);
   const cost = (id: string) => {
     const l = LEGS.find((x) => x.id === id)!;
-    return (l.fareTotal ?? 0) + rebookingLoss(l);
+    return (fareCounts(id, docs) ? (l.fareTotal ?? 0) : 0) + rebookingLoss(l);
   };
   const ways = [
     { name: "Gujarat to Guwahati", legs: fareLegs.filter((l) => ["L0", "L1", "L2"].includes(l.id)) },
@@ -375,6 +377,7 @@ function FaresPanel() {
                   <span>
                     <Route leg={l} />
                     {rebookingLoss(l) > 0 && <span className="block text-xs">incl. {rupees2(rebookingLoss(l))} cancellation loss</span>}
+                    {!fareCounts(l.id, docs) && <span className="block text-xs text-warn">Ticket deleted, fare not counted. Upload it again to add it back.</span>}
                   </span>
                   <span className="tabular">{rupees2(cost(l.id))}</span>
                 </li>

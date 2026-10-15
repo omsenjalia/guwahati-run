@@ -29,13 +29,25 @@ export type ReportRow = {
   docIds: string[];
 };
 
-export function reportRows(expenses: Expense[], docs: DocRow[]): ReportRow[] {
+/**
+ * A train fare counts while its ticket is uploaded: deleting the ticket in
+ * Money takes the fare out of the totals, the grant and the report, and
+ * uploading it again brings it back. docs = null while still loading (count
+ * everything, so totals don't flicker).
+ */
+export function fareCounts(legId: string, docs: DocRow[] | null) {
+  return !docs || docs.some((d) => d.kind === "ticket" && d.leg_id === legId);
+}
+
+export function reportRows(expenses: Expense[], docs: DocRow[] | null): ReportRow[] {
   const rows: ReportRow[] = [];
+  const files = docs ?? [];
 
   for (const leg of LEGS.filter((l) => l.train && l.fareTotal)) {
     const sleeper = GRANT.sleeperFarePerPerson[leg.id];
-    const tickets = docs.filter((d) => d.kind === "ticket" && d.leg_id === leg.id);
-    rows.push({
+    const tickets = files.filter((d) => d.kind === "ticket" && d.leg_id === leg.id);
+    // The cancellation charge below was paid either way, so it stays.
+    if (fareCounts(leg.id, docs)) rows.push({
       date: leg.depart.slice(0, 10),
       category: "Train",
       label: `${leg.train!.number} ${leg.train!.name} (${leg.travelClass})`,
@@ -61,7 +73,7 @@ export function reportRows(expenses: Expense[], docs: DocRow[]): ReportRow[] {
 
   for (const e of expenses) {
     if (e.created_by === "setup" && e.category === "train") continue; // old lump sums; fares come from the tickets
-    const bills = docs.filter((d) => d.kind === "receipt" && d.expense_id === e.id);
+    const bills = files.filter((d) => d.kind === "receipt" && d.expense_id === e.id);
     const grant = CATEGORIES.find((c) => c.id === e.category)?.grant ?? false;
     rows.push({
       date: e.spent_on,

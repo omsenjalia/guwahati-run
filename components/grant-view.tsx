@@ -21,7 +21,7 @@ export function GrantView() {
   const { items } = useExpenses();
   const { docs } = useDocuments();
   if (!items) return <Skeleton className="h-96" />;
-  const g = grantEstimate(reportRows(items, docs ?? []));
+  const g = grantEstimate(reportRows(items, docs ?? null));
 
   return (
     <div className="flex flex-col gap-5">
@@ -172,7 +172,7 @@ function ReportPanel() {
 
   function csv() {
     if (!items) return;
-    const blob = new Blob([reportCsv(reportRows(items, docs ?? []))], { type: "text/csv;charset=utf-8" });
+    const blob = new Blob([reportCsv(reportRows(items, docs ?? null))], { type: "text/csv;charset=utf-8" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = "WhyCode4U_Travel_Report.csv";
@@ -180,7 +180,7 @@ function ReportPanel() {
     URL.revokeObjectURL(a.href);
   }
 
-  const rows = items ? reportRows(items, docs ?? []) : [];
+  const rows = items ? reportRows(items, docs ?? null) : [];
   const withRef = rows.filter((r) => r.ref).length;
 
   return (
