@@ -29,6 +29,9 @@ jobs:
   apk:
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    # The server the app talks to, baked into the JavaScript bundle at build time.
+    env:
+      EXPO_PUBLIC_API_URL: https://guwahati-run.vercel.app
     steps:
       - uses: actions/checkout@v4
 
