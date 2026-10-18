@@ -2,8 +2,9 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useState } from "react";
 import { Linking, ScrollView, StyleSheet, View } from "react-native";
 import { DEADLINES, IRCTC_BOOK_URL, IRCTC_PNR_URL, NE_ALTERNATIVES, TEAM, type Berth, type Leg, type PersonId } from "@/data/trip";
+import { api } from "@/core/api";
 import { useAuth } from "@/core/auth";
-import { useFeed, useNow } from "@/core/data";
+import { refresh, useFeed, useNow } from "@/core/data";
 import { Countdown, Hero, LegChip } from "@/features/bits";
 import { coachKind, coachList, firstName, focusLeg, isSeated, myStatus, personIndex, statusTone, trainLegs } from "@/features/trip";
 import type { LiveState } from "@/lib/live-types";
@@ -125,9 +126,39 @@ function PnrView({ leg, live, me, now }: { leg: Leg; live: LiveState; me: Person
           </T>
         </Card>
       </Section>
+      {leg.pnr && <CheckNow key={leg.id} leg={leg} />}
       <Button label="Check on IRCTC" icon="open-in-new" kind="secondary" onPress={() => void Linking.openURL(IRCTC_PNR_URL)} />
       {(leg.id === "L2" || leg.backupFor === "L2") && <PlanB />}
     </>
+  );
+}
+
+/** Asks the server to fetch this PNR now (at most every 2 minutes per ticket), then reloads. */
+function CheckNow({ leg }: { leg: Leg }) {
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState("");
+  async function check() {
+    setBusy(true);
+    setNote("");
+    try {
+      const r = await api<{ ok: boolean; message: string }>("/api/pnr/refresh", { method: "POST", body: JSON.stringify({ legId: leg.id }) });
+      await refresh();
+      setNote(r.ok ? "Updated just now." : `The ticket site didn't answer: ${r.message}`);
+    } catch (e) {
+      setNote(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <View style={{ gap: 6 }}>
+      <Button label="Check PNR now" icon="refresh" loading={busy} onPress={() => void check()} />
+      {!!note && (
+        <T v="caption" color="muted" center>
+          {note}
+        </T>
+      )}
+    </View>
   );
 }
 
