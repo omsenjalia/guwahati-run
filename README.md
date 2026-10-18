@@ -1,53 +1,66 @@
 # Guwahati Run
 
-Trip companion PWA for 4 of us: Gujarat to Delhi to Guwahati (IIT Guwahati hackathon finals) and back, 28 Oct to 4 Nov 2026.
+Trip companion app for 4 of us: Gujarat to Delhi to Guwahati (IIT Guwahati hackathon finals) and back, 28 Oct to 4 Nov 2026, and for our parents following along.
 
-**Setting it up or deploying? Follow [SETUP.md](SETUP.md).**
+An Android app (Expo / React Native) plus the server that tracks trains in the background (Next.js API on Vercel, Supabase).
+
+**Setting it up, deploying or installing? Follow [SETUP.md](SETUP.md).**
 
 ## What it does
 
-- **Now**: switches by date. Before the trip: countdown, trip status, prep progress, next important date, Guwahati forecast. Travel days: current step with live delay, our seats, next action with leave-by, metro-or-cab plan, journey bar, food stations. Hackathon: submission countdown, rest rotation. Free time: leave-IIT-by. After: trip stats, final report, settle up, recap post.
-- **Timeline**: every leg, transfer, meal and sleep block with live times; Maps, Uber, Ola, Rapido links; subscribable calendar.
-- **Tickets**: static cards with "Can board" and a Check on IRCTC link. North East Express (the one waitlisted ticket) keeps live status, chance, waitlist graph and Plan B. **Wallet**: every ticket offline, with a full-screen "show to TTE" mode.
-- **Money**: receipt and document uploader. Bills, tickets and certificates (photo or PDF) go to the private repo's `documents/` folder, with an offline upload queue, totals by category and a checklist of missing bills. Splitting money stays in Splitwise.
-- **Grant**: BVM SSIP estimate, document checklist, final PDF report (cover, summary, expenses with receipt numbers, requested vs spent, every receipt attached) and Excel.
-- **Team**: members, alerts, packing lists, guides, journal, paper backup, system status.
-- **Hackathon** (replaces Timeline from 30 Oct evening): countdown, schedule, rest rotation, task board, pitch timer, demo checklist.
-- **SOS**: share location and train details, 112 and 139, nearest hospital, lost-item steps.
-- **Parents**: separate passcode, read-only page with position, arrivals and check-ins.
+Sign in as **an attendee** (your name + your password) or **a parent** (whose parent you are + the parent passcode).
 
-Fully automatic: Supabase calls `/api/jobs/tick` every 5 minutes. It tracks the North East Express PNR (every 6h, hourly from 26 Oct, every 15 min from 28 Oct 16:00 until the chart), live running status for whichever train we're on, weather and timetables, then evaluates connections, transfers and deadlines, and sends push alerts.
+| Tab | Parents | Attendees |
+|---|---|---|
+| Home | Countdown or current step, next train with their child's seat, where they are, connections, weather | Same, plus your seat, location sharing and emergency numbers |
+| Train | Live running status station by station (like NTES): delay, platform, where the train is | Same |
+| Ticket | | PNR status while waitlisted (chart time, chance, Plan B). Once RAC or confirmed: coach position on the platform, coach, berth, bay diagram, platform |
+| Plan | The whole trip day by day, times shifted live by delays | Same |
+| Location | Map and list of everyone; if a phone's location is off, a friend's fix is used | |
+| Money | Total spent, per person, by category, grant estimate | Same, plus **Add a bill** (photo or PDF, goes to `documents/` and the college report) |
 
-## The one file you might edit
+Attendees' phones send their location every 30 minutes, also with the app closed (Android shows a small "sharing location" notification).
 
-`data/trip.ts` holds all static trip data. Live data is fetched automatically and layered on top.
+The server does the rest automatically: Supabase calls `/api/jobs/tick` every 5 minutes to track PNRs (every ticket in the 3 days before departure, the North East Express more often), live running status, weather and timetables, and to send alerts.
+
+## Structure
+
+```
+src/app/              Screens (Expo Router): onboarding, (tabs)/*, settings, add-bill
+src/core/             Sign-in, server calls, the data feed, storage
+src/features/         Location sharing, bill upload, shared trip helpers (+ tests)
+src/ui/               Theme, components, tab bar, map
+assets/images/        App icon (icon-source.svg is the source), splash
+backend/              The server (deploy this folder on Vercel)
+  data/trip.ts          All static trip data: the one file you might edit
+  app/api/              auth, parent/state (the app's data feed), location, docs, jobs/tick...
+  lib/                  Trip logic shared with the app, train providers, background jobs
+  supabase/*.sql        Database setup
+documents/            Receipts, tickets, reports (written by the server)
+graphify-out/         Code graph (graphify)
+.github/workflows/    Builds the Android APK
+```
+
+The app imports the trip data and trip logic straight from `backend/data` and `backend/lib`, so there is one copy.
 
 ## Run locally
 
 ```bash
 npm install
-npm run dev
+npm --prefix backend install
+npm --prefix backend run dev -- -p 3000
 ```
 
-Open http://localhost:3000 and sign in with `TEAM_PASSCODE` from `.env`. Add `?at=2026-10-29T03:30` to preview any moment.
+In a second terminal (with `EXPO_PUBLIC_API_URL=http://localhost:3000` in `.env.local`):
 
-## Structure
+```bash
+npx expo start --web
+```
 
-```
-app/(app)/            Screens behind the team passcode
-app/parent/           Parent page (parent passcode)
-app/api/jobs/tick     Background brain, called by Supabase every 5 min
-app/api/...           Session, push, parent data, calendar, self-test
-components/           Screens and shared UI
-data/trip.ts          All static trip data
-data/guides.ts        Station guides and explore list
-lib/providers/        Train data sources with failover (ConfirmTkt first)
-lib/jobs/             Tick scheduler and watchers (alerts, deadlines)
-lib/trip-engine.ts    Now/next, health, buffers, chart times
-lib/notify.ts         Single alert pipeline: push now, WhatsApp later
-lib/github.ts         Private repo storage for receipts (server only)
-lib/report-pdf.ts     Final report for the college (pdf-lib)
-documents/            Receipts, tickets, certificates, reports (written by the app)
-public/sw.js          Offline copy and push notifications
-supabase/*.sql        Database setup (run in the SQL editor)
-```
+Add `?at=2026-10-29T14:00` to the web address to preview any moment of the trip.
+
+Checks: `npm run typecheck`, `npm test`, `npm run lint`.
+
+## Code graph
+
+`graphify update .` rebuilds `graphify-out/graph.json` (also runs automatically after every commit via git hooks). `graphify query "how does location sharing work"` answers questions from it.

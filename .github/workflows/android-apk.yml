@@ -1,0 +1,73 @@
+name: Android APK
+
+# Builds the installable app on every push to main that touches the app
+# (not the backend or receipts), and publishes it as a GitHub release
+# "Guwahati Run <n>" with the APK attached: open it on the phone, download,
+# install. Also runnable by hand from the Actions tab.
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "backend/**"
+      - "documents/**"
+      - "**.md"
+  workflow_dispatch:
+
+concurrency:
+  group: android-apk
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Check the app (types and tests)
+        run: npx tsc --noEmit && npx vitest run
+
+      # Generates android/ first so setup-java can key its Gradle cache on it.
+      - name: Generate the Android project
+        run: npx expo prebuild -p android --no-install
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: temurin
+          cache: gradle
+
+      # Release build: the JavaScript is bundled inside, so it runs without a
+      # computer. Expo signs it with the debug key, which is fine for sideloading.
+      - name: Build APK
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Rename APK
+        run: cp android/app/build/outputs/apk/release/app-release.apk guwahati-run-${{ github.run_number }}.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: guwahati-run-apk
+          path: guwahati-run-${{ github.run_number }}.apk
+          if-no-files-found: error
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "apk-${{ github.run_number }}" "guwahati-run-${{ github.run_number }}.apk" \
+            --title "Guwahati Run ${{ github.run_number }}" \
+            --notes "Android app built from ${{ github.sha }}. Download the .apk on your phone and install it." \
+            --latest
