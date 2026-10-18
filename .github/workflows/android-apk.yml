@@ -32,8 +32,12 @@ jobs:
         with:
           node-version: "22"
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
 
-      - run: npm ci
+      # The app type-checks shared files in backend/lib, which need the backend's packages.
+      - run: npm ci && npm --prefix backend ci
 
       - name: Check the app (types and tests)
         run: npx tsc --noEmit && npx vitest run
