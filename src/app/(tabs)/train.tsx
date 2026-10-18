@@ -1,184 +1,302 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
-import { PLACES, type Leg } from "@/data/trip";
+import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { BACKUPS, LEGS, PLACES, type Leg } from "@/data/trip";
+import { api } from "@/core/api";
 import { useAuth } from "@/core/auth";
-import { useFeed, useNow } from "@/core/data";
+import { clockOffset, useFeed, useNow } from "@/core/data";
+import { useLoad } from "@/core/use-load";
 import { LegChip, TrainCard } from "@/features/bits";
-import { delayText, delayTone, focusLeg, lastPassed, stopsFor, trainLegs, type Stop } from "@/features/trip";
+import { delayTone, focusLeg, lastPassed, stopsFor, trainLegs, type Stop } from "@/features/trip";
+import type { LegLive } from "@/lib/live-types";
+import { buildTrack, type Track, type TrackPoint } from "@/lib/live-track";
 import { ago, dayMonth, hhmm, ms } from "@/lib/time";
-import { Card, Pill } from "@/ui/kit";
+import { Button, Card, Chips, IconButton, Pill } from "@/ui/kit";
 import { Screen } from "@/ui/screen";
 import { T } from "@/ui/text";
 import { font, radius, toneColors, useTheme } from "@/ui/theme";
+import { TrainMap } from "@/ui/train-map";
 
-/** Live running status, station by station (like NTES). */
+type TestRun = { startDate: string; live: Pick<LegLive, "stations" | "departed" | "terminated" | "delayMin" | "liveUpdatedAt">; source: string };
+
+/**
+ * Live running status, NTES style: yet to depart, at a station or between
+ * two, every station with scheduled and actual or expected times (the ones
+ * it runs through too), and a live 3D map with the train moving. ?test=<leg>
+ * (developer options) plays the latest real run of that train instead.
+ */
 export default function TrainScreen() {
-  const c = useTheme();
   const { session } = useAuth();
-  const live = useFeed().live;
-  const now = useNow();
+  const { test } = useLocalSearchParams<{ test?: string }>();
+  const feed = useFeed();
+  const live = feed.live;
+  const now = useNow(15_000);
   const legs = trainLegs(live);
   const [picked, setPicked] = useState<string | null>(null);
-  const [full, setFull] = useState(false);
-  const leg = legs.find((l) => l.id === picked) ?? focusLeg(legs, live, now);
-  const l = live.legs[leg.id];
-  const { stops, from, to, live: isLive } = stopsFor(leg, live, now);
-  const shown = full ? stops : stops.slice(from, to + 1);
-  const offset = full ? 0 : from;
-  const passed = lastPassed(stops);
+  const testLeg = test ? [...LEGS, ...BACKUPS].find((l) => l.id === test) : undefined;
+  const leg = testLeg ?? legs.find((l) => l.id === picked) ?? focusLeg(legs, live, now);
+  const run = useLoad(async () => (testLeg ? api<TestRun>(`/api/dev/live-test?leg=${testLeg.id}`) : null), testLeg?.id ?? "");
+  const l = testLeg ? run.data?.live : live.legs[leg.id];
+  // Live data only counts in the tracking window (3h before departure to 1h after arrival), as the background job fetches it.
+  const track = buildTrack(leg, l, now);
 
   return (
-    <Screen title="Train status" subtitle={isLive && l?.liveUpdatedAt ? `Live · updated ${ago(l.liveUpdatedAt, now)}` : "Timetable"}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingRight: 8 }} style={{ marginHorizontal: -4 }}>
-        {legs.map((x) => (
-          <LegChip key={x.id} leg={x} active={x.id === leg.id} onPress={() => setPicked(x.id)} />
-        ))}
-      </ScrollView>
-
-      <TrainCard leg={leg} live={live} me={session?.person} onPress={() => {}} />
-
-      <Card style={{ gap: 10 }}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-          <MaterialCommunityIcons name={isLive ? "access-point" : "timetable"} size={22} color={isLive ? c.good : c.muted} />
-          <View style={{ flex: 1 }}>
-            <T v="heading">{statusLine(leg, stops, passed, isLive, now, l?.terminated)}</T>
-            <T v="caption" color="muted">
-              {isLive
-                ? `${delayText(l?.delayMin)}${l?.stale ? " · last known, sources are down" : ""}`
-                : `Live tracking starts 3 hours before departure (${hhmm(ms(leg.depart) - 3 * 3600_000)} on ${dayMonth(leg.depart)}).`}
-            </T>
-          </View>
-        </View>
-        {leg.backupFor && (
-          <Pill label="Backup ticket: used only if the North East Express doesn't clear" tone="warn" icon="lifebuoy" />
-        )}
-      </Card>
-
-      <View style={[styles.segment, { backgroundColor: c.surface2 }]}>
-        {(["Our journey", "Full route"] as const).map((label, i) => {
-          const on = full === (i === 1);
-          return (
-            <Pressable key={label} onPress={() => setFull(i === 1)} style={[styles.segmentItem, on && { backgroundColor: c.surface }]} accessibilityRole="button">
-              <T v="label" color={on ? "text" : "muted"}>
-                {label}
-              </T>
-            </Pressable>
-          );
-        })}
-      </View>
-
-      <Card padded={false} style={{ paddingVertical: 8 }}>
-        {shown.map((s, i) => (
-          <StopRow
-            key={`${s.code}-${i}`}
-            stop={s}
-            first={i === 0}
-            last={i === shown.length - 1}
-            passed={i + offset <= passed}
-            here={i + offset === passed && !(l?.terminated && i + offset === stops.length - 1)}
-            between={i + offset === passed && i < shown.length - 1}
-            tag={i + offset === from ? "Board" : i + offset === to ? "Get off" : undefined}
-            dim={full && (i + offset < from || i + offset > to)}
-          />
-        ))}
-      </Card>
-      {!isLive && stops.length <= 2 && (
-        <T v="caption" color="faint" center>
-          All stops appear once the background job fetches the timetable.
-        </T>
+    <Screen
+      title={testLeg ? "Live tracking test" : "Train status"}
+      subtitle={l?.liveUpdatedAt ? `Live · updated ${ago(l.liveUpdatedAt, now)}` : "Timetable"}
+      right={testLeg ? <IconButton icon="close" label="End test" onPress={() => router.replace("/train")} /> : undefined}
+    >
+      {testLeg ? (
+        <Card style={{ gap: 8, borderColor: "#E07B1F", borderWidth: 1 }}>
+          <Pill label="Developer test" tone="accent" solid icon="flask-outline" />
+          <T v="body">
+            {run.data
+              ? `The latest real run of ${leg.train?.number} ${leg.train?.name}, which left its origin on ${dayMonth(`${run.data.startDate.slice(0, 10)}T12:00:00+05:30`)}. Not our trip: nothing is saved.`
+              : run.error || `Fetching the latest run of ${leg.train?.number}...`}
+          </T>
+          {run.data && <Button label="Fetch again" icon="refresh" kind="secondary" onPress={() => void run.reload()} />}
+        </Card>
+      ) : (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingRight: 8 }} style={{ marginHorizontal: -4 }}>
+          {legs.map((x) => (
+            <LegChip key={x.id} leg={x} active={x.id === leg.id} onPress={() => setPicked(x.id)} />
+          ))}
+        </ScrollView>
       )}
+
+      {!testLeg && <TrainCard leg={leg} live={live} me={session?.person} onPress={() => {}} />}
+
+      {track ? <Tracked leg={leg} track={track} live={l} now={now} mapKey={`${leg.id}-${testLeg ? `test-${run.data?.startDate}` : "live"}`} /> : <Timetable leg={leg} now={now} />}
     </Screen>
   );
 }
 
-function statusLine(leg: Leg, stops: Stop[], passed: number, isLive: boolean, now: number, terminated?: boolean) {
-  if (terminated) return `Reached ${PLACES[leg.to].short}`;
-  if (!isLive) return now < ms(leg.depart) ? `Departs ${PLACES[leg.from].short} ${dayMonth(leg.depart)}, ${hhmm(leg.depart)}` : "No live data";
-  if (passed < 0) return "Not started yet";
-  const next = stops[passed + 1];
-  return next ? `Left ${stops[passed].name}, next ${next.name}` : `At ${stops[passed].name}`;
+/* ---------------------------------------------------------------- live */
+
+const VIEWS = [
+  { value: "ours", label: "Our journey" },
+  { value: "all", label: "Full route" },
+] as const;
+
+function Tracked({ leg, track, live, now, mapKey }: { leg: Leg; track: Track; live?: Pick<LegLive, "liveUpdatedAt" | "stale">; now: number; mapKey: string }) {
+  const c = useTheme();
+  const insets = useSafeAreaInsets();
+  const [view, setView] = useState<"ours" | "all">("ours");
+  const [nonStop, setNonStop] = useState(false);
+  const [full, setFull] = useState(false);
+  const icon = track.state === "yet" ? "clock-outline" : track.state === "done" ? "flag-checkered" : track.state === "at" ? "train" : "access-point";
+  const tone = track.state === "between" || track.state === "at" ? c.good : c.muted;
+  const first = view === "ours" ? track.from : 0;
+  const last = view === "ours" ? track.to : track.points.length - 1;
+  const shown = track.points.slice(first, last + 1).filter((p) => nonStop || p.stop);
+  const here = track.points.findLastIndex((p) => p.passed);
+  const stations = track.points.map((p) => ({ c: p.code, n: p.name, lat: p.lat, lon: p.lon, s: p.stop ? 1 : 0, a: p.arr, d: p.dep, p: p.passed ? 1 : 0 }) as const);
+  const map = (
+    <TrainMap
+      key={mapKey}
+      stations={stations as never}
+      from={track.from}
+      to={track.to}
+      offset={clockOffset}
+      caption={`${leg.train?.number} · ${track.title}`}
+      moving={track.state !== "yet" && track.state !== "done"}
+    />
+  );
+
+  return (
+    <>
+      <Card style={{ gap: 8 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <MaterialCommunityIcons name={icon} size={24} color={tone} />
+          <T v="heading" style={{ flex: 1 }}>
+            {track.title}
+          </T>
+        </View>
+        <T v="body" color="muted">
+          {track.detail}
+        </T>
+        <T v="caption" color="faint">
+          {track.live
+            ? `Live running status${live?.stale ? " (last known: sources are down)" : ""}.`
+            : `Timetable. Live tracking starts 3 hours before departure (${hhmm(ms(leg.depart) - 3 * 3600_000)} on ${dayMonth(leg.depart)}).`}
+        </T>
+        {leg.backupFor && <Pill label="Backup ticket: used only if the North East Express doesn't clear" tone="warn" icon="lifebuoy" />}
+      </Card>
+
+      <View style={[styles.mapBox, { backgroundColor: c.surface2, borderColor: c.border }]}>
+        {map}
+        <Pressable onPress={() => setFull(true)} accessibilityLabel="Full screen map" style={[styles.expand, { backgroundColor: c.surface }]}>
+          <MaterialCommunityIcons name="arrow-expand" size={18} color={c.text} />
+        </Pressable>
+      </View>
+      <View style={styles.legend}>
+        <Legend color="#2446C7" label="Stop (flag)" flag />
+        <Legend color="#E53935" label="Runs through" />
+        <Legend color="#E07B1F" label="Covered" line />
+      </View>
+
+      <Chips options={VIEWS} value={view} onChange={setView} />
+      <Pressable onPress={() => setNonStop(!nonStop)} accessibilityRole="switch" accessibilityState={{ checked: nonStop }} style={{ alignSelf: "flex-start" }}>
+        <Pill label={nonStop ? "Showing stations it runs through" : "Show stations it runs through"} tone={nonStop ? "bad" : "neutral"} icon="map-marker-outline" />
+      </Pressable>
+
+      <Card padded={false} style={{ paddingVertical: 8 }}>
+        {shown.map((p, i) => {
+          const idx = track.points.indexOf(p);
+          return (
+            <PointRow
+              key={`${p.code}-${idx}`}
+              p={p}
+              first={i === 0}
+              last={i === shown.length - 1}
+              here={idx === here && track.state !== "done" && track.state !== "yet"}
+              tag={idx === track.from ? "Board" : idx === track.to ? "Get off" : undefined}
+              dim={view === "all" && (idx < track.from || idx > track.to)}
+              now={now}
+            />
+          );
+        })}
+      </Card>
+
+      <Modal visible={full} animationType="slide" onRequestClose={() => setFull(false)}>
+        <View style={{ flex: 1, backgroundColor: c.bg }}>
+          {map}
+          <View style={{ position: "absolute", top: insets.top + 60, left: 12 }}>
+            <IconButton icon="close" label="Close map" onPress={() => setFull(false)} />
+          </View>
+        </View>
+      </Modal>
+    </>
+  );
 }
 
-function StopRow({
-  stop,
-  first,
-  last,
-  passed,
-  here,
-  between,
-  tag,
-  dim,
-}: {
-  stop: Stop;
-  first: boolean;
-  last: boolean;
-  passed: boolean;
-  here: boolean;
-  between: boolean;
-  tag?: string;
-  dim?: boolean;
-}) {
-  const c = useTheme();
-  const sch = stop.schArr ?? stop.schDep;
-  const exp = stop.expArr ?? stop.expDep;
-  const late = stop.delayMin && stop.delayMin > 0 ? stop.delayMin : 0;
-  const tone = toneColors(c, delayTone(late));
-  const lineColor = passed ? c.primary : c.border;
+function Legend({ color, label, flag, line }: { color: string; label: string; flag?: boolean; line?: boolean }) {
   return (
-    <View style={[styles.stop, dim && { opacity: 0.5 }]}>
-      <View style={styles.times}>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+      <View style={{ width: line ? 16 : flag ? 10 : 8, height: line ? 4 : flag ? 8 : 8, borderRadius: flag ? 2 : 4, backgroundColor: color }} />
+      <T v="caption" color="muted">
+        {label}
+      </T>
+    </View>
+  );
+}
+
+/** One station, NTES style: arrival and departure (scheduled, then actual or expected), delay, platform, day and distance. */
+function PointRow({ p, first, last, here, tag, dim, now }: { p: TrackPoint; first: boolean; last: boolean; here: boolean; tag?: string; dim?: boolean; now: number }) {
+  const c = useTheme();
+  const lineColor = p.passed ? c.accent : c.border;
+  const late = p.delayMin && p.delayMin > 0 ? p.delayMin : 0;
+  const tone = toneColors(c, delayTone(late));
+  if (!p.stop) {
+    return (
+      <View style={[styles.row, { minHeight: 34 }, dim && { opacity: 0.5 }]}>
+        <View style={styles.times}>
+          {p.dep && (
+            <T v="caption" num color="faint">
+              ~{hhmm(p.dep)}
+            </T>
+          )}
+        </View>
+        <View style={styles.rail}>
+          <View style={[styles.railTop, { backgroundColor: first ? "transparent" : lineColor }]} />
+          <View style={[styles.passDot, { backgroundColor: "#E53935" }]} />
+          <View style={[styles.railBottom, { backgroundColor: last ? "transparent" : lineColor }]} />
+          {here && <TrainDot />}
+        </View>
+        <View style={{ flex: 1, justifyContent: "center", flexDirection: "row", alignItems: "center", gap: 6 }}>
+          <T v="caption" color="muted" numberOfLines={1} style={{ flexShrink: 1 }}>
+            {p.name} · {p.code}
+          </T>
+          <T v="caption" color="faint">
+            {p.km} km
+          </T>
+        </View>
+      </View>
+    );
+  }
+  const time = (sch?: number, act?: number) =>
+    sch || act ? (
+      <View style={{ alignItems: "flex-end" }}>
         {sch && (
-          <T v="label" num style={{ fontFamily: font.bold }}>
+          <T v="caption" num color="faint" style={act && act !== sch ? { textDecorationLine: "line-through" } : undefined}>
             {hhmm(sch)}
           </T>
         )}
-        {exp && exp !== sch && (
-          <T v="caption" num color={late ? tone.fg : c.good}>
-            {hhmm(exp)}
+        {act && act !== sch && (
+          <T v="label" num color={act > (sch ?? act) ? tone.fg : c.good} style={{ fontFamily: font.bold }}>
+            {hhmm(act)}
           </T>
         )}
+      </View>
+    ) : (
+      <T v="caption" color="faint">
+        {"—"}
+      </T>
+    );
+  return (
+    <View style={[styles.row, { minHeight: 70 }, dim && { opacity: 0.5 }]}>
+      <View style={[styles.times, { gap: 4 }]}>
+        {time(p.schArr, p.arr)}
+        {p.schDep && p.schArr && time(p.schDep, p.dep)}
+        {!p.schArr && time(p.schDep, p.dep)}
       </View>
       <View style={styles.rail}>
         <View style={[styles.railTop, { backgroundColor: first ? "transparent" : lineColor }]} />
         <View
           style={[
             styles.dot,
-            { borderColor: passed ? c.primary : c.faint, backgroundColor: passed ? c.primary : c.surface },
-            tag && { width: 16, height: 16, borderRadius: 8, borderWidth: 3, borderColor: c.accent },
+            { borderColor: p.passed ? c.accent : c.faint, backgroundColor: p.passed ? c.accent : c.surface },
+            tag && { width: 16, height: 16, borderRadius: 8, borderWidth: 3, borderColor: c.primary },
           ]}
         />
-        <View style={[styles.railBottom, { backgroundColor: last ? "transparent" : between ? c.border : lineColor }]} />
-        {here && (
-          <View style={[styles.trainIcon, { backgroundColor: c.accent }, between ? { top: "62%" } : { top: "30%" }]}>
-            <MaterialCommunityIcons name="train" size={14} color="#FFFFFF" />
-          </View>
-        )}
+        <View style={[styles.railBottom, { backgroundColor: last ? "transparent" : lineColor }]} />
+        {here && <TrainDot />}
       </View>
-      <View style={{ flex: 1, paddingVertical: 12, gap: 3 }}>
+      <View style={{ flex: 1, paddingVertical: 10, gap: 3 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
           <T v="label" style={{ fontFamily: tag ? font.heavy : font.semibold, flexShrink: 1 }} numberOfLines={1}>
-            {stop.name}
+            {p.name}
           </T>
-          {tag && <Pill label={tag} tone="accent" />}
+          {tag && <Pill label={tag} tone="primary" />}
         </View>
         <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
           <T v="caption" color="faint">
-            {stop.code}
+            {p.code}
           </T>
-          {stop.platform && (
-            <T v="caption" color="primary">
-              PF {stop.platform}
-            </T>
-          )}
-          {!!stop.day && stop.day > 1 && (
+          <T v="caption" color="faint">
+            {p.km} km
+          </T>
+          {!!p.day && p.day > 1 && (
             <T v="caption" color="faint">
-              Day {stop.day}
+              Day {p.day}
             </T>
           )}
-          {late > 0 && (
+          {p.platform && (
+            <T v="caption" color="primary">
+              PF {p.platform}
+            </T>
+          )}
+          {p.schArr && p.schDep && (
+            <T v="caption" color="faint">
+              Halt {Math.round((p.schDep - p.schArr) / 60_000)}m
+            </T>
+          )}
+          {late > 0 ? (
             <T v="caption" color={tone.fg}>
-              +{late}m
+              {p.passed ? "" : "exp. "}+{late}m
+            </T>
+          ) : (
+            p.actual && (
+              <T v="caption" color="good">
+                On time
+              </T>
+            )
+          )}
+          {!p.passed && p.arr && p.arr > now && p.arr - now < 3 * 3600_000 && (
+            <T v="caption" color="muted">
+              in {Math.round((p.arr - now) / 60_000)} min
             </T>
           )}
         </View>
@@ -187,14 +305,62 @@ function StopRow({
   );
 }
 
+function TrainDot() {
+  const c = useTheme();
+  return (
+    <View style={[styles.trainIcon, { backgroundColor: c.accent }]}>
+      <MaterialCommunityIcons name="train" size={14} color="#FFFFFF" />
+    </View>
+  );
+}
+
+/* ----------------------------------------------- no route data: fallback */
+
+function Timetable({ leg, now }: { leg: Leg; now: number }) {
+  const c = useTheme();
+  const live = useFeed().live;
+  const { stops, from, to } = stopsFor(leg, live, now);
+  const passed = lastPassed(stops);
+  return (
+    <Card padded={false} style={{ paddingVertical: 8 }}>
+      {stops.slice(from, to + 1).map((s: Stop, i, arr) => (
+        <View key={`${s.code}-${i}`} style={[styles.row, { minHeight: 52 }]}>
+          <View style={styles.times}>
+            <T v="label" num>
+              {s.schArr ?? s.schDep ? hhmm((s.schArr ?? s.schDep)!) : ""}
+            </T>
+          </View>
+          <View style={styles.rail}>
+            <View style={[styles.railTop, { backgroundColor: i === 0 ? "transparent" : c.border }]} />
+            <View style={[styles.dot, { borderColor: i + from <= passed ? c.primary : c.faint }]} />
+            <View style={[styles.railBottom, { backgroundColor: i === arr.length - 1 ? "transparent" : c.border }]} />
+          </View>
+          <View style={{ flex: 1, justifyContent: "center" }}>
+            <T v="label">{s.name}</T>
+            <T v="caption" color="faint">
+              {s.code}
+              {s.platform ? ` · PF ${s.platform}` : ""}
+            </T>
+          </View>
+        </View>
+      ))}
+      <T v="caption" color="faint" center style={{ padding: 8 }}>
+        {PLACES[leg.from].short} to {PLACES[leg.to].short}: no map route for this train yet.
+      </T>
+    </Card>
+  );
+}
+
 const styles = StyleSheet.create({
-  segment: { flexDirection: "row", borderRadius: radius.md, padding: 4 },
-  segmentItem: { flex: 1, alignItems: "center", paddingVertical: 9, borderRadius: 12 },
-  stop: { flexDirection: "row", alignItems: "stretch", paddingHorizontal: 14, minHeight: 58 },
-  times: { width: 54, alignItems: "flex-end", justifyContent: "center", paddingRight: 10 },
+  mapBox: { height: 380, borderRadius: radius.lg, overflow: "hidden", borderWidth: StyleSheet.hairlineWidth },
+  expand: { position: "absolute", left: 10, bottom: 24, width: 38, height: 38, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  legend: { flexDirection: "row", gap: 14, flexWrap: "wrap", paddingHorizontal: 4, marginTop: -8 },
+  row: { flexDirection: "row", alignItems: "stretch", paddingHorizontal: 14 },
+  times: { width: 58, alignItems: "flex-end", justifyContent: "center", paddingRight: 10 },
   rail: { width: 26, alignItems: "center" },
   railTop: { width: 3, flex: 1 },
   railBottom: { width: 3, flex: 1 },
   dot: { width: 12, height: 12, borderRadius: 6, borderWidth: 2 },
-  trainIcon: { position: "absolute", width: 24, height: 24, borderRadius: 12, alignItems: "center", justifyContent: "center", marginTop: -12 },
+  passDot: { width: 7, height: 7, borderRadius: 4 },
+  trainIcon: { position: "absolute", top: "50%", width: 24, height: 24, borderRadius: 12, alignItems: "center", justifyContent: "center", marginTop: -12 },
 });
