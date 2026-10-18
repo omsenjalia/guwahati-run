@@ -51,6 +51,7 @@ export default function Dev() {
         </T>
       )}
       <TicketChoiceCard onSaved={reload} />
+      <LiveTestCard />
       <OverrideCard overrides={data?.overrides ?? []} onSaved={reload} />
       <JobsCard onRan={reload} />
       <Section title="Trip plan">
@@ -117,6 +118,28 @@ function TicketChoiceCard({ onSaved }: { onSaved: () => Promise<void> }) {
             {note}
           </T>
         )}
+      </Card>
+    </Section>
+  );
+}
+
+/* ------------------------------------------------------- live test */
+
+/** Opens the Train tab on the latest real run of one of our trains, to see live tracking work before the trip. */
+function LiveTestCard() {
+  const legs = trainLegs(useFeed().live);
+  return (
+    <Section title="Test live tracking">
+      <Card style={{ gap: 12 }}>
+        <T v="body" color="muted">
+          Plays the latest real run of a train (today&apos;s if it has left, else the last one) on the Train tab: status, every station, and the train moving on the map.
+          Nothing is saved.
+        </T>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+          {legs.map((x) => (
+            <LegChip key={x.id} leg={x} active={false} onPress={() => router.push({ pathname: "/train", params: { test: x.id } })} />
+          ))}
+        </ScrollView>
       </Card>
     </Section>
   );

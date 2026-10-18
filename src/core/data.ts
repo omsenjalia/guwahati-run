@@ -105,7 +105,7 @@ export const useLive = () => useStore(store).live;
 export const clearFeed = () => store.set(EMPTY);
 
 /** "now", re-rendering every `everyMs`. Add ?at=2026-10-29T03:30 on web to preview a moment. */
-const offset = (() => {
+export const clockOffset = (() => {
   try {
     const at = typeof location !== "undefined" ? new URLSearchParams(location.search).get("at") : null;
     return at ? Date.parse(at.length <= 16 ? `${at}:00+05:30` : at) - Date.now() : 0;
@@ -113,8 +113,8 @@ const offset = (() => {
     return 0;
   }
 })();
-const clock = createStore(Date.now() + offset);
-setInterval(() => clock.set(Date.now() + offset), 1000);
+const clock = createStore(Date.now() + clockOffset);
+setInterval(() => clock.set(Date.now() + clockOffset), 1000);
 export function useNow(everyMs = 30_000) {
   return useSyncExternalStore(
     clock.subscribe,

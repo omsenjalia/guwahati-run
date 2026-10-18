@@ -124,6 +124,7 @@ type CtLive = {
     delayArr?: number;
     delayDep?: number;
     pfNo?: number;
+    ExpectedPlatformNo?: string;
     travelled?: boolean;
   }[];
 };
@@ -157,7 +158,8 @@ async function getLiveRunningStatus(trainNo: string, boardDate: string, boardSta
 
   const stations: StationStatus[] = (j.stations ?? []).map((s) => {
     const schDate = addDays(startDate, s.schDayCnt - 1);
-    const pf = s.pfNo && s.pfNo > 0 ? String(s.pfNo) : undefined;
+    // Actual platform once known, else the expected one ("0" = unknown).
+    const pf = s.pfNo && s.pfNo > 0 ? String(s.pfNo) : s.ExpectedPlatformNo && s.ExpectedPlatformNo !== "0" ? s.ExpectedPlatformNo : undefined;
     return {
       code: s.stnCode,
       name: s.stnCodeName,
