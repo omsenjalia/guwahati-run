@@ -89,9 +89,9 @@ export async function runTick(opts: { force?: JobName[]; now?: number } = {}) {
   });
   if (pnrLegs.length) results.push(await logged("pnr-sync", () => syncPnrs(pnrLegs, live)));
 
-  // Live running status
-  const liveLegs = LEGS.filter(
-    (l) => l.train && (force.has("live-status") || liveDue(l, now, live.get(l.id))),
+  // Live running status (the backup train too, until it loses)
+  const liveLegs = [...LEGS, ...BACKUPS].filter(
+    (l) => l.train && l.id !== loser && (force.has("live-status") || liveDue(l, now, live.get(l.id))),
   );
   if (liveLegs.length) results.push(await logged("live-status", () => syncLive(liveLegs, live)));
 
@@ -102,7 +102,7 @@ export async function runTick(opts: { force?: JobName[]; now?: number } = {}) {
   // Timetables for the meal planner (once a day)
   const { data: sch } = await db.from("app_state").select("updated_at").eq("key", "schedules").maybeSingle();
   if (force.has("schedules") || isDue(sch ? Date.parse(sch.updated_at) : undefined, 24 * HOUR, now)) {
-    results.push(await logged("schedules", syncSchedules));
+    results.push(await logged("schedules", () => syncSchedules(loser)));
   }
 
   // Weather
@@ -194,6 +194,27 @@ async function seedTrip() {
 }
 
 /* ------------------------------------------------------------ PNR sync */
+
+export const PNR_REFRESH_COOLDOWN = 2 * MIN;
+
+/**
+ * One ticket's PNR right now (the app's "Check now" button). At most once
+ * per 2 minutes per ticket, counted from the last tap (a failed check
+ * counts too), so ConfirmTkt isn't hammered.
+ */
+export async function refreshPnr(legId: string, now = Date.now()): Promise<{ status: number; result?: JobResult; error?: string }> {
+  const leg = [...LEGS, ...BACKUPS].find((l) => l.id === legId && l.pnr);
+  if (!leg) return { status: 404, error: "No ticket with that id" };
+  const db = serverDb();
+  const key = `pnr-refresh:${leg.id}`;
+  const { data: last } = await db.from("app_state").select("value").eq("key", key).maybeSingle();
+  const wait = ((last?.value as { at?: number } | undefined)?.at ?? 0) + PNR_REFRESH_COOLDOWN - now;
+  if (wait > 0) return { status: 429, error: `Checked a moment ago. Try again in ${Math.ceil(wait / 1000)} seconds.` };
+  await db.from("app_state").upsert({ key, value: { at: now }, updated_at: new Date(now).toISOString() });
+  const { data: row } = await db.from("leg_live").select("data").eq("leg_id", leg.id).maybeSingle();
+  const live = new Map<string, LegLive>(row ? [[leg.id, row.data as LegLive]] : []);
+  return { status: 200, result: await logged("pnr-sync", () => syncPnrs([leg], live)) };
+}
 
 async function syncPnrs(legs: Leg[], live: Map<string, LegLive>) {
   const lines: string[] = [];
@@ -344,11 +365,11 @@ async function syncLive(legs: Leg[], live: Map<string, LegLive>) {
 /* ----------------------------------------------------------- schedules */
 
 /** Each train's stops on our travel date, between our boarding and alighting stations. */
-async function syncSchedules() {
+async function syncSchedules(loser?: string) {
   const value: Record<string, StopTime[]> = {};
   const lines: string[] = [];
   let source: string | undefined;
-  for (const leg of LEGS.filter((l) => l.kind === "train")) {
+  for (const leg of [...LEGS, ...BACKUPS].filter((l) => l.kind === "train" && l.id !== loser)) {
     const board = PLACES[leg.from].code!;
     const dest = PLACES[leg.to].code!;
     try {
