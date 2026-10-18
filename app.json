@@ -64,7 +64,8 @@
           "defaultChannel": "alerts"
         }
       ],
-      "expo-background-task"
+      "expo-background-task",
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true,

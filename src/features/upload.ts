@@ -1,9 +1,8 @@
-import { createClient } from "@supabase/supabase-js";
 import { File } from "expo-file-system";
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import { Platform } from "react-native";
 import { api } from "@/core/api";
-import { SUPABASE_KEY, SUPABASE_URL } from "@/core/config";
+import { db, ensureDb } from "@/core/db";
 import { MAX_IMAGE_BYTES, MAX_PDF_BYTES, extFor, type DocUpload } from "@/lib/documents";
 
 /**
@@ -11,8 +10,6 @@ import { MAX_IMAGE_BYTES, MAX_PDF_BYTES, extFor, type DocUpload } from "@/lib/do
  * the website: the file is staged in Supabase Storage (keeps the request
  * small), then /api/docs files it and creates the expense.
  */
-
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
 
 export type Picked = { uri: string; mime: string; name?: string; size?: number };
 
@@ -43,11 +40,9 @@ export async function prepare(p: Picked): Promise<{ data: ArrayBuffer; mime: str
 
 export async function uploadBill(file: Picked, meta: Omit<DocUpload, "staging" | "mime">) {
   const { data, mime } = await prepare(file);
-  const t = await api<{ access_token: string; refresh_token: string }>("/api/session", { method: "POST" });
-  const { error: authError } = await sb.auth.setSession({ access_token: t.access_token, refresh_token: t.refresh_token });
-  if (authError) throw new Error(authError.message);
+  await ensureDb();
   const staging = `staging/${meta.id}.${extFor(mime)}`;
-  const up = await sb.storage.from("trip-files").upload(staging, data, { contentType: mime });
+  const up = await db.storage.from("trip-files").upload(staging, data, { contentType: mime });
   // "Already exists" means an earlier try got this far: carry on.
   if (up.error && !/exist|duplicate/i.test(up.error.message)) throw new Error(`Upload failed: ${up.error.message}`);
   return api<{ doc: unknown }>("/api/docs", { method: "POST", body: JSON.stringify({ ...meta, staging, mime } satisfies DocUpload) });

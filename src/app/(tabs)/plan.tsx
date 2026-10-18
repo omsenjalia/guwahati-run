@@ -5,6 +5,7 @@ import { PLACES } from "@/data/trip";
 import { useFeed, useNow } from "@/core/data";
 import { delayText } from "@/features/trip";
 import { duration, hhmm, istDateKey, weekdayDate } from "@/lib/time";
+import { planTransfers, type TransferPlan } from "@/lib/transfer-planner";
 import { buildSteps, type Step, type StepKind } from "@/lib/trip-engine";
 import { Card, Pill, type IconName } from "@/ui/kit";
 import { Screen } from "@/ui/screen";
@@ -28,6 +29,7 @@ export default function Plan() {
   const now = useNow();
   const [minor, setMinor] = useState(false);
   const steps = buildSteps(live).filter((s) => minor || !s.minor);
+  const transfers = planTransfers(live).filter((t) => t.reachBy > now);
   const days = new Map<string, Step[]>();
   for (const s of steps) days.set(istDateKey(s.start), [...(days.get(istDateKey(s.start)) ?? []), s]);
 
@@ -41,6 +43,16 @@ export default function Plan() {
         </Pressable>
       }
     >
+      {transfers.length > 0 && (
+        <View style={{ gap: 10 }}>
+          <T v="overline" color="faint" style={{ paddingHorizontal: 4 }}>
+            Station transfers
+          </T>
+          {transfers.map((t) => (
+            <TransferCard key={t.legId} plan={t} now={now} />
+          ))}
+        </View>
+      )}
       {[...days].map(([key, list]) => {
         const today = key === istDateKey(now);
         return (
@@ -60,6 +72,40 @@ export default function Plan() {
         );
       })}
     </Screen>
+  );
+}
+
+/** Metro or cab for one transfer, recalculated from the live arrival time. */
+function TransferCard({ plan, now }: { plan: TransferPlan; now: number }) {
+  const late = plan.leaveBy !== undefined && now > plan.leaveBy;
+  const tone: Tone = late || plan.health === "red" ? "bad" : plan.health === "amber" ? "warn" : "good";
+  return (
+    <Card style={{ gap: 8 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+        <MaterialCommunityIcons name={plan.mode === "metro" ? "subway-variant" : "taxi"} size={20} color="#2446C7" />
+        <T v="heading" style={{ flex: 1 }}>
+          {plan.mode === "metro" ? "Take the metro" : "Take a cab"}
+        </T>
+        <Pill label={late ? "Switch to cab" : tone === "good" ? "On track" : tone === "warn" ? "Tight" : "At risk"} tone={tone} />
+      </View>
+      {plan.lines.length > 0 && (
+        <T v="label" color="muted">
+          {plan.lines.map((l) => l.name).join(" then ")}
+        </T>
+      )}
+      {plan.mode === "metro" && (
+        <T v="caption" color="muted">
+          {plan.route}
+          {plan.interchange ? `. Change at ${plan.interchange}.` : ""}
+        </T>
+      )}
+      <T v="label" num>
+        {plan.leaveBy !== undefined ? "Leave by" : "Start"} {hhmm(plan.leaveBy ?? plan.start)} · {plan.minutes} min · ~₹{plan.costTotal} for 4
+      </T>
+      <T v="caption" color="faint">
+        {plan.reason}
+      </T>
+    </Card>
   );
 }
 

@@ -1,17 +1,19 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import * as Location from "expo-location";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { Linking, StyleSheet, View } from "react-native";
 import { EVENT, PLACES, TEAM, USEFUL_NUMBERS } from "@/data/trip";
 import { useAuth } from "@/core/auth";
-import { useFeed, useNow } from "@/core/data";
+import { refresh, useFeed, useNow } from "@/core/data";
+import { db, ensureDb } from "@/core/db";
 import { Countdown, Hero, TrainCard } from "@/features/bits";
 import { sendNow, sharingState, startSharing, useShareStatus, type ShareState } from "@/features/location";
 import { firstName, focusLeg, personIndex, trainLegs } from "@/features/trip";
 import type { Weather } from "@/lib/live-types";
 import { ROUTE_BACK, ROUTE_OUT } from "@/lib/phases";
 import { ago, duration, hhmm, ms, weekdayDate } from "@/lib/time";
-import { buildSteps, computeNow, connectionStates, tripHealth } from "@/lib/trip-engine";
+import { buildSteps, computeNow, connectionStates, tripHealth, type NowState } from "@/lib/trip-engine";
 import { describeWeather } from "@/lib/weather";
 import { Avatar, Button, Card, IconButton, InfoRow, Pill, Section } from "@/ui/kit";
 import { Screen } from "@/ui/screen";
@@ -44,6 +46,8 @@ export default function Home() {
       <Section title={state.phase === "post-trip" ? "Last train" : "Next train"}>
         <TrainCard leg={next} live={live} me={me} />
       </Section>
+
+      {isTeam && <CheckinCard place={checkpointLabel(state)} />}
 
       {isTeam ? <ShareCard /> : <WhereCard />}
 
@@ -149,6 +153,81 @@ function StatusHero({ now }: { now: number }) {
         ))}
       </View>
     </Hero>
+  );
+}
+
+/** Where we should be right now, as a check-in label. */
+function checkpointLabel(state: NowState): string {
+  const s = state.focus;
+  if (state.phase === "post-trip" || !s) return "Home";
+  if (state.phase === "pre-trip") return s.from ? PLACES[s.from].name : "Home";
+  const active = state.focusMode === "active";
+  if (s.kind === "train") return active ? `On ${s.leg?.train?.name ?? "the train"}` : PLACES[s.from!].name;
+  if (s.kind === "transfer") return active ? `On the way to ${PLACES[s.to!].short}` : PLACES[s.from!].name;
+  if (s.kind === "event") return "Hackathon venue, IIT Guwahati";
+  return s.place ? PLACES[s.place].name : "On the way";
+}
+
+/** One tap "I'm here" at each key point, and whether all four of us are together. */
+function CheckinCard({ place }: { place: string }) {
+  const { session } = useAuth();
+  const feed = useFeed();
+  const now = useNow();
+  const me = session!.person;
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const fresh = (id: (typeof TEAM)[number]["id"]) => {
+    const c = feed.checkins[id];
+    return !!c && c.place === place && now - Date.parse(c.created_at) < 3 * 3600_000;
+  };
+  const here = TEAM.filter((p) => fresh(p.id));
+  const iAmIn = here.some((p) => p.id === me);
+
+  async function checkIn() {
+    setBusy(true);
+    setError("");
+    try {
+      let lat: number | null = null;
+      let lon: number | null = null;
+      if ((await Location.getForegroundPermissionsAsync()).granted) {
+        const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }).catch(() => null);
+        lat = pos?.coords.latitude ?? null;
+        lon = pos?.coords.longitude ?? null;
+      }
+      await ensureDb();
+      const { error } = await db.from("checkins").insert({ person: me, place, lat, lon });
+      if (error) throw new Error(error.message);
+      await refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Section title="Check-in">
+      <Card style={{ gap: 12 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <T v="label" style={{ flex: 1 }}>
+            {place}
+          </T>
+          <Pill label={here.length === TEAM.length ? "All 4 together" : `${here.length} of 4 here`} tone={here.length === TEAM.length ? "good" : here.length ? "warn" : "neutral"} />
+        </View>
+        <Button label={iAmIn ? "You're checked in" : "I'm here"} icon={iAmIn ? "check-circle" : "map-marker-check"} loading={busy} disabled={iAmIn} onPress={() => void checkIn()} />
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
+          {TEAM.map((p) => {
+            const c = feed.checkins[p.id];
+            return <Pill key={p.id} label={`${p.short} · ${fresh(p.id) ? "here" : c ? ago(Date.parse(c.created_at), now) : "not yet"}`} tone={fresh(p.id) ? "good" : "neutral"} />;
+          })}
+        </View>
+        {!!error && (
+          <T v="caption" color="bad">
+            {error}
+          </T>
+        )}
+      </Card>
+    </Section>
   );
 }
 
