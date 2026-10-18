@@ -6,10 +6,11 @@ import { verifyToken } from "@/lib/auth";
  * bearer token, except
  * - sign-in (/api/auth),
  * - the calendar feed (its own secret token) and the cron tick (CRON_SECRET),
- * - /api/parent/*, which parents may reach too.
+ * - /api/parent/* and /api/alerts (alerts on their phone), which parents may reach too.
  * CORS is open (no cookies are used), so the web build of the app works.
  */
 const PUBLIC = ["/api/auth", "/api/calendar", "/api/jobs"];
+const PARENT = ["/api/parent", "/api/alerts"];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -17,7 +18,7 @@ export async function proxy(request: NextRequest) {
   if (PUBLIC.some((p) => pathname.startsWith(p))) return cors(NextResponse.next());
 
   const s = await verifyToken(request.headers.get("authorization")?.replace(/^Bearer\s+/i, ""));
-  if (s?.role === "team" || (s?.role === "parent" && pathname.startsWith("/api/parent"))) return cors(NextResponse.next());
+  if (s?.role === "team" || (s?.role === "parent" && PARENT.some((p) => pathname.startsWith(p)))) return cors(NextResponse.next());
   return cors(NextResponse.json({ error: "Sign in required" }, { status: 401 }));
 }
 

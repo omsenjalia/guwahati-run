@@ -3,6 +3,7 @@ import * as TaskManager from "expo-task-manager";
 import { Platform } from "react-native";
 import { API_URL } from "@/core/config";
 import { onSignOut, savedSession } from "@/core/auth";
+import { checkAlerts } from "@/features/alerts";
 import { createStore, useStore } from "@/core/store";
 
 /**
@@ -45,6 +46,8 @@ if (Platform.OS !== "web") {
     if (error || !data?.locations?.length) return;
     const latest = data.locations[data.locations.length - 1];
     await send(latest.coords, latest.timestamp);
+    // This task runs reliably every 30 min (foreground service), so it also picks up new alerts.
+    await checkAlerts();
   });
 }
 

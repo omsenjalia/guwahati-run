@@ -1,8 +1,8 @@
 {
   "app.json": {
-    "mtime": 1792330547.8004816,
-    "seen": 1792331151.0595653,
-    "ast_hash": "c3aaa3c7cfeeba3d4f9f246700b15ff3",
+    "mtime": 1792332362.336561,
+    "seen": 1792332446.7561877,
+    "ast_hash": "22d447abfe22f02949149fdbef94ca72",
     "semantic_hash": ""
   },
   "backend/app/api/admin/github/route.ts": {
@@ -72,9 +72,9 @@
     "semantic_hash": ""
   },
   "backend/app/api/push/route.ts": {
-    "mtime": 1791443862.016094,
-    "seen": 1792331151.059586,
-    "ast_hash": "c52991b722219a3f79b533f45dedb9df",
+    "mtime": 1792332292.4874842,
+    "seen": 1792332446.7579453,
+    "ast_hash": "dd772c1e6c16d606de3d72b0b92e1774",
     "semantic_hash": ""
   },
   "backend/app/api/report/route.ts": {
@@ -234,9 +234,9 @@
     "semantic_hash": ""
   },
   "backend/lib/push.ts": {
-    "mtime": 1791443861.9076746,
-    "seen": 1792331151.0596166,
-    "ast_hash": "09e058c4b575f5886d30dc2ae7c23002",
+    "mtime": 1792332292.4884863,
+    "seen": 1792332446.7615528,
+    "ast_hash": "44df3bacb52705a4ddcf91427c35a87d",
     "semantic_hash": ""
   },
   "backend/lib/receipt-checklist.ts": {
@@ -312,9 +312,9 @@
     "semantic_hash": ""
   },
   "backend/proxy.ts": {
-    "mtime": 1792329264.0204484,
-    "seen": 1792331151.0596309,
-    "ast_hash": "6cdaed3c7fe8ed9d79ccaa9a88af0728",
+    "mtime": 1792332292.5919087,
+    "seen": 1792332446.7633212,
+    "ast_hash": "47296b9bb9efcf6bdf8bd381b699aeef",
     "semantic_hash": ""
   },
   "backend/tsconfig.json": {
@@ -324,9 +324,9 @@
     "semantic_hash": ""
   },
   "backend/vercel.json": {
-    "mtime": 1791685443.3731713,
-    "seen": 1792331151.0596335,
-    "ast_hash": "ea644088a614e6a08f91b7201f799030",
+    "mtime": 1792331487.4930751,
+    "seen": 1792331493.8504822,
+    "ast_hash": "efd9b73c4cb025e02865499ee7479b10",
     "semantic_hash": ""
   },
   "eslint.config.js": {
@@ -342,8 +342,8 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1792331020.5450902,
-    "seen": 1792331151.0596368,
+    "mtime": 1792332440.4800425,
+    "seen": 1792332446.7638865,
     "ast_hash": "346141d2005736ff9aca69792197441d",
     "semantic_hash": ""
   },
@@ -390,9 +390,9 @@
     "semantic_hash": ""
   },
   "src/app/_layout.tsx": {
-    "mtime": 1792330816.6499305,
-    "seen": 1792331151.0596457,
-    "ast_hash": "f100238de707595bf9a77cf34c18c1bb",
+    "mtime": 1792332395.1604931,
+    "seen": 1792332446.7648537,
+    "ast_hash": "9e7f1bbb047a4e49021a682ca54c6b64",
     "semantic_hash": ""
   },
   "src/app/add-bill.tsx": {
@@ -456,9 +456,9 @@
     "semantic_hash": ""
   },
   "src/features/location.ts": {
-    "mtime": 1792329945.847694,
-    "seen": 1792331151.0596578,
-    "ast_hash": "b213a0a17ece16f66b7b7dfa2a767828",
+    "mtime": 1792332395.1604514,
+    "seen": 1792332446.7662048,
+    "ast_hash": "1bab126ab52ad05b5b377eaace06e07c",
     "semantic_hash": ""
   },
   "src/features/trip.test.ts": {
@@ -546,9 +546,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1791688400.8399055,
-    "seen": 1792331151.0596755,
-    "ast_hash": "43d48419b4f8b441d2c39ffe3903bb15",
+    "mtime": 1792331199.8085606,
+    "seen": 1792331283.7124715,
+    "ast_hash": "88aa0b73e791aa47137c2b1c42ab6646",
     "semantic_hash": ""
   },
   "backend/AGENTS.md": {
@@ -557,10 +557,64 @@
     "ast_hash": "c98dbebb744eadc1acc4b9f58bfe0f42",
     "semantic_hash": ""
   },
-  "backend/SETUP.md": {
-    "mtime": 1791688652.5578313,
-    "seen": 1792331151.0596776,
-    "ast_hash": "33c12aea3f7204c2752b33cfd130152e",
+  "CLAUDE.md": {
+    "mtime": 1792331155.566044,
+    "seen": 1792331283.7124672,
+    "ast_hash": "67d88e9d0760c3ba54c75dfd9551c1c5",
+    "semantic_hash": ""
+  },
+  "SETUP.md": {
+    "mtime": 1792332405.7149768,
+    "seen": 1792332446.7684731,
+    "ast_hash": "b74d172eaa0f01359e75a129b40cffa5",
+    "semantic_hash": ""
+  },
+  "backend/lib/push-audience.ts": {
+    "mtime": 1792331407.9463923,
+    "seen": 1792331493.850433,
+    "ast_hash": "147d2e54da11671005016af8eb115454",
+    "semantic_hash": ""
+  },
+  "backend/supabase/002_expenses.sql": {
+    "mtime": 1791445027.761845,
+    "seen": 1792331493.8504734,
+    "ast_hash": "",
+    "semantic_hash": ""
+  },
+  "backend/supabase/003_confirmed_trip.sql": {
+    "mtime": 1791684548.7030447,
+    "seen": 1792331493.850475,
+    "ast_hash": "",
+    "semantic_hash": ""
+  },
+  "backend/supabase/004_event_documents.sql": {
+    "mtime": 1791688652.5720284,
+    "seen": 1792331493.8504765,
+    "ast_hash": "",
+    "semantic_hash": ""
+  },
+  "backend/supabase/schema.sql": {
+    "mtime": 1791434919.2876766,
+    "seen": 1792331493.8504782,
+    "ast_hash": "",
+    "semantic_hash": ""
+  },
+  "src/features/push-audience.test.ts": {
+    "mtime": 1792331408.0184047,
+    "seen": 1792331493.8505251,
+    "ast_hash": "26d4a6b63d7b79fa284241ab845514f2",
+    "semantic_hash": ""
+  },
+  "backend/app/api/alerts/route.ts": {
+    "mtime": 1792332384.610133,
+    "seen": 1792332446.756623,
+    "ast_hash": "1d8c7c99dc646390e01c45540a40cad0",
+    "semantic_hash": ""
+  },
+  "src/features/alerts.ts": {
+    "mtime": 1792332384.6330855,
+    "seen": 1792332446.766065,
+    "ast_hash": "a3723171283b9f5eb5ac656a0a819b75",
     "semantic_hash": ""
   }
 }

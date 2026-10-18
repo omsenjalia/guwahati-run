@@ -1,5 +1,5 @@
 import "react-native-url-polyfill/auto";
-// Registers the background location task before anything else runs.
+// Registers the background location and alert tasks before anything else runs.
 import "@/features/location";
 import { Manrope_400Regular, Manrope_500Medium, Manrope_600SemiBold, Manrope_700Bold, Manrope_800ExtraBold, useFonts } from "@expo-google-fonts/manrope";
 import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router";
@@ -7,10 +7,11 @@ import { Stack } from "expo-router/stack";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import { useColorScheme } from "react-native";
+import { AppState, useColorScheme } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { loadSession, useAuth } from "@/core/auth";
 import { useFeedSync } from "@/core/data";
+import { checkAlerts, startAlerts } from "@/features/alerts";
 import { useTheme } from "@/ui/theme";
 
 void SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -52,8 +53,14 @@ export default function RootLayout() {
   );
 }
 
-/** Keeps the data feed fresh while signed in (any screen). */
+/** Keeps the data feed fresh and alerts registered while signed in (any screen). */
 function FeedSync() {
   useFeedSync();
+  // Alerts: start the background checks, and check whenever the app comes to the front.
+  useEffect(() => {
+    void startAlerts();
+    const sub = AppState.addEventListener("change", (s) => s === "active" && void checkAlerts());
+    return () => sub.remove();
+  }, []);
   return null;
 }
