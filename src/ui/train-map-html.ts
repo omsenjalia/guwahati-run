@@ -5,7 +5,9 @@ export type MapStation = { c: string; n: string; lat: number; lon: number; s: 0 
  * A self-contained MapLibre page: tilted 3D view with terrain relief
  * (Carto basemap, AWS elevation tiles, no API keys), the route, a flag with
  * the code at every stop, a red pin at every station the train runs
- * through, and the train moving in real time (it works out its own
+ * through, and the train moving in real time. Flags, pins and the train are
+ * map layers (drawn by the map itself), so they stay fixed on their
+ * coordinates while the map is dragged, tilted or turned. The page works out the train's own
  * position every frame from the stations' times, so no messages from the
  * app are needed). offset = the app clock minus the real clock (for ?at=).
  */
@@ -17,14 +19,6 @@ export function trainMapHtml(opts: { stations: MapStation[]; from: number; to: n
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <style>
 html,body,#m{margin:0;height:100%;background:${dark ? "#0A0F1C" : "#EDE9E0"};font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-.flag{position:relative;width:2px;height:30px;background:${dark ? "#cfd6e4" : "#3b4252"};transform-origin:bottom}
-.flag span{position:absolute;left:2px;top:0;padding:2px 5px 2px 4px;font:800 10px/1.2 system-ui,sans-serif;color:#fff;background:#2446C7;border-radius:0 4px 4px 0;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.3)}
-.flag.done span{background:#7a8496}.flag.ours span{background:#E07B1F}
-.flag:after{content:"";position:absolute;bottom:-3px;left:-3px;width:8px;height:8px;border-radius:50%;background:inherit}
-.train{width:46px;height:46px;display:flex;align-items:center;justify-content:center}
-.train svg{filter:drop-shadow(0 6px 6px rgba(0,0,0,.45))}
-.pulse{position:absolute;width:46px;height:46px;border-radius:50%;background:rgba(243,160,75,.35);animation:p 1.8s ease-out infinite}
-@keyframes p{0%{transform:scale(.4);opacity:1}100%{transform:scale(1.6);opacity:0}}
 .chip{position:absolute;left:10px;right:10px;top:10px;padding:8px 12px;border-radius:14px;background:${dark ? "rgba(18,26,43,.88)" : "rgba(255,255,255,.92)"};color:${dark ? "#EEF1F7" : "#0E1726"};font:700 13px/1.3 system-ui,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.2)}
 .btns{position:absolute;right:10px;bottom:24px;display:flex;flex-direction:column;gap:8px}
 .btns button{border:0;border-radius:12px;padding:9px 12px;font:700 12px system-ui,sans-serif;background:${dark ? "#1A2438" : "#fff"};color:${dark ? "#EEF1F7" : "#0E1726"};box-shadow:0 2px 8px rgba(0,0,0,.25)}
@@ -47,10 +41,22 @@ function pos(t){
     if(t0!=null&&t1!=null&&t0<=t&&t<t1){var f=(t-t0)/Math.max(1,t1-t0);return {lat:a.lat+(b.lat-a.lat)*f,lon:a.lon+(b.lon-a.lon)*f,b:brg(a,b),i:i,f:f}}}
   var l=S[S.length-1];return {lat:l.lat,lon:l.lon,b:brg(S[S.length-2]||l,l),i:S.length-1};
 }
-var start=pos(now()),flags={};
+var start=pos(now()),DPR=2;
+// Flag picture for a stop: pole, base dot and a coloured flag with the code (drawn once per code and colour).
+function flagImg(code,color){var c=document.createElement('canvas'),x=c.getContext('2d');x.font='800 '+(10*DPR)+'px system-ui,sans-serif';
+  var w=Math.ceil(x.measureText(code).width)+14*DPR,h=34*DPR;c.width=w;c.height=h;x=c.getContext('2d');
+  x.fillStyle='${dark ? "#cfd6e4" : "#3b4252"}';x.fillRect(3*DPR,2*DPR,2*DPR,h-6*DPR);x.beginPath();x.arc(4*DPR,h-4*DPR,3.5*DPR,0,7);x.fill();
+  x.fillStyle=color;x.fillRect(5*DPR,2*DPR,w-7*DPR,15*DPR);
+  x.font='800 '+(10*DPR)+'px system-ui,sans-serif';x.fillStyle='#fff';x.textBaseline='middle';x.fillText(code,8*DPR,10*DPR);return x.getImageData(0,0,w,h)}
+function flagId(s,i){var col=(i===FROM||i===TO)?'#E07B1F':s.p?'#7a8496':'#2446C7',id='f-'+s.c+'-'+col;if(!map.hasImage(id))map.addImage(id,flagImg(s.c,col),{pixelRatio:DPR});return id}
+function stopsData(){return {type:'FeatureCollection',features:S.map(function(s,i){return s.s?{type:'Feature',properties:{i:i,img:flagId(s,i)},geometry:{type:'Point',coordinates:[s.lon,s.lat]}}:null}).filter(Boolean)}}
+function trainImg(){var w=30*DPR,h=44*DPR,c=document.createElement('canvas');c.width=w;c.height=h;var x=c.getContext('2d');
+  function rr(X,Y,W,H,R,f){X*=DPR;Y*=DPR;W*=DPR;H*=DPR;R*=DPR;x.beginPath();x.moveTo(X+R,Y);x.arcTo(X+W,Y,X+W,Y+H,R);x.arcTo(X+W,Y+H,X,Y+H,R);x.arcTo(X,Y+H,X,Y,R);x.arcTo(X,Y,X+W,Y,R);x.closePath();x.fillStyle=f;x.fill()}
+  rr(2,3,26,40,10,'#fff');rr(4,5,22,36,8,'#E07B1F');rr(8,9,14,9,3,'#0E1A3A');rr(8,22,14,3,1.5,'rgba(255,255,255,.85)');rr(8,29,14,3,1.5,'rgba(255,255,255,.85)');
+  x.fillStyle='#FFE08A';[10,20].forEach(function(cx){x.beginPath();x.arc(cx*DPR,38*DPR,2*DPR,0,7);x.fill()});return x.getImageData(0,0,w,h)}
+function trainData(p){return {type:'Feature',properties:{b:p.b},geometry:{type:'Point',coordinates:[p.lon,p.lat]}}}
 // New times and statuses from the app (same route, same order): no reload, the train just carries on.
-window.update=function(u){S=u.stations;MOVING=u.moving;document.getElementById('chip').textContent=u.caption;
-  Object.keys(flags).forEach(function(i){flags[i].className='flag'+(S[i].p?' done':'')+(+i===FROM||+i===TO?' ours':'')})};
+window.update=function(u){S=u.stations;MOVING=u.moving;document.getElementById('chip').textContent=u.caption;if(map.getSource('stops'))map.getSource('stops').setData(stopsData())};
 window.addEventListener('message',function(e){if(e.data&&e.data.stations)window.update(e.data)});
 var map=new maplibregl.Map({container:'m',style:'${style}',center:[78.5,23.5],zoom:3.6,pitch:0,bearing:0,attributionControl:{compact:true},maxPitch:75});
 var follow=MOVING;
@@ -58,9 +64,6 @@ map.on('dragstart',function(){setFollow(false)});
 function setFollow(v){follow=v;document.getElementById('follow').className=v?'on':''}
 document.getElementById('follow').onclick=function(){setFollow(!follow);if(follow)chase(1200)};
 document.getElementById('all').onclick=function(){setFollow(false);var b=new maplibregl.LngLatBounds();coords.forEach(function(c){b.extend(c)});map.fitBounds(b,{padding:60,pitch:30,bearing:0,duration:1500})};
-var trainEl=document.createElement('div');trainEl.className='train';
-trainEl.innerHTML='<div class="pulse"></div><svg width="30" height="44" viewBox="0 0 30 44"><rect x="3" y="4" width="24" height="38" rx="9" fill="#E07B1F" stroke="#fff" stroke-width="2"/><rect x="7" y="8" width="16" height="9" rx="3" fill="#0E1A3A"/><rect x="7" y="21" width="16" height="3" rx="1.5" fill="#fff" opacity=".85"/><rect x="7" y="28" width="16" height="3" rx="1.5" fill="#fff" opacity=".85"/><circle cx="10" cy="38" r="2" fill="#FFE08A"/><circle cx="20" cy="38" r="2" fill="#FFE08A"/></svg>';
-var train=new maplibregl.Marker({element:trainEl,rotationAlignment:'map',pitchAlignment:'map'}).setLngLat([start.lon,start.lat]).setRotation(start.b);
 function chase(ms){var p=pos(now());map.easeTo({center:[p.lon,p.lat],zoom:Math.max(map.getZoom(),10.5),pitch:60,bearing:p.b,duration:ms})}
 map.on('load',function(){
   try{map.addSource('dem',{type:'raster-dem',tiles:['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],encoding:'terrarium',tileSize:256,maxzoom:12,attribution:'Terrain: Mapzen, AWS'});
@@ -75,15 +78,22 @@ map.on('load',function(){
   map.addSource('pass',{type:'geojson',data:{type:'FeatureCollection',features:S.filter(function(s){return !s.s}).map(function(s){return {type:'Feature',properties:{c:s.c},geometry:{type:'Point',coordinates:[s.lon,s.lat]}}})}});
   map.addLayer({id:'pass',type:'circle',source:'pass',paint:{'circle-radius':['interpolate',['linear'],['zoom'],5,2,10,5],'circle-color':'#E53935','circle-stroke-color':'#fff','circle-stroke-width':1.2}});
   map.on('click','pass',function(e){var c=e.features[0].properties.c,s=S.find(function(x){return x.c===c});new maplibregl.Popup({closeButton:false}).setLngLat(e.lngLat).setHTML('<b>'+s.c+'</b> '+s.n+'<br>No stop'+(s.d?' · passes ~'+new Date(s.d).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Kolkata'}):'')).addTo(map)});
-  // The flag sits inside the marker element: its own position:relative would override MapLibre's absolute positioning.
-  S.forEach(function(s,i){if(!s.s)return;var el=document.createElement('div');el.title=s.n;el.innerHTML='<div class="flag'+(s.p?' done':'')+(i===FROM||i===TO?' ours':'')+'"><span>'+s.c+'</span></div>';flags[i]=el.firstChild;
-    new maplibregl.Marker({element:el,anchor:'bottom'}).setLngLat([s.lon,s.lat]).setPopup(new maplibregl.Popup({offset:28,closeButton:false}).setHTML('<b>'+s.c+'</b> '+s.n)).addTo(map)});
-  train.addTo(map);
+  // Stops: flags standing up, pinned by their base to the station.
+  map.addSource('stops',{type:'geojson',data:stopsData()});
+  map.addLayer({id:'stops',type:'symbol',source:'stops',layout:{'icon-image':['get','img'],'icon-anchor':'bottom-left','icon-offset':[-4,4],'icon-allow-overlap':true,'icon-ignore-placement':true,'icon-pitch-alignment':'viewport','icon-rotation-alignment':'viewport','symbol-z-order':'source'}});
+  map.on('click','stops',function(e){var s=S[e.features[0].properties.i];new maplibregl.Popup({closeButton:false}).setLngLat([s.lon,s.lat]).setHTML('<b>'+s.c+'</b> '+s.n).addTo(map)});
+  // The train lies on the map, turned along the track, with a pulse under it.
+  map.addImage('train',trainImg(),{pixelRatio:DPR});
+  map.addSource('train',{type:'geojson',data:trainData(start)});
+  map.addLayer({id:'pulse',type:'circle',source:'train',paint:{'circle-radius':14,'circle-color':'#F3A04B','circle-opacity':.35,'circle-pitch-alignment':'map'}});
+  map.addLayer({id:'train',type:'symbol',source:'train',layout:{'icon-image':'train','icon-rotate':['get','b'],'icon-rotation-alignment':'map','icon-pitch-alignment':'map','icon-allow-overlap':true,'icon-ignore-placement':true}});
   // India overview first, then glide down to the train (or, before it leaves, to our part of the route).
   setTimeout(function(){if(MOVING)return chase(3500);var b=new maplibregl.LngLatBounds();coords.slice(FROM,TO+1).forEach(function(c){b.extend(c)});map.fitBounds(b,{padding:70,pitch:45,duration:3000})},600);
-  var lastDone=-1;
-  (function tick(){var p=pos(now());train.setLngLat([p.lon,p.lat]).setRotation(p.b);
-    var k=p.i;if(k!==lastDone||p.f){lastDone=k;map.getSource('done').setData({type:'Feature',geometry:{type:'LineString',coordinates:coords.slice(0,k+1).concat([[p.lon,p.lat]])}})}
+  var lastDone=-1,lastDraw=0;
+  (function tick(){var p=pos(now());map.getSource('train').setData(trainData(p));
+    var ph=(performance.now()%1800)/1800;map.setPaintProperty('pulse','circle-radius',10+ph*22);map.setPaintProperty('pulse','circle-opacity',.45*(1-ph));
+    // The covered line changes slowly: redraw it at most once a second (the train itself moves every frame).
+    var k=p.i,ts=performance.now();if(k!==lastDone||ts-lastDraw>1000){lastDone=k;lastDraw=ts;map.getSource('done').setData({type:'Feature',geometry:{type:'LineString',coordinates:coords.slice(0,k+1).concat([[p.lon,p.lat]])}})}
     requestAnimationFrame(tick)})();
   setInterval(function(){if(follow&&!map.isMoving())chase(1500)},4000);
 });

@@ -154,6 +154,7 @@ function Tracked({ leg, track, live, now, mapKey }: { leg: Leg; track: Track; li
               tag={idx === track.from ? "Board" : idx === track.to ? "Get off" : undefined}
               dim={view === "all" && (idx < track.from || idx > track.to)}
               now={now}
+              km={idx >= track.from ? p.km - track.points[track.from].km : undefined}
             />
           );
         })}
@@ -183,7 +184,8 @@ function Legend({ color, label, flag, line }: { color: string; label: string; fl
 }
 
 /** One station, NTES style: arrival and departure (scheduled, then actual or expected), delay, platform, day and distance. */
-function PointRow({ p, first, last, here, tag, dim, now }: { p: TrackPoint; first: boolean; last: boolean; here: boolean; tag?: string; dim?: boolean; now: number }) {
+/** km = distance from our boarding station (none for stations before it). */
+function PointRow({ p, first, last, here, tag, dim, now, km }: { p: TrackPoint; first: boolean; last: boolean; here: boolean; tag?: string; dim?: boolean; now: number; km?: number }) {
   const c = useTheme();
   const lineColor = p.passed ? c.accent : c.border;
   const late = p.delayMin && p.delayMin > 0 ? p.delayMin : 0;
@@ -204,13 +206,15 @@ function PointRow({ p, first, last, here, tag, dim, now }: { p: TrackPoint; firs
           <View style={[styles.railBottom, { backgroundColor: last ? "transparent" : lineColor }]} />
           {here && <TrainDot />}
         </View>
-        <View style={{ flex: 1, justifyContent: "center", flexDirection: "row", alignItems: "center", gap: 6 }}>
+        <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 6 }}>
           <T v="caption" color="muted" numberOfLines={1} style={{ flexShrink: 1 }}>
             {p.name} · {p.code}
           </T>
-          <T v="caption" color="faint">
-            {p.km} km
-          </T>
+          {km !== undefined && (
+            <T v="caption" color="faint">
+              {km} km
+            </T>
+          )}
         </View>
       </View>
     );
@@ -264,9 +268,11 @@ function PointRow({ p, first, last, here, tag, dim, now }: { p: TrackPoint; firs
           <T v="caption" color="faint">
             {p.code}
           </T>
-          <T v="caption" color="faint">
-            {p.km} km
-          </T>
+          {km !== undefined && (
+            <T v="caption" color="faint">
+              {km} km
+            </T>
+          )}
           {!!p.day && p.day > 1 && (
             <T v="caption" color="faint">
               Day {p.day}
