@@ -9,8 +9,9 @@ import { API_URL } from "@/core/config";
 import { clearFeed, useFeed, useNow } from "@/core/data";
 import { sharingState, startSharing, useShareStatus, type ShareState } from "@/features/location";
 import { person, personIndex } from "@/features/trip";
+import { isDeveloper } from "@/lib/auth";
 import { ago } from "@/lib/time";
-import { Avatar, Button, Card, IconButton, InfoRow, Section } from "@/ui/kit";
+import { Avatar, Button, Card, IconButton, InfoRow, LinkRow, Section } from "@/ui/kit";
 import { T } from "@/ui/text";
 import { useTheme } from "@/ui/theme";
 
@@ -94,6 +95,14 @@ export default function Settings() {
           <InfoRow icon="information-outline" label="App version" value={Constants.expoConfig?.version ?? "1.0.0"} />
         </Card>
       </Section>
+
+      {isDeveloper(session) && (
+        <Section title="Developer">
+          <Card>
+            <LinkRow icon="wrench-outline" tone="accent" label="Developer options" sub="Backup train, live data, jobs, trip plan" onPress={() => router.push("/tools/dev")} />
+          </Card>
+        </Section>
+      )}
 
       <Button
         label="Sign out"

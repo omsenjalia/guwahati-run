@@ -40,6 +40,10 @@ export async function verifyToken(value: string | null | undefined): Promise<Ses
   return timingSafeEqual(value, expected) ? { role, person } : null;
 }
 
+/** Developer options (edit live data, jobs, the trip file): Om's attendee account only. */
+export const DEVELOPER: PersonId = "oms";
+export const isDeveloper = (s: Session | null) => s?.role === "team" && s.person === DEVELOPER;
+
 /** The signed-in session from the Authorization header, if any. */
 export const sessionFrom = (request: Request) =>
   verifyToken(request.headers.get("authorization")?.replace(/^Bearer\s+/i, ""));

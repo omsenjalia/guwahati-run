@@ -2,6 +2,7 @@ import { sessionFrom } from "@/lib/auth";
 import type { LegLive } from "@/lib/live-types";
 import { effectiveLocations, type LocationRow } from "@/lib/locations";
 import { serverDb } from "@/lib/supabase/server";
+import { tripData } from "@/lib/trip-json";
 
 /**
  * The app's main data feed, for parents and attendees alike (either token,
@@ -61,6 +62,7 @@ export async function GET(request: Request) {
       locations: effectiveLocations((locs.data ?? []) as LocationRow[], now),
       checkins: latest,
       expenses: expenses.data ?? [],
+      tripHash: (await tripData()).hash,
       at: now,
     },
     { headers: { "Cache-Control": "no-store" } },

@@ -1,8 +1,10 @@
+import { router } from "expo-router";
 import type { ReactNode } from "react";
-import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { KeyboardAvoidingView, Platform, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { refresh, useFeed, useNow } from "@/core/data";
 import { ago } from "@/lib/time";
+import { IconButton } from "./kit";
 import { T } from "./text";
 import { TAB_BAR_SPACE, useTheme } from "./theme";
 
@@ -33,6 +35,36 @@ export function Screen({ title, subtitle, right, children }: { title: string; su
       {children}
       <SyncNote />
     </ScrollView>
+  );
+}
+
+/** A pushed screen (tools, settings): title, close button, keyboard-safe scroll. */
+export function Page({ title, subtitle, right, children }: { title: string; subtitle?: string; right?: ReactNode; children: ReactNode }) {
+  const c = useTheme();
+  const insets = useSafeAreaInsets();
+  return (
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.bg }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + 14, paddingBottom: insets.bottom + 40 }]}
+        keyboardShouldPersistTaps="handled"
+        refreshControl={<RefreshControl refreshing={false} onRefresh={() => void refresh()} tintColor={c.primary} colors={[c.primary]} />}
+      >
+        <View style={styles.head}>
+          <View style={{ flex: 1 }}>
+            <T v="title">{title}</T>
+            {subtitle && (
+              <T v="label" color="muted" style={{ marginTop: 2 }}>
+                {subtitle}
+              </T>
+            )}
+          </View>
+          {right}
+          <IconButton icon="close" label="Close" onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))} />
+        </View>
+        {children}
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
