@@ -111,7 +111,7 @@ export default function System() {
 
       <Section title="Background jobs">
         <Card style={{ gap: 14 }}>
-          {runs.error && (
+          {!!runs.error && (
             <T v="caption" color="bad">
               {runs.error}
             </T>
