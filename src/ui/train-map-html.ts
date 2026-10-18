@@ -1,3 +1,5 @@
+import { TRAIN_MODEL_JS } from "./train-model-js";
+
 /** One station for the live map: code, name, position, stop or not, arrival/departure (epoch ms), passed. */
 export type MapStation = { c: string; n: string; lat: number; lon: number; s: 0 | 1; a?: number; d?: number; p: 0 | 1 };
 
@@ -17,6 +19,7 @@ export function trainMapHtml(opts: { stations: MapStation[]; from: number; to: n
   return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/three@0.149.0/build/three.min.js"></script>
 <style>
 html,body,#m{margin:0;height:100%;background:${dark ? "#0A0F1C" : "#EDE9E0"};font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
 .chip{position:absolute;left:10px;right:10px;top:10px;padding:8px 12px;border-radius:14px;background:${dark ? "rgba(18,26,43,.88)" : "rgba(255,255,255,.92)"};color:${dark ? "#EEF1F7" : "#0E1726"};font:700 13px/1.3 system-ui,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.2)}
@@ -42,6 +45,7 @@ function pos(t){
   var l=S[S.length-1];return {lat:l.lat,lon:l.lon,b:brg(S[S.length-2]||l,l),i:S.length-1};
 }
 var start=pos(now()),DPR=2;
+${TRAIN_MODEL_JS}
 // Flag picture for a stop: pole, base dot and a coloured flag with the code (drawn once per code and colour).
 function flagImg(code,color){var c=document.createElement('canvas'),x=c.getContext('2d');x.font='800 '+(10*DPR)+'px system-ui,sans-serif';
   var w=Math.ceil(x.measureText(code).width)+14*DPR,h=34*DPR;c.width=w;c.height=h;x=c.getContext('2d');
@@ -87,14 +91,18 @@ map.on('load',function(){
   map.addSource('train',{type:'geojson',data:trainData(start)});
   map.addLayer({id:'pulse',type:'circle',source:'train',paint:{'circle-radius':14,'circle-color':'#F3A04B','circle-opacity':.35,'circle-pitch-alignment':'map'}});
   map.addLayer({id:'train',type:'symbol',source:'train',layout:{'icon-image':'train','icon-rotate':['get','b'],'icon-rotation-alignment':'map','icon-pitch-alignment':'map','icon-allow-overlap':true,'icon-ignore-placement':true}});
+  // The 3D Vande Bharat replaces the flat icon and pulse (kept if three.js didn't load).
+  var has3d=false;
+  if(window.THREE){try{map.addLayer(trainLayer());map.setLayoutProperty('train','visibility','none');map.setLayoutProperty('pulse','visibility','none');has3d=true}catch(e){}}
   // India overview first, then glide down to the train (or, before it leaves, to our part of the route).
   setTimeout(function(){if(MOVING)return chase(3500);var b=new maplibregl.LngLatBounds();coords.slice(FROM,TO+1).forEach(function(c){b.extend(c)});map.fitBounds(b,{padding:70,pitch:45,duration:3000})},600);
-  var lastDone=-1,lastDraw=0;
-  (function tick(){var p=pos(now());map.getSource('train').setData(trainData(p));
-    var ph=(performance.now()%1800)/1800;map.setPaintProperty('pulse','circle-radius',10+ph*22);map.setPaintProperty('pulse','circle-opacity',.45*(1-ph));
-    // The covered line changes slowly: redraw it at most once a second (the train itself moves every frame).
-    var k=p.i,ts=performance.now();if(k!==lastDone||ts-lastDraw>1000){lastDone=k;lastDraw=ts;map.getSource('done').setData({type:'Feature',geometry:{type:'LineString',coordinates:coords.slice(0,k+1).concat([[p.lon,p.lat]])}})}
-    requestAnimationFrame(tick)})();
+  // Movement: the train's position is worked out from the clock each time the map draws (steady between
+  // two stations by their times, waiting at a stop until it leaves). Redraw 20 times a second while it runs;
+  // the covered line and the flat fallback icon only need a refresh once a second.
+  setInterval(function(){if(!MOVING)return;if(has3d)map.triggerRepaint();else map.getSource('train').setData(trainData(pos(now())))},has3d?50:100);
+  function slow(){var p=pos(now());
+    map.getSource('done').setData({type:'Feature',geometry:{type:'LineString',coordinates:coords.slice(0,p.i+1).concat([[p.lon,p.lat]])}})}
+  slow();setInterval(slow,1000);
   setInterval(function(){if(follow&&!map.isMoving())chase(1500)},4000);
 });
 </script></body></html>`;
