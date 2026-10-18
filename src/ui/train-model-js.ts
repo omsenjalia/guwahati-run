@@ -45,8 +45,10 @@ function trainLayer(){
     render:function(gl,matrix){var p=pos(now()),ll=[p.lon,p.lat];
       var elev=(map.queryTerrainElevation&&map.queryTerrainElevation(ll))||0;
       var mc=maplibregl.MercatorCoordinate.fromLngLat(ll,elev),u=mc.meterInMercatorCoordinateUnits();
-      // About 200 px long whatever the zoom, up to half the map's width (a real 46 m train is a dot when zoomed out).
-      var mpp=40075016.686*Math.cos(p.lat*Math.PI/180)/(512*Math.pow(2,map.getZoom())),px=Math.min(200,map.getCanvas().clientWidth*.5),k=px*mpp/46;
+      // Grows with zoom like the map does: ~30 px over all of India (zoom 5) up to ~200 px close in (zoom 12+),
+      // never over half the map's width (a real 46 m train would be a dot until zoomed right in).
+      var z=map.getZoom(),mpp=40075016.686*Math.cos(p.lat*Math.PI/180)/(512*Math.pow(2,z));
+      var px=Math.min(30+170*Math.min(1,Math.max(0,(z-5)/7)),map.getCanvas().clientWidth*.5),k=px*mpp/46;
       var yaw=(90-p.b)*Math.PI/180;
       var l=new THREE.Matrix4().makeTranslation(mc.x,mc.y,mc.z).scale(new THREE.Vector3(u*k,-u*k,u*k))
         .multiply(new THREE.Matrix4().makeRotationX(Math.PI/2)).multiply(new THREE.Matrix4().makeRotationY(yaw));
