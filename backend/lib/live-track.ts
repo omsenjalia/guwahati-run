@@ -58,22 +58,25 @@ const at = (start: string, day: number, hm: string) => ms(`${start}T${hm}:00+05:
 
 export const lateText = (min?: number) => (!min || min <= 0 ? "on time" : min < 60 ? `${min} min late` : `${Math.floor(min / 60)}h ${min % 60}m late`);
 
-/** The track for one of our train legs, from the route file, the timetable and whatever live data we have. */
-export function buildTrack(leg: Leg, live: Pick<LegLive, "stations" | "departed" | "terminated"> | undefined, now: number): Track | null {
+/**
+ * The track for one of our train legs, from the route file, the timetable and whatever live data we have.
+ * Live data from a different run (left over from a test) is ignored unless anyRun (the developer test).
+ */
+export function buildTrack(leg: Leg, live: Pick<LegLive, "stations" | "departed" | "terminated"> | undefined, now: number, anyRun = false): Track | null {
   const trainNo = leg.train?.number;
   const route = trainNo ? ROUTES[trainNo] : undefined;
   if (!route) return null;
   const boardCode = PLACES[leg.from].code;
   const alightCode = PLACES[leg.to].code;
-  const stations = (live?.stations ?? []) as StationStatus[];
-  const byCode = new Map(stations.map((s) => [s.code, s]));
-  const isLive = stations.length > 0;
-
-  // The run's start date: from live data, else back from our boarding day.
+  // The run's start date: back from our boarding day, or the live run's.
   const board = route.find((p) => p[0] === boardCode && p[5]);
-  const startDate = isLive
-    ? istDateKey(ms(stations[0].schDep ?? stations[0].schArr ?? leg.depart))
-    : istDateKey(ms(leg.depart) - ((board?.[6] ?? 1) - 1) * DAY);
+  const ourStart = istDateKey(ms(leg.depart) - ((board?.[6] ?? 1) - 1) * DAY);
+  const feed = (live?.stations ?? []) as StationStatus[];
+  const liveStart = feed.length ? istDateKey(ms(feed[0].schDep ?? feed[0].schArr ?? leg.depart)) : undefined;
+  const isLive = !!liveStart && (anyRun || liveStart === ourStart);
+  const stations = isLive ? feed : [];
+  const byCode = new Map(stations.map((s) => [s.code, s]));
+  const startDate = isLive ? liveStart! : ourStart;
 
   const points: TrackPoint[] = route.map(([code, name, lat, lon, km, stop, day, arr, dep]) => {
     const p: TrackPoint = { code, name, lat, lon, km, stop: !!stop, passed: false, actual: false };

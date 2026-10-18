@@ -31,7 +31,7 @@ html,body,#m{margin:0;height:100%;background:${dark ? "#0A0F1C" : "#EDE9E0"};fon
 .btns button.on{background:#2446C7;color:#fff}
 .maplibregl-ctrl-attrib{font-size:9px}
 </style></head><body><div id="m"></div><div class="chip" id="chip"></div>
-<div class="btns"><button id="follow" class="on">Follow</button><button id="all">Whole route</button></div>
+<div class="btns"><button id="follow" class="${opts.moving ? "on" : ""}">Follow</button><button id="all">Whole route</button></div>
 <script>
 var S=${JSON.stringify(opts.stations)},FROM=${opts.from},TO=${opts.to},OFFSET=${opts.offset},MOVING=${opts.moving};
 document.getElementById('chip').textContent=${JSON.stringify(opts.caption)};
@@ -53,7 +53,7 @@ window.update=function(u){S=u.stations;MOVING=u.moving;document.getElementById('
   Object.keys(flags).forEach(function(i){flags[i].className='flag'+(S[i].p?' done':'')+(+i===FROM||+i===TO?' ours':'')})};
 window.addEventListener('message',function(e){if(e.data&&e.data.stations)window.update(e.data)});
 var map=new maplibregl.Map({container:'m',style:'${style}',center:[78.5,23.5],zoom:3.6,pitch:0,bearing:0,attributionControl:{compact:true},maxPitch:75});
-var follow=true;
+var follow=MOVING;
 map.on('dragstart',function(){setFollow(false)});
 function setFollow(v){follow=v;document.getElementById('follow').className=v?'on':''}
 document.getElementById('follow').onclick=function(){setFollow(!follow);if(follow)chase(1200)};
@@ -75,11 +75,12 @@ map.on('load',function(){
   map.addSource('pass',{type:'geojson',data:{type:'FeatureCollection',features:S.filter(function(s){return !s.s}).map(function(s){return {type:'Feature',properties:{c:s.c},geometry:{type:'Point',coordinates:[s.lon,s.lat]}}})}});
   map.addLayer({id:'pass',type:'circle',source:'pass',paint:{'circle-radius':['interpolate',['linear'],['zoom'],5,2,10,5],'circle-color':'#E53935','circle-stroke-color':'#fff','circle-stroke-width':1.2}});
   map.on('click','pass',function(e){var c=e.features[0].properties.c,s=S.find(function(x){return x.c===c});new maplibregl.Popup({closeButton:false}).setLngLat(e.lngLat).setHTML('<b>'+s.c+'</b> '+s.n+'<br>No stop'+(s.d?' · passes ~'+new Date(s.d).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Kolkata'}):'')).addTo(map)});
-  S.forEach(function(s,i){if(!s.s)return;var el=document.createElement('div');flags[i]=el;el.className='flag'+(s.p?' done':'')+(i===FROM||i===TO?' ours':'');el.innerHTML='<span>'+s.c+'</span>';el.title=s.n;
+  // The flag sits inside the marker element: its own position:relative would override MapLibre's absolute positioning.
+  S.forEach(function(s,i){if(!s.s)return;var el=document.createElement('div');el.title=s.n;el.innerHTML='<div class="flag'+(s.p?' done':'')+(i===FROM||i===TO?' ours':'')+'"><span>'+s.c+'</span></div>';flags[i]=el.firstChild;
     new maplibregl.Marker({element:el,anchor:'bottom'}).setLngLat([s.lon,s.lat]).setPopup(new maplibregl.Popup({offset:28,closeButton:false}).setHTML('<b>'+s.c+'</b> '+s.n)).addTo(map)});
   train.addTo(map);
-  // India overview first, then glide down to the train.
-  setTimeout(function(){chase(3500)},600);
+  // India overview first, then glide down to the train (or, before it leaves, to our part of the route).
+  setTimeout(function(){if(MOVING)return chase(3500);var b=new maplibregl.LngLatBounds();coords.slice(FROM,TO+1).forEach(function(c){b.extend(c)});map.fitBounds(b,{padding:70,pitch:45,duration:3000})},600);
   var lastDone=-1;
   (function tick(){var p=pos(now());train.setLngLat([p.lon,p.lat]).setRotation(p.b);
     var k=p.i;if(k!==lastDone||p.f){lastDone=k;map.getSource('done').setData({type:'Feature',geometry:{type:'LineString',coordinates:coords.slice(0,k+1).concat([[p.lon,p.lat]])}})}

@@ -39,13 +39,12 @@ export default function TrainScreen() {
   const leg = testLeg ?? legs.find((l) => l.id === picked) ?? focusLeg(legs, live, now);
   const run = useLoad(async () => (testLeg ? api<TestRun>(`/api/dev/live-test?leg=${testLeg.id}`) : null), testLeg?.id ?? "");
   const l = testLeg ? run.data?.live : live.legs[leg.id];
-  // Live data only counts in the tracking window (3h before departure to 1h after arrival), as the background job fetches it.
-  const track = buildTrack(leg, l, now);
+  const track = buildTrack(leg, l, now, !!testLeg);
 
   return (
     <Screen
       title={testLeg ? "Live tracking test" : "Train status"}
-      subtitle={l?.liveUpdatedAt ? `Live · updated ${ago(l.liveUpdatedAt, now)}` : "Timetable"}
+      subtitle={(track ? track.live : !!l?.stations?.length) && l?.liveUpdatedAt ? `Live · updated ${ago(l.liveUpdatedAt, now)}` : "Timetable"}
       right={testLeg ? <IconButton icon="close" label="End test" onPress={() => router.replace("/train")} /> : undefined}
     >
       {testLeg ? (

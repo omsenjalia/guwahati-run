@@ -59,4 +59,10 @@ describe("live train tracking", () => {
     expect(before.next?.code).toBe("ALJN");
     expect(before.detail).toContain("Next stop Aligarh Jn at 09:33");
   });
+
+  it("ignores live data from another run unless it's the developer test", () => {
+    const old: StationStatus[] = [{ code: "ANVT", name: "ANVT", schDep: "2026-10-08T07:40:00+05:30", expDep: "2026-10-08T07:46:00+05:30", passed: true, dayCount: 1 }];
+    expect(buildTrack(NE, { stations: old, departed: true, terminated: false }, t("2026-10-20T10:00:00"))!.live).toBe(false);
+    expect(buildTrack(NE, { stations: old, departed: true, terminated: false }, t("2026-10-08T08:00:00"), true)!.live).toBe(true);
+  });
 });
