@@ -5,11 +5,9 @@ name: Android APK
 # "Guwahati Run <n>" with the APK attached: open it on the phone, download,
 # install. Also runnable by hand from the Actions tab.
 #
-# Caching (each layer skips work the run before already did):
-#   node_modules   both lockfiles -> skip npm ci entirely on a hit
-#   android/       the generated native project, incl. CMake .cxx and build/ outputs
+# Caching:
+#   npm            package download cache from both lockfiles (setup-node)
 #   Gradle         dependencies, wrapper and build cache (setup-gradle) + --build-cache
-#   Metro          the JS bundler's transform cache (/tmp/metro-cache)
 
 on:
   push:
@@ -37,31 +35,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-
-      - name: Cache node_modules
-        id: modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            node_modules
-            backend/node_modules
-          key: modules-${{ runner.os }}-node22-${{ hashFiles('package-lock.json', 'backend/package-lock.json') }}
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
 
       # The app type-checks shared files in backend/lib, which need the backend's packages.
       - name: Install packages
-        if: steps.modules.outputs.cache-hit != 'true'
         run: npm ci && npm --prefix backend ci
 
       - name: Check the app (types and tests)
         run: npx tsc --noEmit && npx vitest run
-
-      # The native project only changes with packages, app config or icons:
-      # exact key only, so a stale project is never reused.
-      - name: Cache Android project
-        uses: actions/cache@v4
-        with:
-          path: android
-          key: android-${{ runner.os }}-${{ hashFiles('package-lock.json', 'app.json', 'assets/images/**') }}
 
       - name: Generate the Android project
         run: npx expo prebuild -p android --no-install
@@ -75,13 +59,6 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           cache-read-only: false
-
-      - name: Cache Metro
-        uses: actions/cache@v4
-        with:
-          path: /tmp/metro-cache
-          key: metro-${{ runner.os }}-${{ github.sha }}
-          restore-keys: metro-${{ runner.os }}-
 
       # Release build: the JavaScript is bundled inside, so it runs without a
       # computer. Expo signs it with the debug key, which is fine for sideloading.
