@@ -55,7 +55,16 @@
           "photosPermission": "Pick a photo of a bill or ticket to upload.",
           "cameraPermission": "Take a photo of a bill or ticket to upload."
         }
-      ]
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/android-icon-monochrome.png",
+          "color": "#0B1220",
+          "defaultChannel": "alerts"
+        }
+      ],
+      "expo-background-task"
     ],
     "experiments": {
       "typedRoutes": true,

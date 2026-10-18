@@ -42,7 +42,18 @@ Parents without GitHub access: download the APK yourself and send it to them on 
 **Parents**
 1. **I'm a parent** → your child's name → the parent passcode.
 
-## 4. Edit trip details
+## 4. Alerts (notifications), on each phone
+
+Alerts (chart prepared, PNR changes, delays, deadlines) need no setup on the server. The app checks for new ones by itself, so **an alert can arrive up to about 30 minutes late**. Opening the app checks straight away.
+
+1. Install the newest APK (section 2) and open it.
+2. When Android asks **Allow Guwahati Run to send you notifications?**, tap **Allow**.
+3. Android Settings → Apps → Guwahati Run → Battery → **Unrestricted** (otherwise the phone may stop the checks to save battery).
+4. If you tapped Don't allow: Android Settings → Apps → Guwahati Run → Notifications → turn on.
+
+Attendees get every alert. Parents get only trip alerts (chart prepared, connections, wake-ups, daily briefing, hackathon rest times), never PNR numbers, ticket changes, booking deadlines or money.
+
+## 5. Edit trip details
 
 `backend/data/trip.ts` holds all static trip data. Edit it on github.com (pencil icon → **Commit changes**). The server redeploys by itself; the app picks up the change in the next APK.
 
@@ -57,7 +68,7 @@ Parents without GitHub access: download the APK yourself and send it to them on 
 | `AUTH_SECRET` | Signs sign-in tokens. Changing it signs everyone out |
 | `CALENDAR_TOKEN` | Secret part of the calendar link |
 | `CRON_SECRET` | Proves the 5-minute calls come from Supabase |
-| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Web push (old website alerts) |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Web push (old website alerts). App alerts need nothing here |
 | `GITHUB_RECEIPTS_TOKEN`, `GITHUB_RECEIPTS_REPO` | Saves bills to `documents/` |
 
 The app itself needs no secrets: it talks to `https://guwahati-run.vercel.app` (change in `src/core/config.ts` or with `EXPO_PUBLIC_API_URL`).
@@ -66,4 +77,5 @@ The app itself needs no secrets: it talks to `https://guwahati-run.vercel.app` (
 
 - **Settings → System → Background tracking** says "Needs a look": the 5-minute job stopped. In Supabase → SQL Editor run `select base_url from private.app_config;` and check it shows the Vercel address.
 - **"Can't reach the server"** in the app: check Vercel's latest deployment is green and Root Directory is `backend`.
+- **No alerts on a phone**: they can be up to 30 minutes late. Check the phone has the newest APK, notifications are on and battery is Unrestricted (section 4), then open the app (it checks on every open).
 - **A parent sees "Location off · with Heet"**: their child's phone hasn't shared in 45 minutes, so the freshest friend's location is shown instead.
