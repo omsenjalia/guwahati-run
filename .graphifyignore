@@ -1,0 +1,11 @@
+# Receipts and generated or binary files: nothing to learn from
+documents/
+assets/
+android/
+ios/
+.expo/
+dist/
+backend/.next/
+*.png
+*.svg
+package-lock.json

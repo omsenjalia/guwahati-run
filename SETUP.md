@@ -1,121 +1,69 @@
-# Guwahati Run: setup and deploy
+# Guwahati Run: setup, deploy and install
 
-Everything here is clicking in a browser except one optional command. Do it once, ideally by 25 Oct.
+## 1. Server (Vercel): two one-time changes
 
-## 1. What's already done
+The server code moved into the `backend/` folder, so Vercel needs to know.
 
-- GitHub: private repo `omsenjalia/guwahati-run` with all the code.
-- Supabase: project created, SQL files run (`supabase/schema.sql`, `supabase/002_expenses.sql`, `supabase/003_confirmed_trip.sql` for the prep checklist and receipts, and `supabase/004_event_documents.sql` for the Documents category).
-- `.env` in the repo holds every key the app needs (committed on purpose; the repo is private).
+1. Go to **vercel.com** → the `guwahati-run` project → **Settings** → **Build and Deployment**.
+2. **Root Directory** → **Edit** → type `backend` → **Save**.
+3. **Settings** → **Environment Variables** → **Add New**:
+   - Key: `ATTENDEE_PASSWORDS`
+   - Value: `oms:1234,omk:1234,heet:1234,sujal:1234`
+   - **Save**.
+4. **Deployments** → latest → **⋯** → **Redeploy**.
 
-## 2. Put it online (Vercel, free)
+To change someone's password later: edit `ATTENDEE_PASSWORDS` in Vercel (and in `backend/.env`), then redeploy. The person ids are `oms` (Om Senjalia), `omk` (Omkumar Vaghela), `heet` (Heet Gajera), `sujal` (Sujal Khatri).
 
-1. Go to **vercel.com** and choose **Continue with GitHub**.
-2. **Add New** → **Project** → find `guwahati-run` → **Import**.
-3. Open **Environment Variables**. Open `.env` from the repo, copy everything, and paste it into the first Key box. Vercel splits it into separate variables.
-4. Click **Deploy** and wait about 2 minutes.
-5. Vercel shows your address, like `guwahati-run-xyz.vercel.app`. That's the app.
+Parents use `PARENT_PASSCODE` (in `backend/.env` and Vercel), same as before.
 
-From now on, every change pushed to GitHub redeploys automatically.
+Everything else stays as it was: Supabase still calls the server every 5 minutes, receipts still go to `documents/`. Commits that only touch the app or `documents/` don't redeploy the server.
 
-## 2b. Receipts in GitHub
+## 2. Get the Android app
 
-Bills, tickets, certificates and reports are saved in this repo's `documents/` folder (private). The app does it from the server with a token; phones never see it.
+Every push to `main` that changes the app builds a new APK automatically (about 15 minutes).
 
-1. In Vercel: **Settings** → **Environment Variables**, add:
-   - `GITHUB_RECEIPTS_TOKEN`: the fine-grained token (this repo only, Contents read and write)
-   - `GITHUB_RECEIPTS_REPO`: `omsenjalia/guwahati-run`
-2. **Deployments** → latest → **⋯** → **Redeploy**.
-3. Check: **Team** → **System status** → **Data sources health** → "Receipts storage" is green.
+1. On the phone, open **github.com/omsenjalia/guwahati-run/releases** (signed in to GitHub).
+2. Open the newest **Guwahati Run N** → tap the `.apk` file to download.
+3. Open the download. If Android asks, allow **Install unknown apps** for your browser, then **Install**.
+4. Updating later: install the newer APK over the old one. You stay signed in.
 
-Commits that only add files under `documents/` don't rebuild the site (`vercel.json`). Because the app commits to `main`, run `git pull` before pushing code from the laptop.
+To build without pushing: GitHub → **Actions** → **Android APK** → **Run workflow**.
 
-To replace the token (it expires): github.com → **Settings** → **Developer settings** → **Personal access tokens** → **Fine-grained tokens** → the token → **Regenerate token**, then paste the new value into Vercel and `.env.local`, and redeploy.
+Parents without GitHub access: download the APK yourself and send it to them on WhatsApp (as a document).
 
-## 3. Switch on the automation
+## 3. First open, on each phone
 
-1. On your phone, open the Vercel address and sign in with the team passcode.
-   This first sign-in tells Supabase where the app lives. Supabase then calls it every 5 minutes, so the app runs even when nobody has it open.
-2. Wait 5 to 10 minutes, then open **Team** → **System status and data self-test** (bottom of the page).
-3. Check that **Background jobs** shows green ticks with recent times.
-4. Press **Run self-test**. All rows should be green. This proves ConfirmTkt answers from the cloud servers, not just from home internet.
+**Attendees**
+1. **I'm on the trip** → your name → password.
+2. **Allow location**, then pick **Allow all the time** on the next screen. This lets the app share your location every 30 minutes even when closed.
+3. If you skipped it: Home → **Location sharing** → **Turn on**.
+4. Some phones (Xiaomi, Oppo, Vivo, Samsung) stop background apps to save battery: Settings → Apps → Guwahati Run → Battery → **Unrestricted**.
 
-If the jobs stay empty after 15 minutes, open Supabase → **SQL Editor** and run:
+**Parents**
+1. **I'm a parent** → your child's name → the parent passcode.
 
-```sql
-select base_url from private.app_config;
-```
+## 4. Edit trip details
 
-It should show your Vercel address. If it's empty, sign in on the phone once more.
+`backend/data/trip.ts` holds all static trip data. Edit it on github.com (pencil icon → **Commit changes**). The server redeploys by itself; the app picks up the change in the next APK.
 
-## 4. Install on every phone
+## Environment variables (server, in Vercel)
 
-### Android (Chrome)
-1. Open the Vercel address in **Chrome** and sign in.
-2. Menu **⋮** → **Add to Home screen** (or **Install app**).
-3. Open it from the home screen.
+| Name | What it's for |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Database address and public key |
+| `SUPABASE_SECRET_KEY` | Background jobs write data. Server only |
+| `ATTENDEE_PASSWORDS` | Each attendee's password, `id:password` pairs |
+| `PARENT_PASSCODE` | Passcode for parents |
+| `AUTH_SECRET` | Signs sign-in tokens. Changing it signs everyone out |
+| `CALENDAR_TOKEN` | Secret part of the calendar link |
+| `CRON_SECRET` | Proves the 5-minute calls come from Supabase |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Web push (old website alerts) |
+| `GITHUB_RECEIPTS_TOKEN`, `GITHUB_RECEIPTS_REPO` | Saves bills to `documents/` |
 
-### iPhone (Safari, iOS 16.4 or newer)
-1. Open the address in **Safari** and sign in.
-2. Tap **Share** → **Add to Home Screen** → **Add**.
-3. Open it from the home screen. Alerts only work from the home screen app on iPhone.
-
-### Then, on each phone
-1. **Team** → **Whose phone is this?** → tap your name.
-2. **Team** → **Alerts on this phone** → **Turn on alerts** → **Allow**. You should get "Alerts are on".
-3. Open every tab once with internet. The app saves a full offline copy.
-4. Test offline: turn on airplane mode, close the app fully, reopen it. Everything should still show.
-
-## 5. Fill in the blanks (any time, from your phone)
-
-Edit `data/trip.ts` on github.com: open the file, tap the **pencil**, change, then **Commit changes**. Vercel redeploys in about 2 minutes.
-
-- Each person's `phone`, `guardian` (name, relation, phone) and `role`.
-- `PICKUP`: who collects you at Anand at 01:42 on 4 Nov.
-- `TRANSFERS`: first-metro times (06:20 Ahmedabad, 05:30 Delhi are estimates) and fares.
-- `EVENT_SCHEDULE` and `VENUE_NOTES`: update when the official schedule arrives (tbc items).
-- `REPORT.teamName`: used in the report file name.
-
-## 6. Share with parents
-
-Send parents the Vercel address and the `PARENT_PASSCODE` (from `.env`). They land on a read-only page: where you are, the next arrival, delays and the latest check-ins. No PNRs and no money.
-
-## 7. Calendar (optional)
-
-**Timeline** → **Add to calendar** subscribes your phone's calendar. Times update by themselves as trains run late.
-
-## Environment variables
-
-| Name | What it's for | Where it comes from |
-|---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Database address | Supabase → Project Settings → API |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Phones connect to the database (reads nothing without a team sign-in) | Supabase → API Keys |
-| `SUPABASE_SECRET_KEY` | Background jobs write data. Full access: server only | Supabase → API Keys |
-| `TEAM_PASSCODE` | Passcode for the 4 of you | You choose |
-| `PARENT_PASSCODE` | Passcode for the parent page | You choose |
-| `AUTH_SECRET` | Signs the login cookie. Changing it signs everyone out | Random |
-| `CALENDAR_TOKEN` | Secret part of the calendar link | Random |
-| `CRON_SECRET` | Proves the 5-minute calls really come from Supabase | Random, also stored in the database by the SQL |
-| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Push notifications | Generated once |
-| `GITHUB_RECEIPTS_TOKEN` | Saves receipts to GitHub. Server only, never committed (Vercel and `.env.local` only) | GitHub fine-grained token |
-| `GITHUB_RECEIPTS_REPO` | Which repo: `omsenjalia/guwahati-run` | You |
-| `NOTIFY_WEBHOOK_URL` (optional) | Copy of every alert to a webhook, for a future WhatsApp bridge | Later |
-
-To change a passcode: edit `.env` on GitHub **and** the same variable in Vercel (Settings → Environment Variables), then redeploy.
+The app itself needs no secrets: it talks to `https://guwahati-run.vercel.app` (change in `src/core/config.ts` or with `EXPO_PUBLIC_API_URL`).
 
 ## If something looks wrong
 
-- **Red "Automatic updates stopped" banner**: open the System page. If no job ran recently, check Vercel is up and step 3.
-- **"Live updates failing"**: ConfirmTkt didn't answer. The app keeps showing the last known data (marked stale) and keeps retrying every 5 minutes. A backup source can be added in `lib/providers/`.
-- **Testing a moment of the trip**: add `?at=2026-10-29T04:00` to any address. `?at=off` goes back to real time.
-
-## Before 25 Oct checklist
-
-- [ ] Deployed on Vercel, self-test all green from the System page
-- [ ] All 4 phones installed, names picked, alerts on, offline test passed
-- [ ] Phone numbers, parents and pickup filled in
-- [ ] DigiLocker set up on every phone (Aadhaar or driving licence)
-- [ ] Paper backup printed (Team → Paper backup)
-- [ ] HOD approval for the grant ticked in the Grant tab
-- [ ] `supabase/003_confirmed_trip.sql` run, GitHub variables in Vercel, "Receipts storage" green
-- [ ] All 5 e-tickets uploaded (Money → Add receipt → Ticket)
+- **Settings → System → Background tracking** says "Needs a look": the 5-minute job stopped. In Supabase → SQL Editor run `select base_url from private.app_config;` and check it shows the Vercel address.
+- **"Can't reach the server"** in the app: check Vercel's latest deployment is green and Root Directory is `backend`.
+- **A parent sees "Location off · with Heet"**: their child's phone hasn't shared in 45 minutes, so the freshest friend's location is shown instead.
