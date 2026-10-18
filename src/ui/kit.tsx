@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import type { ComponentProps, ReactNode } from "react";
-import { ActivityIndicator, Platform, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
+import { ActivityIndicator, Alert, Platform, Pressable, StyleSheet, TextInput, View, type StyleProp, type TextInputProps, type ViewStyle } from "react-native";
 import { T } from "./text";
 import { font, radius, toneColors, useTheme, type Tone } from "./theme";
 
@@ -180,7 +180,141 @@ export function Empty({ icon, title, body }: { icon: IconName; title: string; bo
   );
 }
 
+/** Labelled text box. mono = code editor look (developer options). */
+export function Input({ label, mono, style, ...rest }: TextInputProps & { label?: string; mono?: boolean }) {
+  const c = useTheme();
+  return (
+    <View style={{ gap: 6 }}>
+      {label && (
+        <T v="label" color="muted">
+          {label}
+        </T>
+      )}
+      <TextInput
+        placeholderTextColor={c.faint}
+        accessibilityLabel={label}
+        {...rest}
+        style={[
+          styles.input,
+          { backgroundColor: c.surface, borderColor: c.border, color: c.text },
+          rest.multiline && styles.multiline,
+          mono && styles.mono,
+          style,
+        ]}
+      />
+    </View>
+  );
+}
+
+/** One-of-several choice as a row of pills. */
+export function Chips<V extends string>({ options, value, onChange }: { options: readonly { value: V; label: string }[]; value: V | null; onChange: (v: V) => void }) {
+  const c = useTheme();
+  return (
+    <View style={styles.chips}>
+      {options.map((o) => {
+        const on = o.value === value;
+        return (
+          <Pressable
+            key={o.value}
+            onPress={() => {
+              tap();
+              onChange(o.value);
+            }}
+            accessibilityRole="radio"
+            accessibilityState={{ selected: on }}
+            style={[styles.chip, { backgroundColor: on ? c.primary : c.surface, borderColor: on ? c.primary : c.border }]}
+          >
+            <T v="label" color={on ? c.onPrimary : "text"}>
+              {o.label}
+            </T>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+/** Tick box row. */
+export function Check({ label, sub, on, onPress }: { label: string; sub?: string; on: boolean; onPress: () => void }) {
+  const c = useTheme();
+  return (
+    <Pressable
+      onPress={() => {
+        tap();
+        onPress();
+      }}
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked: on }}
+      style={({ pressed }) => [styles.check, pressed && { opacity: 0.7 }]}
+    >
+      <View style={[styles.box, { borderColor: on ? c.good : c.faint, backgroundColor: on ? c.good : "transparent" }]}>
+        {on && <MaterialCommunityIcons name="check" size={16} color={c.surface} />}
+      </View>
+      <View style={{ flex: 1 }}>
+        <T v="body" color={on ? "muted" : "text"} style={on && { textDecorationLine: "line-through" }}>
+          {label}
+        </T>
+        {!!sub && (
+          <T v="caption" color="faint">
+            {sub}
+          </T>
+        )}
+      </View>
+    </Pressable>
+  );
+}
+
+/** Tappable list row: icon, label, optional detail, chevron. */
+export function LinkRow({ icon, label, sub, onPress, tone }: { icon: IconName; label: string; sub?: string; onPress: () => void; tone?: Tone }) {
+  const c = useTheme();
+  const { fg, bg } = toneColors(c, tone ?? "primary");
+  return (
+    <Pressable
+      onPress={() => {
+        tap();
+        onPress();
+      }}
+      accessibilityRole="button"
+      style={({ pressed }) => [styles.linkRow, pressed && { opacity: 0.7 }]}
+    >
+      <View style={[styles.infoIcon, { backgroundColor: bg }]}>
+        <MaterialCommunityIcons name={icon} size={18} color={fg} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <T v="label" style={{ fontSize: 15 }}>
+          {label}
+        </T>
+        {!!sub && (
+          <T v="caption" color="muted">
+            {sub}
+          </T>
+        )}
+      </View>
+      <MaterialCommunityIcons name="chevron-right" size={20} color={c.faint} />
+    </Pressable>
+  );
+}
+
+/** Yes/no question; resolves true on yes (window.confirm on the web build). */
+export function confirm(title: string, message: string, yes = "OK"): Promise<boolean> {
+  if (Platform.OS === "web") return Promise.resolve(window.confirm(`${title}\n\n${message}`));
+  return new Promise((resolve) =>
+    Alert.alert(title, message, [
+      { text: "Cancel", style: "cancel", onPress: () => resolve(false) },
+      { text: yes, style: "destructive", onPress: () => resolve(true) },
+    ]),
+  );
+}
+
 const styles = StyleSheet.create({
+  input: { minHeight: 52, borderRadius: radius.md, borderWidth: 1, paddingHorizontal: 14, fontFamily: font.semibold, fontSize: 16 },
+  multiline: { paddingVertical: 12, minHeight: 110, textAlignVertical: "top" },
+  mono: { fontFamily: Platform.OS === "android" ? "monospace" : "Menlo, Consolas, monospace", fontSize: 13, lineHeight: 19 },
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  chip: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 999, borderWidth: StyleSheet.hairlineWidth },
+  linkRow: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 52 },
+  check: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 44 },
+  box: { width: 24, height: 24, borderRadius: 7, borderWidth: 2, alignItems: "center", justifyContent: "center" },
   card: { borderRadius: radius.lg, borderWidth: StyleSheet.hairlineWidth },
   padded: { padding: 16 },
   pill: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 9, paddingVertical: 4, borderRadius: radius.pill, alignSelf: "flex-start" },

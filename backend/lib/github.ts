@@ -118,6 +118,25 @@ export async function deleteFile(path: string, sha: string, message: string) {
   }
 }
 
+/** A text file from the branch, with its blob SHA (needed to save an edit). */
+export async function readText(path: string) {
+  const { repo, branch } = config();
+  const res = await gh(`/repos/${repo}/contents/${encodePath(path)}?ref=${encodeURIComponent(branch)}`);
+  const j = await res.json();
+  return { text: Buffer.from(j.content as string, "base64").toString("utf8"), sha: j.sha as string };
+}
+
+/** Replaces a text file in one commit. GitHub refuses (409) if it changed since `sha` was read. */
+export async function updateText(path: string, text: string, sha: string, message: string) {
+  const { repo, branch } = config();
+  const res = await gh(`/repos/${repo}/contents/${encodePath(path)}`, {
+    method: "PUT",
+    body: JSON.stringify({ message, content: Buffer.from(text, "utf8").toString("base64"), sha, branch }),
+  });
+  const j = await res.json();
+  return { sha: j.content.sha as string, commitSha: j.commit.sha as string };
+}
+
 /** Last successful call, for the data sources health row. */
 export async function repoReachable() {
   const { repo } = config();

@@ -6,11 +6,12 @@ import { verifyToken } from "@/lib/auth";
  * bearer token, except
  * - sign-in (/api/auth),
  * - the calendar feed (its own secret token) and the cron tick (CRON_SECRET),
- * - /api/parent/* and /api/alerts (alerts on their phone), which parents may reach too.
+ * - /api/parent/*, /api/alerts (alerts on their phone) and /api/trip (the plan),
+ *   which parents may reach too.
  * CORS is open (no cookies are used), so the web build of the app works.
  */
 const PUBLIC = ["/api/auth", "/api/calendar", "/api/jobs"];
-const PARENT = ["/api/parent", "/api/alerts"];
+const PARENT = ["/api/parent", "/api/alerts", "/api/trip"];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

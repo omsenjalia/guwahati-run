@@ -65,3 +65,16 @@ describe("locations", () => {
     expect(r.sujal?.via).toBe("heet");
   });
 });
+
+describe("trip plan patching", () => {
+  it("makes the target equal the source and keeps object identity", async () => {
+    const { patchInPlace } = await import("@/core/trip-sync");
+    const leg = { id: "L1", pnr: "1", notes: ["a", "b"], extra: true };
+    const legs = [leg, { id: "L2" }];
+    const target = { legs, name: "x" };
+    patchInPlace(target, { legs: [{ id: "L1", pnr: "2", notes: ["a"] }], name: "y" });
+    expect(target).toEqual({ legs: [{ id: "L1", pnr: "2", notes: ["a"] }], name: "y" });
+    expect(target.legs).toBe(legs);
+    expect(target.legs[0]).toBe(leg);
+  });
+});

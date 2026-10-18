@@ -7,6 +7,7 @@ import type { PersonLocation } from "@/lib/locations";
 import { api } from "./api";
 import { cacheGet, cacheSet } from "./storage";
 import { createStore, useStore } from "./store";
+import { applyTrip } from "./trip-sync";
 
 /**
  * The app's one data feed (/api/parent/state, for parents and attendees):
@@ -33,10 +34,23 @@ type Raw = {
   locations: Feed["locations"];
   checkins: Feed["checkins"];
   expenses: Expense[];
+  /** Hash of the server's trip plan (changes when it's edited in developer options). */
+  tripHash?: string;
   at: number;
 };
 
 const KEY = "gr-feed";
+const TRIP_KEY = "gr-trip";
+let tripHash: string | undefined;
+
+/** Picks up an edited trip plan: fetched only when the server's hash differs from ours. */
+async function syncTrip(hash?: string) {
+  if (!hash || hash === tripHash) return;
+  const r = await api<{ hash: string; trip: Record<string, unknown> }>("/api/trip");
+  applyTrip(r.trip);
+  tripHash = r.hash;
+  void cacheSet(TRIP_KEY, r);
+}
 const EMPTY: Feed = { live: EMPTY_LIVE, locations: {}, checkins: {}, expenses: [], fetchedAt: 0, loading: true };
 const store = createStore<Feed>(EMPTY);
 let booted = false;
@@ -45,6 +59,7 @@ export async function refresh() {
   store.set((f) => ({ ...f, loading: true }));
   try {
     const r = await api<Raw>("/api/parent/state");
+    await syncTrip(r.tripHash).catch(() => {});
     const next: Feed = {
       live: { legs: r.legs, state: r.state, syncedAt: r.at },
       locations: r.locations,
@@ -65,6 +80,12 @@ export function useFeedSync() {
   useEffect(() => {
     if (!booted) {
       booted = true;
+      void cacheGet<{ hash: string; trip: Record<string, unknown> }>(TRIP_KEY).then((saved) => {
+        if (saved && !tripHash) {
+          applyTrip(saved.trip);
+          tripHash = saved.hash;
+        }
+      });
       void cacheGet<Feed>(KEY).then((saved) => {
         if (saved && !store.get().fetchedAt) store.set({ ...saved, loading: true });
       });
