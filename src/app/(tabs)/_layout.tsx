@@ -12,12 +12,13 @@ const SPECS: Record<string, TabSpec> = {
   plan: { label: "Plan", icon: "map-legend", activeIcon: "map-legend" },
   location: { label: "Location", icon: "map-marker-outline", activeIcon: "map-marker" },
   money: { label: "Money", icon: "wallet-outline", activeIcon: "wallet" },
+  more: { label: "More", icon: "dots-grid", activeIcon: "dots-grid" },
 };
 
 /** Parents follow the trip; attendees get their ticket (PNR, then coach) instead of the map. */
 const VISIBLE = {
-  parent: ["index", "train", "plan", "location", "money"],
-  team: ["index", "train", "ticket", "plan", "money"],
+  parent: ["index", "train", "plan", "location", "money", "more"],
+  team: ["index", "train", "ticket", "plan", "money", "more"],
 };
 
 export default function TabsLayout() {

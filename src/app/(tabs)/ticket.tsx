@@ -5,9 +5,13 @@ import { DEADLINES, IRCTC_BOOK_URL, IRCTC_PNR_URL, NE_ALTERNATIVES, TEAM, type B
 import { api } from "@/core/api";
 import { useAuth } from "@/core/auth";
 import { refresh, useFeed, useNow } from "@/core/data";
+import { db, useRows } from "@/core/db";
+import { useLoad } from "@/core/use-load";
 import { Countdown, Hero, LegChip } from "@/features/bits";
+import { WlGraph } from "@/features/wl-graph";
 import { coachKind, coachList, firstName, focusLeg, isSeated, myStatus, personIndex, statusTone, trainLegs } from "@/features/trip";
-import type { LiveState } from "@/lib/live-types";
+import type { LiveState, PassengerLive } from "@/lib/live-types";
+import { choiceText, storedChoice } from "@/lib/ticket-choice";
 import { ago, dayMonth, hhmm } from "@/lib/time";
 import { chartTime, legBerths, legPassengers, legSituation, parseStatus, personBerth } from "@/lib/trip-engine";
 import { Avatar, avatarColor, Button, Card, InfoRow, Pill, Section } from "@/ui/kit";
@@ -126,8 +130,10 @@ function PnrView({ leg, live, me, now }: { leg: Leg; live: LiveState; me: Person
           </T>
         </Card>
       </Section>
+      {leg.pnr && <PnrHistory key={`h-${leg.id}`} legId={leg.id} />}
       {leg.pnr && <CheckNow key={leg.id} leg={leg} />}
       <Button label="Check on IRCTC" icon="open-in-new" kind="secondary" onPress={() => void Linking.openURL(IRCTC_PNR_URL)} />
+      {(leg.id === "L2" || leg.backupFor === "L2") && <ChoiceBanner live={live} />}
       {(leg.id === "L2" || leg.backupFor === "L2") && <PlanB />}
     </>
   );
@@ -162,9 +168,92 @@ function CheckNow({ leg }: { leg: Leg }) {
   );
 }
 
+type HistoryRow = { fetched_at: string; passengers: PassengerLive[] };
+
+/** Highest waitlist number on the ticket at each status change (0 once nobody is waitlisted). */
+function PnrHistory({ legId }: { legId: string }) {
+  const { rows } = useRows<HistoryRow>(
+    "pnr_history",
+    () => db.from("pnr_history").select("fetched_at, passengers").eq("leg_id", legId).order("fetched_at", { ascending: true }).limit(500),
+    `pnr-history-${legId}`,
+  );
+  if (!rows || rows.length < 2) return null;
+  const worst = (r: HistoryRow) => Math.max(0, ...r.passengers.map((p) => parseStatus(p.current)).map((s) => (s.kind === "WL" ? (s.number ?? 0) : 0)));
+  return (
+    <Card>
+      <WlGraph points={rows.map((r) => ({ t: Date.parse(r.fetched_at), wl: worst(r) }))} />
+    </Card>
+  );
+}
+
+/** North East vs backup: the rule while both are waitlisted, then which PNR to cancel once one clears. */
+function ChoiceBanner({ live }: { live: LiveState }) {
+  const choice = storedChoice(live);
+  if (!choice) {
+    return (
+      <Card>
+        <T v="caption" color="muted">
+          Two tickets for 29 Oct. Whichever of 12506 North East or the backup clears first (anyone confirmed or RAC), we keep; if both clear together, North East. The app
+          alerts everyone to cancel the other.
+        </T>
+      </Card>
+    );
+  }
+  const t = choiceText(choice);
+  return (
+    <Card style={{ gap: 8 }}>
+      <Pill label="Action" tone="bad" solid />
+      <T v="heading">{t.title}</T>
+      <T v="body" color="muted">
+        {t.action}
+      </T>
+      <Button label={`Cancel ${t.lose.train!.number} on IRCTC`} icon="open-in-new" onPress={() => void Linking.openURL("https://www.irctc.co.in/nget/txn/cancel-ticket")} />
+    </Card>
+  );
+}
+
+type Alt = { number: string; name: string; from: string; to: string; depart?: string; arrive?: string; classes: { travelClass: string; status: string; confirmChance?: number }[]; error?: string };
+
+/** Other Delhi to Guwahati trains on 29 Oct, with seats right now. */
+function Alternatives() {
+  const { data, error, reload } = useLoad(() => api<{ fetchedAt: number; trains: Alt[] }>("/api/alternatives"));
+  return (
+    <View style={{ gap: 10 }}>
+      {!data && !error && <T v="caption">Checking seats</T>}
+      {data?.trains.map((t) => (
+        <View key={t.number} style={{ gap: 2 }}>
+          <T v="label">
+            {t.number} {t.name}
+            {t.depart ? ` · ${hhmm(t.depart)}` : ""}
+          </T>
+          <T v="caption" color="muted">
+            {t.from} to {t.to}
+            {t.arrive ? `, arrives ${dayMonth(t.arrive)} ${hhmm(t.arrive)}` : ""}
+          </T>
+          <T v="caption" color={t.classes.length ? "text" : "warn"}>
+            {t.classes.length ? t.classes.map((c) => `${c.travelClass} ${c.status}${c.confirmChance !== undefined ? ` (${c.confirmChance}%)` : ""}`).join(" · ") : t.error}
+          </T>
+        </View>
+      ))}
+      {!!error && (
+        <T v="caption" color="bad">
+          Couldn&apos;t load alternatives: {error}
+        </T>
+      )}
+      <Button label="Refresh seats" icon="refresh" kind="secondary" onPress={() => void reload()} />
+      {data && (
+        <T v="caption" color="faint">
+          Seats as of {hhmm(data.fetchedAt)}. Flights only as a last resort.
+        </T>
+      )}
+    </View>
+  );
+}
+
 /** If the North East Express doesn't clear: the Tatkal decision and other trains that day. */
 function PlanB() {
   const d = DEADLINES.filter((x) => x.leg === "L2");
+  const [showAlt, setShowAlt] = useState(false);
   return (
     <Section title="Plan B">
       <Card style={{ gap: 14 }}>
@@ -176,6 +265,7 @@ function PlanB() {
           label={`Other trains on ${dayMonth(NE_ALTERNATIVES.date)}`}
           value={NE_ALTERNATIVES.trains.map((t) => `${t.number} ${t.name} (${t.fromName} to ${t.toName})`).join("\n")}
         />
+        {showAlt ? <Alternatives /> : <Button label="Live seats on other trains" icon="seat-passenger" kind="secondary" onPress={() => setShowAlt(true)} />}
         <View style={{ flexDirection: "row", gap: 10 }}>
           <Button label="IRCTC" icon="train" kind="secondary" style={{ flex: 1 }} onPress={() => void Linking.openURL(IRCTC_BOOK_URL)} />
           <Button label="Flights" icon="airplane" kind="secondary" style={{ flex: 1 }} onPress={() => void Linking.openURL(NE_ALTERNATIVES.flightsUrl)} />

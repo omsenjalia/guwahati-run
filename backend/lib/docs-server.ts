@@ -161,3 +161,21 @@ export async function documentBytes(id: string) {
   if (!doc) return null;
   return { doc, bytes: await readBlob(doc.sha) };
 }
+
+/**
+ * A 10-minute link to a document, for phones that can't send our token
+ * with the request (PDF viewers, the web build's image tag). The bytes are
+ * cached in Supabase Storage under their SHA.
+ */
+export async function documentLink(id: string, download = false) {
+  const found = await documentBytes(id);
+  if (!found) return null;
+  const { doc, bytes } = found;
+  const db = serverDb();
+  const tmp = `cache/${doc.sha}.${extFor(doc.mime)}`;
+  await db.storage.from("trip-files").upload(tmp, bytes, { contentType: doc.mime, upsert: true });
+  const name = doc.path.split("/").pop() ?? "file";
+  const { data, error } = await db.storage.from("trip-files").createSignedUrl(tmp, 600, download ? { download: name } : undefined);
+  if (error) throw new Error(error.message);
+  return data.signedUrl;
+}
