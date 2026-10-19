@@ -64,3 +64,7 @@ export type LiveState = {
 };
 
 export const EMPTY_LIVE: LiveState = { legs: {}, state: {} };
+
+/** Average delay at one stop over a train's recent runs (/api/delays). */
+export type StationDelay = { code: string; avgMin: number; maxMin: number; onTimePct: number; samples: number };
+export type Delays = { runs: number; dates: string[]; stations: StationDelay[]; fetchedAt: number };
