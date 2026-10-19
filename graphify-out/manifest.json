@@ -216,9 +216,9 @@
     "semantic_hash": ""
   },
   "backend/lib/providers/confirmtkt.ts": {
-    "mtime": 1791684512.7998474,
-    "seen": 1792331151.0596132,
-    "ast_hash": "392ef34425b86a4cd79b635ab81c1092",
+    "mtime": 1792338288.9043689,
+    "seen": 1792338525.9891663,
+    "ast_hash": "f479fb21e08aa4acae2f6db1e9f12e99",
     "semantic_hash": ""
   },
   "backend/lib/providers/index.ts": {
@@ -384,9 +384,9 @@
     "semantic_hash": ""
   },
   "src/app/(tabs)/train.tsx": {
-    "mtime": 1792330864.341615,
-    "seen": 1792331151.0596447,
-    "ast_hash": "148ea562a42c162ffd930e1dbaec09c9",
+    "mtime": 1792382182.8549893,
+    "seen": 1792382259.4956324,
+    "ast_hash": "c3cdf219ec554864c6ede93986011e95",
     "semantic_hash": ""
   },
   "src/app/_layout.tsx": {
@@ -432,9 +432,9 @@
     "semantic_hash": ""
   },
   "src/core/data.ts": {
-    "mtime": 1792335719.4739313,
-    "seen": 1792336034.147899,
-    "ast_hash": "5722005591be1d6ce157bd4526389ee6",
+    "mtime": 1792338397.5381873,
+    "seen": 1792338525.98926,
+    "ast_hash": "a35a0c80d2efabfdd64865263e31373b",
     "semantic_hash": ""
   },
   "src/core/storage.ts": {
@@ -577,25 +577,25 @@
   },
   "backend/supabase/002_expenses.sql": {
     "mtime": 1791445027.761845,
-    "seen": 1792332540.4350617,
+    "seen": 1792338525.9891996,
     "ast_hash": "",
     "semantic_hash": ""
   },
   "backend/supabase/003_confirmed_trip.sql": {
     "mtime": 1791684548.7030447,
-    "seen": 1792332540.4350638,
+    "seen": 1792338525.989201,
     "ast_hash": "",
     "semantic_hash": ""
   },
   "backend/supabase/004_event_documents.sql": {
     "mtime": 1791688652.5720284,
-    "seen": 1792332540.4350655,
+    "seen": 1792338525.9892027,
     "ast_hash": "",
     "semantic_hash": ""
   },
   "backend/supabase/schema.sql": {
     "mtime": 1791434919.2876766,
-    "seen": 1792332540.435067,
+    "seen": 1792338525.989204,
     "ast_hash": "",
     "semantic_hash": ""
   },
@@ -660,9 +660,9 @@
     "semantic_hash": ""
   },
   "src/app/tools/dev.tsx": {
-    "mtime": 1792335951.1142921,
-    "seen": 1792336034.1478918,
-    "ast_hash": "4d6fe953b411a901aeb477601167afc5",
+    "mtime": 1792338470.3710065,
+    "seen": 1792338525.9892356,
+    "ast_hash": "a1dbbd41f4ecf263ac1ff5b59e6e8532",
     "semantic_hash": ""
   },
   "src/app/tools/trip-file.tsx": {
@@ -762,9 +762,9 @@
     "semantic_hash": ""
   },
   "src/app/tools/system.tsx": {
-    "mtime": 1792336520.3324866,
-    "seen": 1792336819.6242688,
-    "ast_hash": "9cdcdf1aec4b119b9b79c461eb59d55c",
+    "mtime": 1792339757.8240602,
+    "seen": 1792339790.2736745,
+    "ast_hash": "88964019ef3b92a693a9dae11705fa8e",
     "semantic_hash": ""
   },
   "src/app/tools/wallet.tsx": {
@@ -807,6 +807,60 @@
     "mtime": 1792336619.3823574,
     "seen": 1792336819.6243055,
     "ast_hash": "6c197aabad43716aa50fff9f1234cf06",
+    "semantic_hash": ""
+  },
+  "backend/app/api/dev/live-test/route.ts": {
+    "mtime": 1792338288.9641461,
+    "seen": 1792338525.989098,
+    "ast_hash": "c65d71cfd4e09334b45a8cf105ac15d7",
+    "semantic_hash": ""
+  },
+  "backend/data/routes.ts": {
+    "mtime": 1792338105.9005713,
+    "seen": 1792338525.9891317,
+    "ast_hash": "389cd28d5a8a91dbdbdb8156fa002266",
+    "semantic_hash": ""
+  },
+  "backend/lib/live-track.ts": {
+    "mtime": 1792338649.0408103,
+    "seen": 1792338826.6771219,
+    "ast_hash": "d45cf424e5b2333eb42bd796066eca90",
+    "semantic_hash": ""
+  },
+  "backend/scripts/build-routes.mjs": {
+    "mtime": 1792338104.551532,
+    "seen": 1792338525.9891975,
+    "ast_hash": "531ac24c0903f401afd104ca118eef21",
+    "semantic_hash": ""
+  },
+  "src/features/track.test.ts": {
+    "mtime": 1792338682.1177144,
+    "seen": 1792338826.6773393,
+    "ast_hash": "b1468a03713c8500fd2326cc490d4fb6",
+    "semantic_hash": ""
+  },
+  "src/ui/train-map-html.ts": {
+    "mtime": 1792341107.7067826,
+    "seen": 1792341241.9074934,
+    "ast_hash": "cb5de2feb4a8b6356f1fdf99320a7e40",
+    "semantic_hash": ""
+  },
+  "src/ui/train-map.tsx": {
+    "mtime": 1792338397.536301,
+    "seen": 1792338525.9893007,
+    "ast_hash": "641dd7f00f1a8e9e95be8977b6226dab",
+    "semantic_hash": ""
+  },
+  "src/ui/train-map.web.tsx": {
+    "mtime": 1792338649.0394185,
+    "seen": 1792338826.6773798,
+    "ast_hash": "62d268f1c2c9e0e12149bc47c013359c",
+    "semantic_hash": ""
+  },
+  "src/ui/train-model-js.ts": {
+    "mtime": 1792341256.0082746,
+    "seen": 1792341284.4257295,
+    "ast_hash": "d0bbe85e6d7920194747c45dad99ae49",
     "semantic_hash": ""
   }
 }
