@@ -1,8 +1,8 @@
 {
   "app.json": {
-    "mtime": 1792336090.48737,
-    "seen": 1792336819.624098,
-    "ast_hash": "9625bce39a769b55180338947457e57a",
+    "mtime": 1792382365.0872614,
+    "seen": 1792382366.4956262,
+    "ast_hash": "70242a94545e159db09aefc97fbb0d62",
     "semantic_hash": ""
   },
   "backend/app/api/admin/github/route.ts": {
@@ -342,9 +342,9 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1792336078.9495146,
-    "seen": 1792336819.624233,
-    "ast_hash": "fa2f6dda6024ca77ab9c6d46546b491e",
+    "mtime": 1792382365.0973716,
+    "seen": 1792382366.4958262,
+    "ast_hash": "95f37b70a61906f3fada378e25c1b44c",
     "semantic_hash": ""
   },
   "src/app/(tabs)/_layout.tsx": {
@@ -384,15 +384,15 @@
     "semantic_hash": ""
   },
   "src/app/(tabs)/train.tsx": {
-    "mtime": 1792382182.8549893,
-    "seen": 1792382259.4956324,
-    "ast_hash": "c3cdf219ec554864c6ede93986011e95",
+    "mtime": 1792382429.8383994,
+    "seen": 1792382556.798896,
+    "ast_hash": "7740c1aae0b5d6f11d8ff5047241fd77",
     "semantic_hash": ""
   },
   "src/app/_layout.tsx": {
-    "mtime": 1792335866.3286633,
-    "seen": 1792336034.1478841,
-    "ast_hash": "b1163d3e35f0fdfa4b1e60841e982c87",
+    "mtime": 1792382365.0990348,
+    "seen": 1792382366.4958541,
+    "ast_hash": "673bc0e9b0867794f98c9fd7b38e57ee",
     "semantic_hash": ""
   },
   "src/app/add-bill.tsx": {
@@ -450,9 +450,9 @@
     "semantic_hash": ""
   },
   "src/features/bits.tsx": {
-    "mtime": 1792330864.340763,
-    "seen": 1792331151.0596566,
-    "ast_hash": "46bd470e831eb94b0fb11693865c24bb",
+    "mtime": 1792382419.949311,
+    "seen": 1792382556.80262,
+    "ast_hash": "3dfc0cb6428374804d5a4e7e74bcbf1b",
     "semantic_hash": ""
   },
   "src/features/location.ts": {
@@ -540,9 +540,9 @@
     "semantic_hash": ""
   },
   ".github/workflows/android-apk.yml": {
-    "mtime": 1792332712.2642608,
-    "seen": 1792336034.1479306,
-    "ast_hash": "b97d510396bf126e1d7c6be68ba9c7f2",
+    "mtime": 1792382365.0862749,
+    "seen": 1792382366.4960623,
+    "ast_hash": "85b4c7c2396e21c9ec0628d91f376af9",
     "semantic_hash": ""
   },
   "README.md": {
@@ -577,25 +577,25 @@
   },
   "backend/supabase/002_expenses.sql": {
     "mtime": 1791445027.761845,
-    "seen": 1792338525.9891996,
+    "seen": 1792382366.4958024,
     "ast_hash": "",
     "semantic_hash": ""
   },
   "backend/supabase/003_confirmed_trip.sql": {
     "mtime": 1791684548.7030447,
-    "seen": 1792338525.989201,
+    "seen": 1792382366.4958055,
     "ast_hash": "",
     "semantic_hash": ""
   },
   "backend/supabase/004_event_documents.sql": {
     "mtime": 1791688652.5720284,
-    "seen": 1792338525.9892027,
+    "seen": 1792382366.4958084,
     "ast_hash": "",
     "semantic_hash": ""
   },
   "backend/supabase/schema.sql": {
     "mtime": 1791434919.2876766,
-    "seen": 1792338525.989204,
+    "seen": 1792382366.495811,
     "ast_hash": "",
     "semantic_hash": ""
   },
@@ -861,6 +861,12 @@
     "mtime": 1792341256.0082746,
     "seen": 1792341284.4257295,
     "ast_hash": "d0bbe85e6d7920194747c45dad99ae49",
+    "semantic_hash": ""
+  },
+  "src/core/crash.ts": {
+    "mtime": 1792382365.100221,
+    "seen": 1792382373.7148938,
+    "ast_hash": "0d6ee94393ddb32e0344983b07e5511b",
     "semantic_hash": ""
   }
 }
