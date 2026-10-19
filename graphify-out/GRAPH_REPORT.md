@@ -1,74 +1,90 @@
-# Graph Report - guwahati-run  (2026-10-18)
+# Graph Report - guwahati-run  (2026-10-19)
 
 ## Corpus Check
-- 134 files · ~66,696 words
+- 143 files · ~74,515 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 5 file(s) not represented in the graph (top: (none) 4, .example 1)
 
 ## Summary
-- 1057 nodes · 3791 edges · 40 communities (36 shown, 4 thin omitted)
+- 1112 nodes · 3953 edges · 54 communities (50 shown, 4 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 10 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `49f08a6a`
+- Built from commit: `fa76f05d`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- ticket.tsx
+- kit.tsx
 - grant.tsx
-- watch-sync.ts
+- selftest/route.ts
 - backend/package.json
 - tick.ts
 - dependencies
-- print.tsx
-- report-pdf.ts
-- wallet.tsx
+- add-bill.tsx
+- docs-server.ts
+- checklist.tsx
 - expo
 - package.json
-- deadline-rules.ts
+- ticket.tsx
 - compilerOptions
 - phases.ts
 - trip-engine.ts
-- serverDb
-- live-types.ts
+- LEGS
+- time.ts
 - core/auth.ts
 - CLAUDE.md
-- ticket.tsx
-- T
+- features/trip.ts
+- (tabs)/index.tsx
 - tsconfig.json
-- app/_layout.tsx
+- report-data.ts
 - weather.ts
 - scripts
-- notify.ts
+- serverDb
 - data.ts
 - devDependencies
 - Guwahati Run: setup, deploy and install
-- trip-sync.ts
+- trip.test.ts
 - location.tsx
 - vercel.json
 - AGENTS.md
-- metro.config.js
-- vitest
+- serverDb
+- Page
 - watchers.ts
-- bits.tsx
-- time.ts
-- (tabs)/index.tsx
+- T
+- github.ts
+- print.tsx
+- grant.tsx
+- useTheme
+- ref_react
+- onboarding/index.tsx
+- Card
+- location.ts
+- features/trip.ts
+- confirmtkt.ts
+- locations.ts
+- index.ts
+- wallet.tsx
+- trip-sync.ts
+- run
+- PaperBackup
 
 ## God Nodes (most connected - your core abstractions)
-1. `T()` - 113 edges
-2. `useTheme()` - 76 edges
-3. `Card()` - 75 edges
-4. `Button()` - 57 edges
+1. `T()` - 117 edges
+2. `Card()` - 78 edges
+3. `useTheme()` - 78 edges
+4. `Button()` - 59 edges
 5. `serverDb()` - 54 edges
-6. `Section()` - 51 edges
-7. `ms()` - 44 edges
-8. `useAuth()` - 43 edges
-9. `hhmm()` - 42 edges
-10. `useFeed()` - 42 edges
+6. `Section()` - 52 edges
+7. `ms()` - 48 edges
+8. `hhmm()` - 44 edges
+9. `useFeed()` - 44 edges
+10. `useAuth()` - 43 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `t()` --calls--> `ms()`  [EXTRACTED]
+  src/features/track.test.ts → backend/lib/time.ts
 - `Settings()` --calls--> `isDeveloper()`  [EXTRACTED]
   src/app/settings.tsx → backend/lib/auth.ts
 - `Dev()` --calls--> `isDeveloper()`  [EXTRACTED]
@@ -77,49 +93,47 @@
   src/app/tools/trip-file.tsx → backend/lib/auth.ts
 - `uploadBill()` --calls--> `extFor()`  [EXTRACTED]
   src/features/upload.ts → backend/lib/documents.ts
-- `ExpenseItem()` --calls--> `categoryLabel()`  [EXTRACTED]
-  src/app/(tabs)/money.tsx → backend/lib/expenses.ts
 
 ## Import Cycles
 - None detected.
 
-## Communities (40 total, 4 thin omitted)
+## Communities (54 total, 4 thin omitted)
 
-### Community 0 - "ticket.tsx"
-Cohesion: 0.06
-Nodes (71): expectedReceipts(), expo-haptics, expo-router, @expo/vector-icons, react-native, react-native-safe-area-context, react-native-webview, Choice() (+63 more)
+### Community 0 - "kit.tsx"
+Cohesion: 0.12
+Nodes (29): expo-haptics, @expo/vector-icons, react-native, CalendarRow(), Item, More(), PARENT, TEAM (+21 more)
 
 ### Community 1 - "grant.tsx"
-Cohesion: 0.10
-Nodes (38): GRANT, rebookingLoss(), claimDocuments(), grantEstimate(), GrantLine, csvCell(), defaultSummary(), fareCounts() (+30 more)
+Cohesion: 0.18
+Nodes (18): A4, appendix(), BuildInput, buildReport(), cover(), expenseTable(), fetchAll(), GREY (+10 more)
 
-### Community 2 - "watch-sync.ts"
-Cohesion: 0.06
-Nodes (66): Check, dmy(), GET(), timed(), Alternative, dmy(), GET(), DELETE() (+58 more)
+### Community 2 - "selftest/route.ts"
+Cohesion: 0.21
+Nodes (14): Check, dmy(), GET(), timed(), Alternative, dmy(), GET(), FALLBACK_TRAINS (+6 more)
 
 ### Community 3 - "backend/package.json"
 Cohesion: 0.05
-Nodes (39): eslintConfig, dependencies, next, pdf-lib, react, react-dom, @supabase/supabase-js, typescript (+31 more)
+Nodes (38): eslintConfig, dependencies, next, pdf-lib, react, react-dom, @supabase/supabase-js, typescript (+30 more)
 
 ### Community 4 - "tick.ts"
-Cohesion: 0.17
-Nodes (21): maxDuration, POST(), BERTH_TYPES, isDue(), JobResult, liveDue(), logged(), markStale() (+13 more)
+Cohesion: 0.14
+Nodes (24): maxDuration, POST(), maxDuration, POST(), Berth, BERTH_TYPES, isDue(), JobName (+16 more)
 
 ### Community 5 - "dependencies"
 Cohesion: 0.05
 Nodes (39): dependencies, expo, expo-background-task, expo-constants, expo-document-picker, expo-file-system, expo-font, @expo-google-fonts/manrope (+31 more)
 
-### Community 6 - "print.tsx"
-Cohesion: 0.52
-Nodes (6): DEADLINES, legBerths(), esc(), paperHtml(), short(), statusOf()
+### Community 6 - "add-bill.tsx"
+Cohesion: 0.16
+Nodes (16): CATEGORIES, expo-document-picker, expo-image-manipulator, expo-image-picker, DOC_NAMES, Kind, KINDS, styles (+8 more)
 
-### Community 7 - "report-pdf.ts"
-Cohesion: 0.05
-Nodes (65): GET(), maxDuration, GET(), GET(), maxDuration, DELETE(), maxDuration, PATCH() (+57 more)
+### Community 7 - "docs-server.ts"
+Cohesion: 0.13
+Nodes (27): GET(), GET(), maxDuration, DELETE(), maxDuration, PATCH(), maxDuration, POST() (+19 more)
 
-### Community 8 - "wallet.tsx"
-Cohesion: 0.50
-Nodes (7): onTicket(), seatFor(), TteScreen(), Wallet(), useRows(), openDoc(), useDocs()
+### Community 8 - "checklist.tsx"
+Cohesion: 0.28
+Nodes (8): db, useRows(), CheckItem, cols(), EVERYONE, progress(), short(), useChecklist()
 
 ### Community 9 - "expo"
 Cohesion: 0.08
@@ -127,67 +141,67 @@ Nodes (25): backgroundColor, backgroundImage, foregroundImage, monochromeImage, 
 
 ### Community 10 - "package.json"
 Cohesion: 0.07
-Nodes (26): eslint, react, react-dom, @supabase/supabase-js, @types/react, typescript, main, name (+18 more)
+Nodes (26): config, { getDefaultConfig }, eslint, react, react-dom, @supabase/supabase-js, @types/react, typescript (+18 more)
 
-### Community 11 - "deadline-rules.ts"
-Cohesion: 0.32
-Nodes (14): Deadline, evaluate(), maxWl(), minChance(), Verdict, duration(), canBoard(), chartTime() (+6 more)
+### Community 11 - "ticket.tsx"
+Cohesion: 0.25
+Nodes (20): DEADLINES, evaluate(), maxWl(), minChance(), canBoard(), chartTime(), legPassengers(), legSituation() (+12 more)
 
 ### Community 12 - "compilerOptions"
 Cohesion: 0.10
 Nodes (19): compilerOptions, allowImportingTsExtensions, allowJs, esModuleInterop, incremental, isolatedModules, jsx, lib (+11 more)
 
 ### Community 13 - "phases.ts"
-Cohesion: 0.06
-Nodes (33): EXPLORE, EXPLORE_RETURN_MARGIN_MIN, ExploreSpot, STATION_GUIDES, StationGuide, Connection, DeadlineId, DEMO_CHECKLIST (+25 more)
+Cohesion: 0.14
+Nodes (15): EXPLORE, EXPLORE_RETURN_MARGIN_MIN, ExploreSpot, STATION_GUIDES, StationGuide, PlaceId, IIT_TO_KYQ_MIN, inFreeTime() (+7 more)
 
 ### Community 14 - "trip-engine.ts"
-Cohesion: 0.09
-Nodes (32): GET(), Block, BLOCKS, CONNECTIONS, buildSteps(), computeNow(), ConnectionState, instructionFor() (+24 more)
+Cohesion: 0.11
+Nodes (25): GET(), Block, BLOCKS, CONNECTIONS, buildSteps(), ConnectionState, connectionStates(), instructionFor() (+17 more)
 
-### Community 15 - "serverDb"
-Cohesion: 0.23
-Nodes (11): GET(), POST(), DELETE(), POST(), POST(), POST(), registerDeployUrl(), deriveSecret() (+3 more)
+### Community 15 - "LEGS"
+Cohesion: 0.19
+Nodes (11): maxDuration, POST(), REPORT, DocRow, Expense, ExpenseCategory, DOCS_ROOT, ClaimDoc (+3 more)
 
-### Community 16 - "live-types.ts"
-Cohesion: 0.17
-Nodes (13): Berth, EMPTY_LIVE, LegLive, LiveState, PassengerLive, ECATERING_URL, istMidnight(), MEALS (+5 more)
+### Community 16 - "time.ts"
+Cohesion: 0.16
+Nodes (15): POST(), countdownParts(), dateKeyFmt, dayFmt, duration(), MIN, timeFmt, weekdayFmt (+7 more)
 
 ### Community 17 - "core/auth.ts"
-Cohesion: 0.27
-Nodes (9): currentSession(), Role, Session, signOutHooks, store, API_URL, SUPABASE_KEY, SUPABASE_URL (+1 more)
+Cohesion: 0.24
+Nodes (12): expo-web-browser, selfTest(), api(), currentSession(), signOut(), signOutHooks, store, API_URL (+4 more)
 
-### Community 19 - "ticket.tsx"
-Cohesion: 0.14
-Nodes (29): BACKUPS, Leg, BACKUP, byId(), choiceText(), PRIMARY, storedChoice(), ms() (+21 more)
+### Community 19 - "features/trip.ts"
+Cohesion: 0.20
+Nodes (14): Leg, at(), bearing(), buildTrack(), cap(), dayLabel(), lateText(), nextAfter() (+6 more)
 
-### Community 20 - "T"
-Cohesion: 0.06
-Nodes (120): Entry, facts(), highlights(), linkedinPost(), xPost(), ago(), stamp(), weekdayDate() (+112 more)
+### Community 20 - "(tabs)/index.tsx"
+Cohesion: 0.16
+Nodes (32): USEFUL_NUMBERS, ago(), computeNow(), describeWeather(), react-native-safe-area-context, Settings(), styles, CheckinCard() (+24 more)
 
 ### Community 21 - "tsconfig.json"
 Cohesion: 0.15
 Nodes (12): expo/tsconfig.base.json, compilerOptions, allowImportingTsExtensions, noEmit, paths, strict, exclude, extends (+4 more)
 
-### Community 22 - "app/_layout.tsx"
-Cohesion: 0.16
-Nodes (17): expo-background-task, @expo-google-fonts/manrope, expo-notifications, expo-splash-screen, expo-status-bar, expo-task-manager, react-native-url-polyfill, FeedSync() (+9 more)
+### Community 22 - "report-data.ts"
+Cohesion: 0.24
+Nodes (11): GRANT, rebookingLoss(), TEAM, GrantLine, csvCell(), fareCounts(), legTimeline(), reportCsv() (+3 more)
 
 ### Community 23 - "weather.ts"
 Cohesion: 0.17
-Nodes (5): Place, Weather, describeWeather(), fetchWeather(), fetchWeatherMany()
+Nodes (5): Place, syncWeather(), Weather, fetchWeather(), fetchWeatherMany()
 
 ### Community 24 - "scripts"
 Cohesion: 0.25
 Nodes (8): scripts, android, graph, lint, start, test, typecheck, web
 
-### Community 25 - "notify.ts"
-Cohesion: 0.19
-Nodes (11): GET(), Row, Alert, AlertKind, Channel, channels, forParent(), PARENT_KINDS (+3 more)
+### Community 25 - "serverDb"
+Cohesion: 0.11
+Nodes (38): DELETE(), fail(), maxDuration, PATCH(), POST(), station(), alertChange(), fetchWatch() (+30 more)
 
 ### Community 26 - "data.ts"
 Cohesion: 0.21
-Nodes (10): Checkin, clock, EMPTY, Feed, offset, Raw, store, useLive() (+2 more)
+Nodes (10): Checkin, clock, clockOffset, EMPTY, Feed, Raw, store, useLive() (+2 more)
 
 ### Community 27 - "devDependencies"
 Cohesion: 0.33
@@ -197,57 +211,113 @@ Nodes (6): devDependencies, eslint, eslint-config-expo, @types/react, typescript
 Cohesion: 0.13
 Nodes (13): Code graph, Guwahati Run, Run locally, Structure, What it does, 1. Server (Vercel): two one-time changes, 2. Get the Android app, 3. First open, on each phone (+5 more)
 
-### Community 29 - "trip-sync.ts"
-Cohesion: 0.70
-Nodes (4): applyTrip(), isObj(), Obj, patchInPlace()
+### Community 29 - "trip.test.ts"
+Cohesion: 0.09
+Nodes (13): between(), byTrain, CACHE, here, index, km(), numbers, OUT (+5 more)
 
 ### Community 30 - "location.tsx"
-Cohesion: 0.07
-Nodes (43): POST(), GET(), POST(), Table, TABLES, GET(), PUT(), maxDuration (+35 more)
+Cohesion: 0.08
+Nodes (34): POST(), GET(), maxDuration, GET(), POST(), Table, TABLES, GET() (+26 more)
 
 ### Community 31 - "vercel.json"
 Cohesion: 0.33
 Nodes (5): buildCommand, framework, ignoreCommand, installCommand, $schema
 
-### Community 33 - "metro.config.js"
-Cohesion: 0.50
-Nodes (3): config, { getDefaultConfig }, expo
+### Community 33 - "serverDb"
+Cohesion: 0.13
+Nodes (20): GET(), Row, GET(), DELETE(), POST(), POST(), registerDeployUrl(), deriveSecret() (+12 more)
+
+### Community 34 - "Page"
+Cohesion: 0.11
+Nodes (30): AddBill(), Form(), run(), PickTile(), checkIn(), CheckNow(), check(), Alert (+22 more)
 
 ### Community 35 - "watchers.ts"
-Cohesion: 0.18
-Nodes (18): TransferOption, TRANSFERS, buildBriefing(), name(), rank(), runWatchers(), Store, returnLeaveBy() (+10 more)
+Cohesion: 0.08
+Nodes (40): BACKUPS, Connection, Deadline, DeadlineId, DEMO_CHECKLIST, EVENT_SCHEDULE, INITIAL_EXPENSES, IRCTC_BOOK_URL (+32 more)
 
-### Community 36 - "bits.tsx"
-Cohesion: 0.21
-Nodes (24): PLACES, countdownParts(), dayMonth(), hhmm(), StatusHero(), Plan(), StepRow(), TransferCard() (+16 more)
-
-### Community 40 - "time.ts"
-Cohesion: 0.33
-Nodes (4): dateKeyFmt, dayFmt, timeFmt, weekdayFmt
-
-### Community 41 - "(tabs)/index.tsx"
+### Community 36 - "T"
 Cohesion: 0.16
-Nodes (20): USEFUL_NUMBERS, expo-constants, expo-location, Settings(), styles, checkpointLabel(), styles, savedSession() (+12 more)
+Nodes (38): storedChoice(), hhmm(), stamp(), Plan(), StepRow(), TransferCard(), Alternatives(), ChoiceBanner() (+30 more)
+
+### Community 37 - "github.ts"
+Cohesion: 0.29
+Nodes (14): GET(), config(), createFile(), deleteFile(), encodePath(), gh(), githubConfigured(), GitHubError (+6 more)
+
+### Community 38 - "print.tsx"
+Cohesion: 0.21
+Nodes (14): EVENT, PLACES, REMINDERS, Entry, facts(), highlights(), linkedinPost(), xPost() (+6 more)
+
+### Community 39 - "grant.tsx"
+Cohesion: 0.23
+Nodes (12): claimDocuments(), grantEstimate(), defaultSummary(), expo-file-system, expo-sharing, Grant(), ReportCard(), rupees() (+4 more)
+
+### Community 40 - "useTheme"
+Cohesion: 0.16
+Nodes (22): expectedReceipts(), expo-router, SPECS, TabsLayout(), VISIBLE, DocumentsCard(), ExpenseItem(), ICONS (+14 more)
+
+### Community 41 - "ref_react"
+Cohesion: 0.33
+Nodes (7): react-native-webview, MapStation, trainMapHtml(), TrainMap(), TrainMapProps, TrainMap(), TRAIN_MODEL_JS
+
+### Community 42 - "onboarding/index.tsx"
+Cohesion: 0.12
+Nodes (28): TRIP, expo-linear-gradient, Choice(), Onboarding(), finish(), submit(), Point(), RouteDots() (+20 more)
+
+### Community 43 - "Card"
+Cohesion: 0.15
+Nodes (27): BayDiagram(), Dev(), DevData, JOBS, JobsCard(), JsonEditor(), run(), LiveTestCard() (+19 more)
+
+### Community 44 - "location.ts"
+Cohesion: 0.11
+Nodes (26): expo-background-task, @expo-google-fonts/manrope, expo-location, expo-notifications, expo-splash-screen, expo-status-bar, expo-task-manager, react-native-url-polyfill (+18 more)
+
+### Community 45 - "features/trip.ts"
+Cohesion: 0.17
+Nodes (19): LegId, PersonId, EMPTY_LIVE, ECATERING_URL, istMidnight(), MEALS, MealStop, planMeals() (+11 more)
+
+### Community 46 - "confirmtkt.ts"
+Cohesion: 0.21
+Nodes (15): addDays(), chance(), CtAvail, CtLive, CtPnr, fetchLive(), getAvailability(), getJson() (+7 more)
+
+### Community 47 - "locations.ts"
+Cohesion: 0.27
+Nodes (8): GET(), GET(), LegLive, effectiveLocations(), FRESH_MS, LocationRow, PersonLocation, tripData()
+
+### Community 48 - "index.ts"
+Cohesion: 0.24
+Nodes (10): confirmtkt, PROVIDERS, Sourced, Availability, AvailabilityQuery, BerthCode, LiveRunningStatus, PnrPassenger (+2 more)
+
+### Community 49 - "wallet.tsx"
+Cohesion: 0.62
+Nodes (6): weekdayDate(), onTicket(), TteScreen(), Wallet(), openDoc(), trainLegs()
+
+### Community 51 - "trip-sync.ts"
+Cohesion: 0.70
+Nodes (4): applyTrip(), isObj(), Obj, patchInPlace()
+
+### Community 52 - "run"
+Cohesion: 0.50
+Nodes (4): add(), move(), remove(), run()
 
 ## Knowledge Gaps
 - **24 isolated node(s):** `@supabase/supabase-js`, `react`, `react-dom`, `typescript`, `@types/node` (+19 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 347 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 365 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **4 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `react-native` connect `ticket.tsx` to `grant.tsx`, `bits.tsx`, `print.tsx`, `report-pdf.ts`, `wallet.tsx`, `(tabs)/index.tsx`, `package.json`, `trip-engine.ts`, `ticket.tsx`, `T`, `app/_layout.tsx`, `data.ts`, `location.tsx`?**
-  _High betweenness centrality (0.071) - this node is a cross-community bridge._
+- **Why does `vitest` connect `trip.test.ts` to `serverDb`, `package.json`, `features/trip.ts`, `features/trip.ts`?**
+  _High betweenness centrality (0.080) - this node is a cross-community bridge._
 - **What connects `@supabase/supabase-js`, `react`, `react-dom` to the rest of the system?**
   _24 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `ticket.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.061031664964249235 - nodes in this community are weakly interconnected._
+- **Should `kit.tsx` be split into smaller, more focused modules?**
+  _Cohesion score 0.11740890688259109 - nodes in this community are weakly interconnected._
 - **Why does `dependencies` connect `dependencies` to `package.json`?**
-  _High betweenness centrality (0.060) - this node is a cross-community bridge._
-- **Should `grant.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.09568627450980392 - nodes in this community are weakly interconnected._
-- **Why does `pdf-lib` connect `backend/package.json` to `grant.tsx`?**
-  _High betweenness centrality (0.046) - this node is a cross-community bridge._
-- **Should `watch-sync.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.05754385964912281 - nodes in this community are weakly interconnected._
+  _High betweenness centrality (0.067) - this node is a cross-community bridge._
+- **Should `backend/package.json` be split into smaller, more focused modules?**
+  _Cohesion score 0.047619047619047616 - nodes in this community are weakly interconnected._
+- **Why does `react-native` connect `kit.tsx` to `Page`, `T`, `add-bill.tsx`, `grant.tsx`, `useTheme`, `print.tsx`, `package.json`, `onboarding/index.tsx`, `location.ts`, `ticket.tsx`, `Card`, `checklist.tsx`, `time.ts`, `wallet.tsx`, `ref_react`, `(tabs)/index.tsx`, `serverDb`, `data.ts`?**
+  _High betweenness centrality (0.057) - this node is a cross-community bridge._
+- **Should `tick.ts` be split into smaller, more focused modules?**
+  _Cohesion score 0.13675213675213677 - nodes in this community are weakly interconnected._
