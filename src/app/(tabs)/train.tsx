@@ -1,14 +1,14 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Modal, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BACKUPS, LEGS, PLACES, type Leg } from "@/data/trip";
 import { api } from "@/core/api";
 import { useAuth } from "@/core/auth";
 import { clockOffset, useFeed, useNow } from "@/core/data";
 import { useLoad } from "@/core/use-load";
-import { LegChip, TrainCard } from "@/features/bits";
+import { LegPicker, TrainCard } from "@/features/bits";
 import { delayTone, focusLeg, lastPassed, stopsFor, trainLegs, type Stop } from "@/features/trip";
 import type { LegLive } from "@/lib/live-types";
 import { buildTrack, trainPosition, type Track, type TrackPoint } from "@/lib/live-track";
@@ -58,11 +58,7 @@ export default function TrainScreen() {
           {run.data && <Button label="Fetch again" icon="refresh" kind="secondary" onPress={() => void run.reload()} />}
         </Card>
       ) : (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingRight: 8 }} style={{ marginHorizontal: -4 }}>
-          {legs.map((x) => (
-            <LegChip key={x.id} leg={x} active={x.id === leg.id} onPress={() => setPicked(x.id)} />
-          ))}
-        </ScrollView>
+        <LegPicker legs={legs} value={leg} onChange={setPicked} />
       )}
 
       {!testLeg && <TrainCard leg={leg} live={live} me={session?.person} onPress={() => {}} />}
