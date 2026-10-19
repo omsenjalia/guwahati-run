@@ -10,7 +10,7 @@ import { clockOffset, useFeed, useNow } from "@/core/data";
 import { useLoad } from "@/core/use-load";
 import { LegPicker, TrainCard } from "@/features/bits";
 import { delayTone, focusLeg, lastPassed, stopsFor, trainLegs, type Stop } from "@/features/trip";
-import type { LegLive } from "@/lib/live-types";
+import type { Delays, LegLive } from "@/lib/live-types";
 import { buildTrack, trainPosition, type Track, type TrackPoint } from "@/lib/live-track";
 import { ago, dayMonth, hhmm, ms } from "@/lib/time";
 import { Button, Card, Chips, IconButton, Pill } from "@/ui/kit";
@@ -73,12 +73,13 @@ export default function TrainScreen() {
 const VIEWS = [
   { value: "ours", label: "Our journey" },
   { value: "all", label: "Full route" },
+  { value: "avg", label: "Avg delay" },
 ] as const;
 
 function Tracked({ leg, track, live, now, mapKey }: { leg: Leg; track: Track; live?: Pick<LegLive, "liveUpdatedAt" | "stale">; now: number; mapKey: string }) {
   const c = useTheme();
   const insets = useSafeAreaInsets();
-  const [view, setView] = useState<"ours" | "all">("ours");
+  const [view, setView] = useState<(typeof VIEWS)[number]["value"]>("ours");
   const [nonStop, setNonStop] = useState(false);
   const [full, setFull] = useState(false);
   const icon = track.state === "yet" ? "clock-outline" : track.state === "done" ? "flag-checkered" : track.state === "at" ? "train" : "access-point";
@@ -135,28 +136,34 @@ function Tracked({ leg, track, live, now, mapKey }: { leg: Leg; track: Track; li
       </View>
 
       <Chips options={VIEWS} value={view} onChange={setView} />
-      <Pressable onPress={() => setNonStop(!nonStop)} accessibilityRole="switch" accessibilityState={{ checked: nonStop }} style={{ alignSelf: "flex-start" }}>
-        <Pill label={nonStop ? "Showing stations it runs through" : "Show stations it runs through"} tone={nonStop ? "bad" : "neutral"} icon="map-marker-outline" />
-      </Pressable>
+      {view === "avg" ? (
+        <AvgDelay leg={leg} track={track} />
+      ) : (
+        <>
+        <Pressable onPress={() => setNonStop(!nonStop)} accessibilityRole="switch" accessibilityState={{ checked: nonStop }} style={{ alignSelf: "flex-start" }}>
+          <Pill label={nonStop ? "Showing stations it runs through" : "Show stations it runs through"} tone={nonStop ? "bad" : "neutral"} icon="map-marker-outline" />
+        </Pressable>
 
-      <Card padded={false} style={{ paddingVertical: 8 }}>
-        {shown.map((p, i) => {
-          const idx = track.points.indexOf(p);
-          return (
-            <PointRow
-              key={`${p.code}-${idx}`}
-              p={idx <= here && !p.passed ? { ...p, passed: true } : p}
-              first={i === 0}
-              last={i === shown.length - 1}
-              here={idx === here && running}
-              tag={idx === track.from ? "Board" : idx === track.to ? "Get off" : undefined}
-              dim={view === "all" && (idx < track.from || idx > track.to)}
-              now={now}
-              km={idx >= track.from ? p.km - track.points[track.from].km : undefined}
-            />
-          );
-        })}
-      </Card>
+        <Card padded={false} style={{ paddingVertical: 8 }}>
+          {shown.map((p, i) => {
+            const idx = track.points.indexOf(p);
+            return (
+              <PointRow
+                key={`${p.code}-${idx}`}
+                p={idx <= here && !p.passed ? { ...p, passed: true } : p}
+                first={i === 0}
+                last={i === shown.length - 1}
+                here={idx === here && running}
+                tag={idx === track.from ? "Board" : idx === track.to ? "Get off" : undefined}
+                dim={view === "all" && (idx < track.from || idx > track.to)}
+                now={now}
+                km={idx >= track.from ? p.km - track.points[track.from].km : undefined}
+              />
+            );
+          })}
+        </Card>
+        </>
+      )}
 
       <Modal visible={full} animationType="slide" onRequestClose={() => setFull(false)}>
         <View style={{ flex: 1, backgroundColor: c.bg }}>
@@ -167,6 +174,50 @@ function Tracked({ leg, track, live, now, mapKey }: { leg: Leg; track: Track; li
         </View>
       </Modal>
     </>
+  );
+}
+
+/** Our stops with how late the train usually is there, over its last runs. */
+function AvgDelay({ leg, track }: { leg: Leg; track: Track }) {
+  const c = useTheme();
+  const { data, error } = useLoad(() => api<Delays>(`/api/delays?leg=${leg.id}`), leg.id);
+  if (!data)
+    return (
+      <Card>
+        <T v="body" color="muted">
+          {error || "Checking how late this train has run lately..."}
+        </T>
+      </Card>
+    );
+  const by = new Map(data.stations.map((s) => [s.code, s]));
+  const stops = track.points.slice(track.from, track.to + 1).filter((p) => p.stop && by.has(p.code));
+  return (
+    <Card padded={false} style={{ paddingVertical: 4 }}>
+      <T v="caption" color="faint" style={{ paddingHorizontal: 14, paddingVertical: 8 }}>
+        Over the last {data.runs} runs (from {dayMonth(`${data.dates[data.dates.length - 1]}T12:00:00+05:30`)}). On time = within 5 min.
+      </T>
+      {stops.map((p, i) => {
+        const d = by.get(p.code)!;
+        const tone = toneColors(c, delayTone(d.avgMin));
+        return (
+          <View key={p.code} style={[styles.avgRow, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderColor: c.border }]}>
+            <View style={{ flex: 1, gap: 2 }}>
+              <T v="label" numberOfLines={1} style={{ fontFamily: i === 0 || i === stops.length - 1 ? font.heavy : font.semibold }}>
+                {p.name}
+              </T>
+              <T v="caption" color="faint">
+                {p.code} · on time {d.onTimePct}% · worst +{d.maxMin}m
+              </T>
+            </View>
+            <View style={[styles.avgBadge, { backgroundColor: tone.bg }]}>
+              <T v="label" num color={tone.fg} style={{ fontFamily: font.bold }}>
+                {d.avgMin <= 5 ? "On time" : `+${d.avgMin}m`}
+              </T>
+            </View>
+          </View>
+        );
+      })}
+    </Card>
   );
 }
 
@@ -355,6 +406,8 @@ function Timetable({ leg, now }: { leg: Leg; now: number }) {
 }
 
 const styles = StyleSheet.create({
+  avgRow: { flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 14, paddingVertical: 10 },
+  avgBadge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: radius.sm },
   mapBox: { height: 380, borderRadius: radius.lg, overflow: "hidden", borderWidth: StyleSheet.hairlineWidth },
   expand: { position: "absolute", left: 10, bottom: 24, width: 38, height: 38, borderRadius: 12, alignItems: "center", justifyContent: "center" },
   legend: { flexDirection: "row", gap: 14, flexWrap: "wrap", paddingHorizontal: 4, marginTop: -8 },

@@ -11,7 +11,7 @@ import { verifyToken } from "@/lib/auth";
  * CORS is open (no cookies are used), so the web build of the app works.
  */
 const PUBLIC = ["/api/auth", "/api/calendar", "/api/jobs"];
-const PARENT = ["/api/parent", "/api/alerts", "/api/trip", "/api/journal"];
+const PARENT = ["/api/parent", "/api/alerts", "/api/trip", "/api/journal", "/api/delays"];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

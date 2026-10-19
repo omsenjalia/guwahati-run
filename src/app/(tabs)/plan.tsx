@@ -23,15 +23,23 @@ const KIND: Record<StepKind, { icon: IconName; tone: Tone }> = {
   sleep: { icon: "weather-night", tone: "neutral" },
 };
 
-/** The whole trip, day by day, with live-adjusted times. */
+/** The trip one day at a time (today first), with live-adjusted times. */
 export default function Plan() {
+  const c = useTheme();
   const live = useFeed().live;
   const now = useNow();
   const [minor, setMinor] = useState(false);
+  const [picked, setPicked] = useState<string | null>(null);
   const steps = buildSteps(live).filter((s) => minor || !s.minor);
   const transfers = planTransfers(live).filter((t) => t.reachBy > now);
   const days = new Map<string, Step[]>();
   for (const s of steps) days.set(istDateKey(s.start), [...(days.get(istDateKey(s.start)) ?? []), s]);
+  const keys = [...days.keys()];
+  const todayKey = istDateKey(now);
+  // Before the trip: day 1; after it: the last day.
+  const key = picked && days.has(picked) ? picked : days.has(todayKey) ? todayKey : todayKey < keys[0] ? keys[0] : keys[keys.length - 1];
+  const list = days.get(key) ?? [];
+  const dayTransfers = transfers.filter((t) => istDateKey(t.start) === key);
 
   return (
     <Screen
@@ -43,34 +51,46 @@ export default function Plan() {
         </Pressable>
       }
     >
-      {transfers.length > 0 && (
-        <View style={{ gap: 10 }}>
-          <T v="overline" color="faint" style={{ paddingHorizontal: 4 }}>
-            Station transfers
-          </T>
-          {transfers.map((t) => (
-            <TransferCard key={t.legId} plan={t} now={now} />
-          ))}
-        </View>
-      )}
-      {[...days].map(([key, list]) => {
-        const today = key === istDateKey(now);
-        return (
-          <View key={key} style={{ gap: 10 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 4 }}>
-              <T v="overline" color={today ? "primary" : "faint"}>
-                {weekdayDate(list[0].start)}
+      <View style={styles.days}>
+        {keys.map((k, i) => {
+          const on = k === key;
+          const [wd, date] = weekdayDate(days.get(k)![0].start).split(", ");
+          return (
+            <Pressable
+              key={k}
+              onPress={() => setPicked(k)}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: on }}
+              accessibilityLabel={`Day ${i + 1}, ${wd} ${date}`}
+              style={[styles.day, { backgroundColor: on ? c.primary : c.surface, borderColor: on ? c.primary : k === todayKey ? c.accent : c.border }]}
+            >
+              <T v="caption" color={on ? c.onPrimary : "faint"}>
+                {wd}
               </T>
-              {today && <Pill label="Today" tone="primary" />}
-            </View>
-            <Card padded={false} style={{ paddingVertical: 6 }}>
-              {list.map((s, i) => (
-                <StepRow key={s.id} step={s} now={now} last={i === list.length - 1} />
-              ))}
-            </Card>
-          </View>
-        );
-      })}
+              <T v="label" num color={on ? c.onPrimary : "text"} style={{ fontFamily: font.bold }}>
+                {date.split(" ")[0]}
+              </T>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 4 }}>
+        <T v="heading" style={{ flex: 1 }}>
+          Day {keys.indexOf(key) + 1} · {weekdayDate(list[0]?.start ?? now)}
+        </T>
+        {key === todayKey && <Pill label="Today" tone="primary" />}
+      </View>
+
+      {dayTransfers.map((t) => (
+        <TransferCard key={t.legId} plan={t} now={now} />
+      ))}
+
+      <Card padded={false} style={{ paddingVertical: 6 }}>
+        {list.map((s, i) => (
+          <StepRow key={s.id} step={s} now={now} last={i === list.length - 1} />
+        ))}
+      </Card>
     </Screen>
   );
 }
@@ -148,15 +168,9 @@ function StepRow({ step, now, last }: { step: Step; now: number; last: boolean }
           {active && <Pill label="Now" tone="accent" solid />}
           {shiftMin > 2 && step.kind === "train" && <Pill label={delayText(shiftMin)} tone="bad" />}
         </View>
-        {!step.minor && !!sub && (
-          <T v="caption" color="muted">
-            {sub}
-          </T>
-        )}
-        {!step.minor && step.end - step.start >= 30 * 60_000 && (
-          <T v="caption" color="faint">
-            {step.approx ? "About " : ""}
-            {duration(step.end - step.start)}
+        {!step.minor && (!!sub || step.end - step.start >= 30 * 60_000) && (
+          <T v="caption" color="muted" numberOfLines={2}>
+            {[sub, step.end - step.start >= 30 * 60_000 && `${step.approx ? "about " : ""}${duration(step.end - step.start)}`].filter(Boolean).join(" · ")}
           </T>
         )}
       </View>
@@ -165,6 +179,8 @@ function StepRow({ step, now, last }: { step: Step; now: number; last: boolean }
 }
 
 const styles = StyleSheet.create({
+  days: { flexDirection: "row", gap: 6 },
+  day: { flex: 1, alignItems: "center", paddingVertical: 8, borderRadius: radius.md, borderWidth: StyleSheet.hairlineWidth, gap: 1 },
   row: { flexDirection: "row", paddingHorizontal: 14, paddingTop: 10, gap: 6, minHeight: 64 },
   time: { width: 50, alignItems: "flex-end", paddingTop: 6 },
   icon: { width: 32, height: 32, borderRadius: radius.sm + 2, alignItems: "center", justifyContent: "center" },
