@@ -1,6 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { PLACES, type Leg, type PersonId } from "@/data/trip";
 import { useNow } from "@/core/data";
@@ -189,7 +190,45 @@ export function LegChip({ leg, active, onPress }: { leg: Leg; active: boolean; o
   );
 }
 
+/** A dropdown of tickets: the picked one, tap to open the list. */
+export function LegPicker({ legs, value, onChange }: { legs: Leg[]; value: Leg; onChange: (id: string) => void }) {
+  const c = useTheme();
+  const [open, setOpen] = useState(false);
+  const row = (leg: Leg, active: boolean, onPress: () => void, chevron?: boolean) => (
+    <Pressable
+      key={leg.id}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={chevron ? { expanded: open } : { selected: active }}
+      style={[styles.pickRow, active && !chevron && { backgroundColor: c.surface2 }]}
+    >
+      <View style={{ flex: 1, gap: 1 }}>
+        <T v="label" num style={{ fontFamily: font.bold }} numberOfLines={1}>
+          {leg.train?.number} {leg.train?.name}
+        </T>
+        <T v="caption" color="muted">
+          {PLACES[leg.from].code} → {PLACES[leg.to].code} · {dayMonth(leg.depart)}
+        </T>
+      </View>
+      {chevron && <MaterialCommunityIcons name={open ? "chevron-up" : "chevron-down"} size={22} color={c.muted} />}
+    </Pressable>
+  );
+  return (
+    <Card padded={false} style={{ overflow: "hidden" }}>
+      {row(value, true, () => setOpen(!open), true)}
+      {open &&
+        legs.map((l) =>
+          row(l, l.id === value.id, () => {
+            onChange(l.id);
+            setOpen(false);
+          }),
+        )}
+    </Card>
+  );
+}
+
 const styles = StyleSheet.create({
+  pickRow: { flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 14, paddingVertical: 10 },
   chip: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: radius.md, borderWidth: StyleSheet.hairlineWidth, gap: 1 },
   hero: { borderRadius: radius.xl, padding: 20, gap: 10, overflow: "hidden" },
   row: { flexDirection: "row", alignItems: "center", gap: 10 },
