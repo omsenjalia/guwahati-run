@@ -11,7 +11,7 @@ import { useLoad } from "@/core/use-load";
 import { LegChip, TrainCard } from "@/features/bits";
 import { delayTone, focusLeg, lastPassed, stopsFor, trainLegs, type Stop } from "@/features/trip";
 import type { LegLive } from "@/lib/live-types";
-import { buildTrack, type Track, type TrackPoint } from "@/lib/live-track";
+import { buildTrack, trainPosition, type Track, type TrackPoint } from "@/lib/live-track";
 import { ago, dayMonth, hhmm, ms } from "@/lib/time";
 import { Button, Card, Chips, IconButton, Pill } from "@/ui/kit";
 import { Screen } from "@/ui/screen";
@@ -32,7 +32,7 @@ export default function TrainScreen() {
   const { test } = useLocalSearchParams<{ test?: string }>();
   const feed = useFeed();
   const live = feed.live;
-  const now = useNow(15_000);
+  const now = useNow(5_000);
   const legs = trainLegs(live);
   const [picked, setPicked] = useState<string | null>(null);
   const testLeg = test ? [...LEGS, ...BACKUPS].find((l) => l.id === test) : undefined;
@@ -90,7 +90,9 @@ function Tracked({ leg, track, live, now, mapKey }: { leg: Leg; track: Track; li
   const first = view === "ours" ? track.from : 0;
   const last = view === "ours" ? track.to : track.points.length - 1;
   const shown = track.points.slice(first, last + 1).filter((p) => nonStop || p.stop);
-  const here = track.points.findLastIndex((p) => p.passed);
+  const running = track.state === "between" || track.state === "at";
+  // Same clock as the map's train, so the list moves with it between live updates.
+  const here = Math.max(track.points.findLastIndex((p) => p.passed), running ? trainPosition(track, now).index : -1);
   const stations = track.points.map((p) => ({ c: p.code, n: p.name, lat: p.lat, lon: p.lon, s: p.stop ? 1 : 0, a: p.arr, d: p.dep, p: p.passed ? 1 : 0 }) as const);
   const map = (
     <TrainMap
@@ -147,10 +149,10 @@ function Tracked({ leg, track, live, now, mapKey }: { leg: Leg; track: Track; li
           return (
             <PointRow
               key={`${p.code}-${idx}`}
-              p={p}
+              p={idx <= here && !p.passed ? { ...p, passed: true } : p}
               first={i === 0}
               last={i === shown.length - 1}
-              here={idx === here && track.state !== "done" && track.state !== "yet"}
+              here={idx === here && running}
               tag={idx === track.from ? "Board" : idx === track.to ? "Get off" : undefined}
               dim={view === "all" && (idx < track.from || idx > track.to)}
               now={now}
