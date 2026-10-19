@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "backend/lib/live-types.ts": {
-    "mtime": 1792329321.5324528,
-    "seen": 1792331151.0596077,
-    "ast_hash": "fe23deca9a7979664c7532c899db54be",
+    "mtime": 1792382755.3635669,
+    "seen": 1792382827.0226262,
+    "ast_hash": "ba4585c9d960838293b3944e691a151f",
     "semantic_hash": ""
   },
   "backend/lib/locations.ts": {
@@ -312,9 +312,9 @@
     "semantic_hash": ""
   },
   "backend/proxy.ts": {
-    "mtime": 1792336129.9163363,
-    "seen": 1792336819.6242187,
-    "ast_hash": "fce68bccfeedafef89411675e9c67ef0",
+    "mtime": 1792382727.2919412,
+    "seen": 1792382827.0261726,
+    "ast_hash": "4f03cad31f649025606d70cd56f18815",
     "semantic_hash": ""
   },
   "backend/tsconfig.json": {
@@ -372,9 +372,9 @@
     "semantic_hash": ""
   },
   "src/app/(tabs)/plan.tsx": {
-    "mtime": 1792336718.0277796,
-    "seen": 1792336819.6242418,
-    "ast_hash": "c48b08c407c50226d03b0fc4e9ea7875",
+    "mtime": 1792382663.541286,
+    "seen": 1792382827.028064,
+    "ast_hash": "889bfd3bee137ca32c6c6a47bf8ecac7",
     "semantic_hash": ""
   },
   "src/app/(tabs)/ticket.tsx": {
@@ -384,9 +384,9 @@
     "semantic_hash": ""
   },
   "src/app/(tabs)/train.tsx": {
-    "mtime": 1792382429.8383994,
-    "seen": 1792382556.798896,
-    "ast_hash": "7740c1aae0b5d6f11d8ff5047241fd77",
+    "mtime": 1792382814.220456,
+    "seen": 1792382827.0282147,
+    "ast_hash": "93e0a0bb34a3bc40e103c0f4e3622342",
     "semantic_hash": ""
   },
   "src/app/_layout.tsx": {
@@ -577,25 +577,25 @@
   },
   "backend/supabase/002_expenses.sql": {
     "mtime": 1791445027.761845,
-    "seen": 1792382366.4958024,
+    "seen": 1792382580.0324447,
     "ast_hash": "",
     "semantic_hash": ""
   },
   "backend/supabase/003_confirmed_trip.sql": {
     "mtime": 1791684548.7030447,
-    "seen": 1792382366.4958055,
+    "seen": 1792382580.0324466,
     "ast_hash": "",
     "semantic_hash": ""
   },
   "backend/supabase/004_event_documents.sql": {
     "mtime": 1791688652.5720284,
-    "seen": 1792382366.4958084,
+    "seen": 1792382580.0324483,
     "ast_hash": "",
     "semantic_hash": ""
   },
   "backend/supabase/schema.sql": {
     "mtime": 1791434919.2876766,
-    "seen": 1792382366.495811,
+    "seen": 1792382580.0324497,
     "ast_hash": "",
     "semantic_hash": ""
   },
@@ -867,6 +867,12 @@
     "mtime": 1792382365.100221,
     "seen": 1792382373.7148938,
     "ast_hash": "0d6ee94393ddb32e0344983b07e5511b",
+    "semantic_hash": ""
+  },
+  "backend/app/api/delays/route.ts": {
+    "mtime": 1792382800.501111,
+    "seen": 1792382827.0170507,
+    "ast_hash": "435f761130efd6fb6303c59bac518afe",
     "semantic_hash": ""
   }
 }
