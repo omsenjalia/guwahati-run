@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "backend/lib/jobs/tick.ts": {
-    "mtime": 1792335594.8961086,
-    "seen": 1792336034.1478152,
-    "ast_hash": "614c5772ac6a5909c644cca2b0b4285a",
+    "mtime": 1792383649.537907,
+    "seen": 1792383682.9697838,
+    "ast_hash": "670c3a957d447f370be7ee159d9e6d67",
     "semantic_hash": ""
   },
   "backend/lib/jobs/watch-sync.ts": {
@@ -372,21 +372,21 @@
     "semantic_hash": ""
   },
   "src/app/(tabs)/plan.tsx": {
-    "mtime": 1792382663.541286,
-    "seen": 1792382827.028064,
-    "ast_hash": "889bfd3bee137ca32c6c6a47bf8ecac7",
+    "mtime": 1792383839.388906,
+    "seen": 1792384085.6202595,
+    "ast_hash": "67f96c403dd9551453c6e1f4fcf7f5da",
     "semantic_hash": ""
   },
   "src/app/(tabs)/ticket.tsx": {
-    "mtime": 1792336700.9842632,
-    "seen": 1792336819.6242435,
-    "ast_hash": "89a387ae283b4bff8c4a5a5f46eebf01",
+    "mtime": 1792383952.1674857,
+    "seen": 1792384085.6202636,
+    "ast_hash": "3ba1eb6609e22fbab74d6189b4ea2a53",
     "semantic_hash": ""
   },
   "src/app/(tabs)/train.tsx": {
-    "mtime": 1792383377.991841,
-    "seen": 1792383423.1566348,
-    "ast_hash": "08a5142ac21cafa0cbcda494af1c63e6",
+    "mtime": 1792383952.1664822,
+    "seen": 1792384085.620266,
+    "ast_hash": "6af0027f770091425d062ee13bf6fab5",
     "semantic_hash": ""
   },
   "src/app/_layout.tsx": {
@@ -468,9 +468,9 @@
     "semantic_hash": ""
   },
   "src/features/trip.ts": {
-    "mtime": 1792329971.1048932,
-    "seen": 1792331151.05966,
-    "ast_hash": "493461691bd874460f70a162100e53ba",
+    "mtime": 1792383945.139409,
+    "seen": 1792384085.6257045,
+    "ast_hash": "577200eb16782e28d7d279ccf009447e",
     "semantic_hash": ""
   },
   "src/features/upload.ts": {
@@ -577,25 +577,25 @@
   },
   "backend/supabase/002_expenses.sql": {
     "mtime": 1791445027.761845,
-    "seen": 1792382852.726718,
+    "seen": 1792383453.8049626,
     "ast_hash": "",
     "semantic_hash": ""
   },
   "backend/supabase/003_confirmed_trip.sql": {
     "mtime": 1791684548.7030447,
-    "seen": 1792382852.726721,
+    "seen": 1792383453.8049653,
     "ast_hash": "",
     "semantic_hash": ""
   },
   "backend/supabase/004_event_documents.sql": {
     "mtime": 1791688652.5720284,
-    "seen": 1792382852.7267227,
+    "seen": 1792383453.8049674,
     "ast_hash": "",
     "semantic_hash": ""
   },
   "backend/supabase/schema.sql": {
     "mtime": 1791434919.2876766,
-    "seen": 1792382852.7267244,
+    "seen": 1792383453.804969,
     "ast_hash": "",
     "semantic_hash": ""
   },
@@ -660,9 +660,9 @@
     "semantic_hash": ""
   },
   "src/app/tools/dev.tsx": {
-    "mtime": 1792338470.3710065,
-    "seen": 1792338525.9892356,
-    "ast_hash": "a1dbbd41f4ecf263ac1ff5b59e6e8532",
+    "mtime": 1792384047.909721,
+    "seen": 1792384085.6214452,
+    "ast_hash": "4b6917a6cdbc44270d75b535dfe2bb1e",
     "semantic_hash": ""
   },
   "src/app/tools/trip-file.tsx": {
@@ -870,9 +870,33 @@
     "semantic_hash": ""
   },
   "backend/app/api/delays/route.ts": {
-    "mtime": 1792382800.501111,
-    "seen": 1792382827.0170507,
-    "ast_hash": "435f761130efd6fb6303c59bac518afe",
+    "mtime": 1792383629.8745854,
+    "seen": 1792383682.9648693,
+    "ast_hash": "05128b2c4e5d0fa795d5fa0eec008361",
+    "semantic_hash": ""
+  },
+  "backend/lib/delay-runs.ts": {
+    "mtime": 1792383620.4758055,
+    "seen": 1792383682.9688437,
+    "ast_hash": "7b34a1787ba634c9eb22f009c44592da",
+    "semantic_hash": ""
+  },
+  "src/features/delays.test.ts": {
+    "mtime": 1792383821.5881808,
+    "seen": 1792383838.0358205,
+    "ast_hash": "cae578106b41d141e476db2e22805bf2",
+    "semantic_hash": ""
+  },
+  "src/core/dev-prefs.ts": {
+    "mtime": 1792383945.080052,
+    "seen": 1792384085.623818,
+    "ast_hash": "4ea217c97c72add9709aa8473d856dce",
+    "semantic_hash": ""
+  },
+  "src/features/trip-half.test.ts": {
+    "mtime": 1792383976.4147806,
+    "seen": 1792384085.6255686,
+    "ast_hash": "e8ceebd5250b49e6ea81ee3028b49b27",
     "semantic_hash": ""
   }
 }

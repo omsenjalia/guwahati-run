@@ -7,9 +7,11 @@ import { useAuth } from "@/core/auth";
 import { refresh, useFeed, useNow } from "@/core/data";
 import { db, useRows } from "@/core/db";
 import { useLoad } from "@/core/use-load";
-import { Countdown, Hero, LegChip } from "@/features/bits";
+import { Countdown, Hero, LegPicker } from "@/features/bits";
 import { WlGraph } from "@/features/wl-graph";
-import { coachKind, coachList, firstName, focusLeg, isSeated, myStatus, personIndex, statusTone, trainLegs } from "@/features/trip";
+import { coachKind, coachList, firstName, focusLeg, isSeated, myStatus, personIndex, statusTone, trainLegs, tripHalf } from "@/features/trip";
+import { useAllTrains } from "@/core/dev-prefs";
+import { isDeveloper } from "@/lib/auth";
 import type { LiveState, PassengerLive } from "@/lib/live-types";
 import { choiceText, storedChoice } from "@/lib/ticket-choice";
 import { ago, dayMonth, hhmm } from "@/lib/time";
@@ -29,7 +31,8 @@ export default function TicketScreen() {
   const live = useFeed().live;
   const now = useNow();
   const me = session!.person;
-  const legs = trainLegs(live);
+  const allTrains = useAllTrains() && isDeveloper(session);
+  const legs = allTrains ? trainLegs(live) : tripHalf(trainLegs(live), now);
   const [picked, setPicked] = useState<string | null>(null);
   const leg = legs.find((l) => l.id === picked) ?? focusLeg(legs, live, now);
   const status = myStatus(leg, live, me);
@@ -37,11 +40,7 @@ export default function TicketScreen() {
 
   return (
     <Screen title={seated ? "Your coach" : "PNR status"} subtitle={`${leg.train?.number} ${leg.train?.name}`}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingRight: 8 }} style={{ marginHorizontal: -4 }}>
-        {legs.map((x) => (
-          <LegChip key={x.id} leg={x} active={x.id === leg.id} onPress={() => setPicked(x.id)} />
-        ))}
-      </ScrollView>
+      <LegPicker legs={legs} value={leg} onChange={setPicked} />
       {seated ? <CoachView leg={leg} live={live} me={me} /> : <PnrView leg={leg} live={live} me={me} now={now} />}
     </Screen>
   );
