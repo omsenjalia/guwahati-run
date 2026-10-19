@@ -68,7 +68,8 @@ map.on('dragstart',function(){setFollow(false)});
 function setFollow(v){follow=v;document.getElementById('follow').className=v?'on':''}
 document.getElementById('follow').onclick=function(){setFollow(!follow);if(follow)chase(1200)};
 document.getElementById('all').onclick=function(){setFollow(false);var b=new maplibregl.LngLatBounds();coords.forEach(function(c){b.extend(c)});map.fitBounds(b,{padding:60,pitch:30,bearing:0,duration:1500})};
-function chase(ms){var p=pos(now());map.easeTo({center:[p.lon,p.lat],zoom:Math.max(map.getZoom(),10.5),pitch:60,bearing:p.b,duration:ms})}
+// Camera a little to the side of the train (three-quarter view): from straight behind it's only a thin bar.
+function chase(ms){var p=pos(now());map.easeTo({center:[p.lon,p.lat],zoom:Math.max(map.getZoom(),12),pitch:60,bearing:p.b-60,duration:ms})}
 map.on('load',function(){
   try{map.addSource('dem',{type:'raster-dem',tiles:['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],encoding:'terrarium',tileSize:256,maxzoom:12,attribution:'Terrain: Mapzen, AWS'});
     map.addLayer({id:'hills',type:'hillshade',source:'dem',paint:{'hillshade-exaggeration':0.35,'hillshade-shadow-color':'${dark ? "#000000" : "#6b6253"}'}});

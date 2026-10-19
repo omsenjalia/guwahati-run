@@ -384,9 +384,9 @@
     "semantic_hash": ""
   },
   "src/app/(tabs)/train.tsx": {
-    "mtime": 1792382814.220456,
-    "seen": 1792382827.0282147,
-    "ast_hash": "93e0a0bb34a3bc40e103c0f4e3622342",
+    "mtime": 1792383377.991841,
+    "seen": 1792383423.1566348,
+    "ast_hash": "08a5142ac21cafa0cbcda494af1c63e6",
     "semantic_hash": ""
   },
   "src/app/_layout.tsx": {
@@ -577,25 +577,25 @@
   },
   "backend/supabase/002_expenses.sql": {
     "mtime": 1791445027.761845,
-    "seen": 1792382580.0324447,
+    "seen": 1792382852.726718,
     "ast_hash": "",
     "semantic_hash": ""
   },
   "backend/supabase/003_confirmed_trip.sql": {
     "mtime": 1791684548.7030447,
-    "seen": 1792382580.0324466,
+    "seen": 1792382852.726721,
     "ast_hash": "",
     "semantic_hash": ""
   },
   "backend/supabase/004_event_documents.sql": {
     "mtime": 1791688652.5720284,
-    "seen": 1792382580.0324483,
+    "seen": 1792382852.7267227,
     "ast_hash": "",
     "semantic_hash": ""
   },
   "backend/supabase/schema.sql": {
     "mtime": 1791434919.2876766,
-    "seen": 1792382580.0324497,
+    "seen": 1792382852.7267244,
     "ast_hash": "",
     "semantic_hash": ""
   },
@@ -840,9 +840,9 @@
     "semantic_hash": ""
   },
   "src/ui/train-map-html.ts": {
-    "mtime": 1792341107.7067826,
-    "seen": 1792341241.9074934,
-    "ast_hash": "cb5de2feb4a8b6356f1fdf99320a7e40",
+    "mtime": 1792383135.976875,
+    "seen": 1792383423.1645303,
+    "ast_hash": "77a587f0a38ec50935ce7a9757dcb558",
     "semantic_hash": ""
   },
   "src/ui/train-map.tsx": {
@@ -858,9 +858,9 @@
     "semantic_hash": ""
   },
   "src/ui/train-model-js.ts": {
-    "mtime": 1792341256.0082746,
-    "seen": 1792341284.4257295,
-    "ast_hash": "d0bbe85e6d7920194747c45dad99ae49",
+    "mtime": 1792383135.976875,
+    "seen": 1792383423.1648574,
+    "ast_hash": "213209bc7cf53e5226d3b03b27f07f5a",
     "semantic_hash": ""
   },
   "src/core/crash.ts": {

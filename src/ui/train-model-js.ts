@@ -39,16 +39,17 @@ function vandeBharat(){
 function trainLayer(){
   var model,camera,scene,renderer;
   return {id:'train3d',type:'custom',renderingMode:'3d',
-    onAdd:function(map,gl){camera=new THREE.Camera();scene=new THREE.Scene();model=vandeBharat();scene.add(model);
+    onAdd:function(map,gl){camera=new THREE.Camera();scene=new THREE.Scene();model=vandeBharat();model.scale.set(1,2,2);scene.add(model);
       scene.add(new THREE.AmbientLight(0xffffff,.75));var sun=new THREE.DirectionalLight(0xffffff,.9);sun.position.set(-20,40,30);scene.add(sun);
       renderer=new THREE.WebGLRenderer({canvas:map.getCanvas(),context:gl,antialias:true});renderer.autoClear=false},
     render:function(gl,matrix){var p=pos(now()),ll=[p.lon,p.lat];
       var elev=(map.queryTerrainElevation&&map.queryTerrainElevation(ll))||0;
       var mc=maplibregl.MercatorCoordinate.fromLngLat(ll,elev),u=mc.meterInMercatorCoordinateUnits();
-      // Grows with zoom like the map does: ~30 px over all of India (zoom 5) up to ~200 px close in (zoom 12+),
-      // never over half the map's width (a real 46 m train would be a dot until zoomed right in).
+      // Twice as wide and tall as life (set in onAdd) so it reads as a train at map scale.
+      // Grows with zoom like the map does: ~22 px over all of India (zoom 5) up to ~90 px close in (zoom 13),
+      // and never shorter than its real 46 m once zoomed right in. Bigger hid the stations around it.
       var z=map.getZoom(),mpp=40075016.686*Math.cos(p.lat*Math.PI/180)/(512*Math.pow(2,z));
-      var px=Math.min(30+170*Math.min(1,Math.max(0,(z-5)/7)),map.getCanvas().clientWidth*.5),k=px*mpp/46;
+      var px=22+68*Math.min(1,Math.max(0,(z-5)/8)),k=Math.max(1,px*mpp/46);
       var yaw=(90-p.b)*Math.PI/180;
       var l=new THREE.Matrix4().makeTranslation(mc.x,mc.y,mc.z).scale(new THREE.Vector3(u*k,-u*k,u*k))
         .multiply(new THREE.Matrix4().makeRotationX(Math.PI/2)).multiply(new THREE.Matrix4().makeRotationY(yaw));
