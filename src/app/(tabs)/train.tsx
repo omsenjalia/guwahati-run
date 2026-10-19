@@ -84,12 +84,13 @@ function Tracked({ leg, track, live, now, mapKey }: { leg: Leg; track: Track; li
   const [full, setFull] = useState(false);
   const icon = track.state === "yet" ? "clock-outline" : track.state === "done" ? "flag-checkered" : track.state === "at" ? "train" : "access-point";
   const tone = track.state === "between" || track.state === "at" ? c.good : c.muted;
-  const first = view === "ours" ? track.from : 0;
-  const last = view === "ours" ? track.to : track.points.length - 1;
-  const shown = track.points.slice(first, last + 1).filter((p) => nonStop || p.stop);
   const running = track.state === "between" || track.state === "at";
   // Same clock as the map's train, so the list moves with it between live updates.
   const here = Math.max(track.points.findLastIndex((p) => p.passed), running ? trainPosition(track, now).index : -1);
+  // Our journey, stretched to wherever the train is now (before we board or after we get off).
+  const first = view === "ours" ? Math.min(track.from, running ? here : track.from) : 0;
+  const last = view === "ours" ? Math.max(track.to, running ? here : track.to) : track.points.length - 1;
+  const shown = track.points.slice(first, last + 1).filter((p, i) => nonStop || p.stop || first + i === here);
   const stations = track.points.map((p) => ({ c: p.code, n: p.name, lat: p.lat, lon: p.lon, s: p.stop ? 1 : 0, a: p.arr, d: p.dep, p: p.passed ? 1 : 0 }) as const);
   const map = (
     <TrainMap
@@ -155,7 +156,7 @@ function Tracked({ leg, track, live, now, mapKey }: { leg: Leg; track: Track; li
                 last={i === shown.length - 1}
                 here={idx === here && running}
                 tag={idx === track.from ? "Board" : idx === track.to ? "Get off" : undefined}
-                dim={view === "all" && (idx < track.from || idx > track.to)}
+                dim={(idx < track.from || idx > track.to) && idx !== here}
                 now={now}
                 km={idx >= track.from ? p.km - track.points[track.from].km : undefined}
               />
@@ -239,6 +240,7 @@ function PointRow({ p, first, last, here, tag, dim, now, km }: { p: TrackPoint; 
   const lineColor = p.passed ? c.accent : c.border;
   const late = p.delayMin && p.delayMin > 0 ? p.delayMin : 0;
   const tone = toneColors(c, delayTone(late));
+  const status = late > 0 ? `delayed by ${late} min` : p.delayMin && p.delayMin < 0 ? `${-p.delayMin} min early` : "on time";
   if (!p.stop) {
     return (
       <View style={[styles.row, { minHeight: 34 }, dim && { opacity: 0.5 }]}>
@@ -337,16 +339,10 @@ function PointRow({ p, first, last, here, tag, dim, now, km }: { p: TrackPoint; 
               Halt {Math.round((p.schDep - p.schArr) / 60_000)}m
             </T>
           )}
-          {late > 0 ? (
-            <T v="caption" color={tone.fg}>
-              {p.passed ? "" : "exp. "}+{late}m
+          {(!!p.delayMin || p.actual) && (
+            <T v="caption" color={late > 0 ? tone.fg : "good"} style={{ fontFamily: font.semibold }}>
+              {!p.passed && (p.arr ?? 0) > now ? `Likely ${status}` : status[0].toUpperCase() + status.slice(1)}
             </T>
-          ) : (
-            p.actual && (
-              <T v="caption" color="good">
-                On time
-              </T>
-            )
           )}
           {!p.passed && p.arr && p.arr > now && p.arr - now < 3 * 3600_000 && (
             <T v="caption" color="muted">
