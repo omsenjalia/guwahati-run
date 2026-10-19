@@ -9,6 +9,8 @@
  *                 other ticket: every 3h in the 3 days before departure.
  *   Live status   every tick (5 min) from 3h before departure to 1h after arrival
  *   Weather       every 3h
+ *   Train runs    once a day: each train's recent runs and how late it was
+ *                 at each stop, for the "Avg delay" view (lib/delay-runs.ts)
  *   Watches       extra PNRs / waitlist routes added on the Tickets page:
  *                 every 2h, every 30 min in the last 2 days (lib/watches.ts)
  *
@@ -18,6 +20,8 @@
 import * as trip from "@/data/trip";
 import { BACKUPS, LEGS, PLACES, type Berth, type Leg, type PersonId } from "@/data/trip";
 import type { TicketChoice } from "@/lib/ticket-choice";
+import { runDelays, saveRuns } from "@/lib/delay-runs";
+import { ROUTES } from "@/data/routes";
 import { AllProvidersFailed, getLiveRunningStatus, getPnrStatus } from "@/lib/providers/index.ts";
 import type { LegLive, PassengerLive } from "@/lib/live-types";
 import { notify } from "@/lib/notify";
@@ -29,7 +33,7 @@ import { HOUR, MIN, istDateKey, ms } from "@/lib/time";
 import { parseStatus } from "@/lib/trip-engine";
 import { fetchWeatherMany } from "@/lib/weather";
 
-export type JobName = "seed" | "pnr-sync" | "live-status" | "weather" | "watchers" | "schedules" | "watches";
+export type JobName = "seed" | "pnr-sync" | "live-status" | "weather" | "watchers" | "schedules" | "watches" | "train-runs";
 type JobResult = { job: JobName; ok: boolean; message: string; source?: string; details?: unknown };
 
 const BERTH_TYPES: Record<string, Berth["type"]> = {
@@ -103,6 +107,12 @@ export async function runTick(opts: { force?: JobName[]; now?: number } = {}) {
   const { data: sch } = await db.from("app_state").select("updated_at").eq("key", "schedules").maybeSingle();
   if (force.has("schedules") || isDue(sch ? Date.parse(sch.updated_at) : undefined, 24 * HOUR, now)) {
     results.push(await logged("schedules", () => syncSchedules(loser)));
+  }
+
+  // Past runs for the delay averages (once a day)
+  const { data: tr } = await db.from("app_state").select("updated_at").eq("key", "train-runs").maybeSingle();
+  if (force.has("train-runs") || isDue(tr ? Date.parse(tr.updated_at) : undefined, 24 * HOUR, now)) {
+    results.push(await logged("train-runs", () => syncTrainRuns(now)));
   }
 
   // Weather
@@ -391,6 +401,26 @@ async function syncSchedules(loser?: string) {
   const { error } = await serverDb().from("app_state").upsert({ key: "schedules", value, updated_at: new Date().toISOString() });
   if (error) throw new Error(error.message);
   return { ok: Object.keys(value).length > 0, message: lines.join(" | "), source };
+}
+
+/* ---------------------------------------------------------- train runs */
+
+/** Saves runs that started today, yesterday and the day before (long trains are still running a day later). */
+async function syncTrainRuns(now: number) {
+  const trains = [...new Set([...LEGS, ...BACKUPS].flatMap((l) => (l.train ? [l.train.number] : [])))];
+  const dates = [0, 1, 2].map((d) => istDateKey(now - d * 24 * HOUR));
+  // Marked first: if this fails (say the table is missing) it waits a day instead of retrying every tick.
+  const { error } = await serverDb().from("app_state").upsert({ key: "train-runs", value: { at: now }, updated_at: new Date(now).toISOString() });
+  if (error) throw new Error(error.message);
+  const lines: string[] = [];
+  for (const train of trains) {
+    const origin = ROUTES[train]?.[0]?.[0];
+    if (!origin) continue;
+    const results = await Promise.allSettled(dates.map((d) => getLiveRunningStatus(train, d, origin)));
+    const runs = results.flatMap((r) => (r.status === "fulfilled" ? [runDelays(r.value.data)].filter((x) => x !== null) : []));
+    lines.push(`${train}: ${await saveRuns(train, runs)} saved`);
+  }
+  return { ok: true, message: lines.join(" | ") };
 }
 
 /* ------------------------------------------------------------- weather */
