@@ -28,6 +28,13 @@ export function trainLegs(live: LiveState): Leg[] {
   return out;
 }
 
+/** Going trains (Anand to Guwahati) until the end of 31 Oct, then only the trains home. */
+export const RETURN_FROM = ms("2026-11-01T00:00:00+05:30");
+export function tripHalf(legs: Leg[], now: number): Leg[] {
+  const half = legs.filter((l) => (ms(l.depart) < RETURN_FROM) === (now < RETURN_FROM));
+  return half.length ? half : legs;
+}
+
 const liveEnd = (l: Leg, live: LiveState) => ms(live.legs[l.id]?.expectedArrive ?? l.arrive);
 const liveStart = (l: Leg, live: LiveState) => ms(live.legs[l.id]?.expectedDepart ?? l.depart);
 
