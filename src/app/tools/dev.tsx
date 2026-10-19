@@ -1,10 +1,11 @@
 import { router } from "expo-router";
 import { useState } from "react";
-import { ScrollView, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 import type { LegId } from "@/data/trip";
 import { api } from "@/core/api";
 import { useAuth } from "@/core/auth";
 import { refresh, useFeed, useNow } from "@/core/data";
+import { setAllTrains, useAllTrains } from "@/core/dev-prefs";
 import { useLoad } from "@/core/use-load";
 import { LegChip } from "@/features/bits";
 import { firstName, trainLegs } from "@/features/trip";
@@ -12,7 +13,7 @@ import { isDeveloper } from "@/lib/auth";
 import type { LegLive } from "@/lib/live-types";
 import { BACKUP, PRIMARY, storedChoice, type TicketChoice } from "@/lib/ticket-choice";
 import { ago, stamp } from "@/lib/time";
-import { Button, Card, Chips, confirm, Empty, InfoRow, Input, LinkRow, Section } from "@/ui/kit";
+import { Button, Card, Chips, confirm, Empty, InfoRow, Input, LinkRow, Pill, Section } from "@/ui/kit";
 import { Page } from "@/ui/screen";
 import { T } from "@/ui/text";
 
@@ -44,12 +45,13 @@ export default function Dev() {
     );
   }
   return (
-    <Page title="Developer options" subtitle="Changes apply to every phone">
+    <Page title="Developer options" subtitle="Most changes apply to every phone">
       {!!error && (
         <T v="label" color="bad">
           {error}
         </T>
       )}
+      <ThisPhoneCard />
       <TicketChoiceCard onSaved={reload} />
       <LiveTestCard />
       <OverrideCard overrides={data?.overrides ?? []} onSaved={reload} />
@@ -65,6 +67,25 @@ export default function Dev() {
       </Section>
       <StateCard rows={data?.state ?? null} onSaved={reload} />
     </Page>
+  );
+}
+
+/* ---------------------------------------------------------- this phone */
+
+/** Switches for this phone only: everyone else keeps the normal view. */
+function ThisPhoneCard() {
+  const all = useAllTrains();
+  return (
+    <Section title="This phone only">
+      <Card style={{ gap: 10 }}>
+        <T v="body" color="muted">
+          Train and Ticket tabs show the trains to Guwahati until 31 Oct, then only the trains home. Turn this on to list every train.
+        </T>
+        <Pressable onPress={() => setAllTrains(!all)} accessibilityRole="switch" accessibilityState={{ checked: all }} style={{ alignSelf: "flex-start" }}>
+          <Pill label={all ? "Showing all trains" : "Show all trains"} tone={all ? "primary" : "neutral"} icon="train" />
+        </Pressable>
+      </Card>
+    </Section>
   );
 }
 
