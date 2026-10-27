@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { FOOD, FOOD_ITEMS, FOOD_SOURCE, FOOD_VEG } from "@/data/food";
+import { LEGS, TRIP_SPAN } from "@/data/trip";
 
 describe("food prices", () => {
   it("lists vegetarian dishes only", () => {
@@ -25,5 +26,20 @@ describe("food prices", () => {
   it("points at the official IRCTC tariff", () => {
     expect(FOOD_SOURCE.url).toMatch(/^https:\/\/menurates\.irctc\.co\.in/);
     expect(FOOD_SOURCE.pdf).toMatch(/^https:\/\/menurates\.irctc\.co\.in\/.*\.pdf$/);
+  });
+});
+
+describe("trip window", () => {
+  it("runs from the first departure to the last arrival, off the legs", () => {
+    const departs = LEGS.map((l) => new Date(l.depart).getTime());
+    const arrives = LEGS.map((l) => new Date(l.arrive).getTime());
+    expect(new Date(TRIP_SPAN.start).getTime()).toBe(Math.min(...departs));
+    expect(new Date(TRIP_SPAN.end).getTime()).toBe(Math.max(...arrives));
+    // Food tab is shown inside this window only, so it must cover every train,
+    // including the 3 Nov return leg that runs past the hackathon's end.
+    for (const l of LEGS) {
+      expect(new Date(l.depart).getTime()).toBeGreaterThanOrEqual(new Date(TRIP_SPAN.start).getTime());
+      expect(new Date(l.arrive).getTime()).toBeLessThanOrEqual(new Date(TRIP_SPAN.end).getTime());
+    }
   });
 });
