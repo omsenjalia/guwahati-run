@@ -19,7 +19,7 @@ export type Person = {
   /** Fill in: +91 number, used for SOS and the team screen. */
   phone: string;
   guardian: { name: string; relation: string; phone: string };
-  /** e.g. "Tatkal booker", "Chart checker", "Navigator". */
+  /** e.g. "Ticket booker", "Chart checker", "Navigator". */
   role: string;
   /** Spelling differences between real name and a ticket, keyed by leg id. */
   ticketNameNotes?: Partial<Record<LegId, string>>;
@@ -131,7 +131,7 @@ export type TransferOption = {
   walkMin: number;
 };
 
-export type DeadlineId = "aa-tatkal" | "aa-chart" | "bp-late" | "gr-chart";
+export type DeadlineId = "aa-chart" | "bp-late" | "gr-chart";
 
 export type Deadline = {
   id: DeadlineId;
@@ -167,7 +167,7 @@ export const TEAM: Person[] = [
     gender: "M",
     phone: "",
     guardian: { name: "", relation: "", phone: "" },
-    role: "Tatkal booker",
+    role: "Ticket booker",
     ticketNameNotes: {
       L2: "Spelled SENJALIYA on this ticket. Carry an original photo ID.",
     },
@@ -204,8 +204,8 @@ export const TEAM: Person[] = [
   },
 ];
 
-/** Has an Aadhaar-verified IRCTC account. Books Avadh Assam Tatkal on 28 Oct if needed. */
-export const TATKAL_BOOKER: PersonId = "oms";
+/** Has an Aadhaar-verified IRCTC account. Books and cancels our tickets. */
+export const BOOKING_OWNER: PersonId = "oms";
 
 /* -------------------------------------------------------------- places */
 // Coordinates are station entrances (approx.) used for weather, maps and cab links.
@@ -370,12 +370,13 @@ export const LEGS: Leg[] = [
     travelClass: "3A",
     pnr: "2960910157",
     bookedStatus: "GNWL 55-58",
-    // Ticket order. Last known status (11 Oct); the tracker replaces it live.
+    // Ticket order. Booked waitlisted, now RAC for all four (no berth numbers
+    // until the chart); the tracker replaces both with live data.
     passengers: [
-      { person: "heet", booked: "GNWL 55", current: "GNWL 16" },
-      { person: "omk", booked: "GNWL 57", current: "GNWL 18" },
-      { person: "sujal", booked: "GNWL 58", current: "GNWL 19" },
-      { person: "oms", booked: "GNWL 56", current: "GNWL 17" },
+      { person: "heet", booked: "GNWL 55", current: "RAC" },
+      { person: "omk", booked: "GNWL 57", current: "RAC" },
+      { person: "sujal", booked: "GNWL 58", current: "RAC" },
+      { person: "oms", booked: "GNWL 56", current: "RAC" },
     ],
     fareTotal: 9095.4,
     tracked: true,
@@ -481,7 +482,7 @@ export const CONNECTIONS: Connection[] = [
     plannedBufferMin: 152,
     note: "Same station: Delhi Jn 04:50, 15910 leaves Delhi Jn 07:22.",
     planB: {
-      text: "You are already at Delhi Jn. If 15910 is missed, book the next Delhi to Guwahati train on IRCTC (AC Tatkal for tomorrow opens 10:00).",
+      text: "You are already at Delhi Jn. If 15910 is missed, book the next Delhi to Guwahati train on IRCTC.",
       owner: "oms",
       link: { label: "Open IRCTC", href: "https://www.irctc.co.in/nget/train-search" },
     },
@@ -495,7 +496,7 @@ export const CONNECTIONS: Connection[] = [
     plannedBufferMin: 245,
     note: "Delhi Jn 04:50 to Sarai Rohilla 08:55. Brahmaputra is often late.",
     planB: {
-      text: "Tatkal 12918 Gujarat Sampark Kranti (Nizamuddin 13:25 to Anand 01:58) and cancel the Garib Rath before its chart.",
+      text: "Book 12918 Gujarat Sampark Kranti (Nizamuddin 13:25 to Anand 01:58) and cancel the Garib Rath before its chart.",
       owner: "oms",
       link: { label: "Open IRCTC", href: "https://www.irctc.co.in/nget/train-search" },
     },
@@ -565,24 +566,12 @@ export const ALTERNATE_TRAINS = {
 
 export const DEADLINES: Deadline[] = [
   {
-    id: "aa-tatkal",
-    at: "2026-10-28T10:00:00+05:30",
-    title: "Avadh Assam Tatkal decision (only if still WL)",
-    condition: "Confirmation chance is under about 70% or GNWL is still above about 15-20.",
-    action:
-      "Book Tatkal 3A for all 4 for 29 Oct, Delhi Jn to Kamakhya. We'll be in Ahmedabad that morning (Yoga leaves 11:25), so book from there.",
-    leg: "L2",
-    owner: "oms",
-    link: { label: "Open IRCTC", href: IRCTC_BOOK_URL },
-  },
-  {
     id: "aa-chart",
     // 10 hours before 15910 leaves Pili Bangan (22:50 on 28 Oct), where the chart is made.
     at: "2026-10-28T12:50:00+05:30",
     title: "Chart for 15910 Avadh Assam Exp",
-    condition: "All 4 still waitlisted after charting.",
-    action:
-      "The ticket auto-cancels and refunds. Use the Tatkal ticket, or pick another Delhi to Guwahati option for 29 Oct. If even 1 of us is confirmed or RAC, all 4 can board.",
+    condition: "The chart is out: our coach and berths are final.",
+    action: "Open the Ticket tab and note the coach and berth. Nothing else to do.",
     leg: "L2",
     owner: "oms",
   },
@@ -592,7 +581,7 @@ export const DEADLINES: Deadline[] = [
     title: "Decide: is 15658 Brahmaputra 3h+ late?",
     condition: "Live running status shows 3 hours or more delay.",
     action:
-      "Tatkal 12918 Gujarat Sampark Kranti (Nizamuddin 13:25 to Anand 01:58) and cancel the Garib Rath before its chart.",
+      "Book 12918 Gujarat Sampark Kranti (Nizamuddin 13:25 to Anand 01:58) and cancel the Garib Rath before its chart.",
     leg: "L3",
     owner: "oms",
     link: { label: "Open IRCTC", href: IRCTC_BOOK_URL },

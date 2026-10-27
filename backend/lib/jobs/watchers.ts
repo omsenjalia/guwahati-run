@@ -11,7 +11,7 @@
  *   briefing      07:00 IST daily summary during the trip
  *   settle        Splitwise reminder after the trip
  */
-import { CONNECTIONS, DEADLINES, EVENT, LEGS, PLACES, REST_PLAN, TATKAL_BOOKER, TEAM } from "@/data/trip";
+import { CONNECTIONS, DEADLINES, EVENT, LEGS, PLACES, REST_PLAN, BOOKING_OWNER, TEAM } from "@/data/trip";
 import type { LegLive, LiveState } from "@/lib/live-types";
 import { notify, type Alert } from "@/lib/notify";
 import { serverDb } from "@/lib/supabase/server";
@@ -82,7 +82,7 @@ export async function runWatchers(legs: Map<string, LegLive>, now: number) {
   for (const d of DEADLINES) {
     const v = verdicts[d.id];
     const at = ms(d.at);
-    const owner = `${name(d.owner)}${d.owner === TATKAL_BOOKER && d.link ? " (Tatkal booker)" : ""}`;
+    const owner = `${name(d.owner)}${d.owner === BOOKING_OWNER && d.link ? " (ticket booker)" : ""}`;
     if (v.status === "action" && prev.deadlines?.[d.id]?.status !== "action") {
       once(`deadline-action-${d.id}`, {
         kind: "deadline",

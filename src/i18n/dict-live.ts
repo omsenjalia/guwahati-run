@@ -39,7 +39,6 @@ Still waitlisted after the chart|चार्ट के बाद भी वे�
 All confirmed|सब कन्फ़र्म|બધા કન્ફર્મ
 Unreserved|अनारक्षित|અનારક્ષિત
 Chart is late. Still checking every 15 minutes.|चार्ट लेट है। हर 15 मिनट में जाँच जारी।|ચાર્ટ મોડો છે. દર 15 મિનિટે તપાસ ચાલુ.
-Tatkal window has passed.|तत्काल की खिड़की बीत गई।|તત્કાલની તક પૂરી થઈ ગઈ.
 Brahmaputra has arrived.|ब्रह्मपुत्र पहुँच गई।|બ્રહ્મપુત્ર પહોંચી ગઈ.
 Garib Rath chart time has passed.|गरीब रथ का चार्ट समय बीत गया।|ગરીબ રથનો ચાર્ટ સમય પૂરો થયો.
 No action unless we switch to 12918.|जब तक 12918 पर न जाएँ, कुछ नहीं करना।|જ્યાં સુધી 12918 પર ન જઈએ, કંઈ કરવાનું નથી.
@@ -50,11 +49,9 @@ Hackathon is live. Build, rest in turns, ship.|हैकाथॉन शुर�
 Free time in Guwahati starts after the finals.|गुवाहाटी में खाली समय फ़ाइनल के बाद शुरू होता है।|ગુવાહાટીમાં ફ્રી ટાઇમ ફાઇનલ પછી શરૂ થાય છે.
 Trip complete. Settle up in Splitwise|ट्रिप पूरी। Splitwise में हिसाब करें|ટ્રિપ પૂરી. Splitwiseમાં હિસાબ કરો
 # Deadlines and alerts
-Tatkal window has passed.|तत्काल की खिड़की बीत गई।|તત્કાલની તક પૂરી થઈ ગઈ.
 Checked automatically on 2 Nov from 04:00.|2 नवंबर से 04:00 बजे अपने आप जाँच।|2 નવેમ્બરથી 04:00 વાગ્યે આપોઆપ તપાસ.
 Waiting for live running data.|लाइव रनिंग डेटा का इंतज़ार।|લાઇવ રનિંગ ડેટાની રાહ.
 Overdue, was due|समय बीत गया, था|સમય પૂરો, હતું
-All 4 still waitlisted after the chart: the ticket auto-cancels and refunds. Book a Tatkal ticket, or pick one of the Plan B alternatives.|चार्ट के बाद भी चारों वेटलिस्ट: टिकट अपने आप रद्द होकर पैसे लौट जाते हैं। तत्काल टिकट बुक करें या प्लान बी का विकल्प चुनें।|ચાર્ટ પછી પણ ચારેય વેઇટલિસ્ટ: ટિકિટ આપોઆપ રદ થઈને પૈસા પાછા આવે છે. તત્કાલ ટિકિટ બુક કરો અથવા પ્લાન બીનો વિકલ્પ પસંદ કરો.
 # Long explanatory copy
 Bills the team adds show up here.|टीम जो बिल जोड़ती है वे यहाँ दिखते हैं।|ટીમ જે બિલ ઉમેરે તે અહીં દેખાય.
 Built an app to run the trip too.|ट्रिप चलाने के लिए ऐप भी बनाया।|ટ્રિપ ચલાવવા એપ પણ બનાવી.
@@ -98,7 +95,6 @@ Guwahati Run|गुवाहाटी रन|ગુવાહાટી રન
 leave IIT by|IIT से निकलें|IIT થી નીકળો
 rest at IITG|IITG में आराम|IITGમાં આરામ
 Chart checker|चार्ट चेकर|ચાર્ટ ચેકર
-Tatkal booker|तत्काल बुकर|તત્કાલ બુકર
 Chart prepared|चार्ट बन गया|ચાર્ટ થઈ ગયો
 sharing location|लोकेशन शेयर हो रही है|લોકેશન શેર થઈ રહ્યું છે
 Live train status|लाइव ट्रेन स्टेटस|લાઇવ ટ્રેન સ્ટેટસ
@@ -205,4 +201,6 @@ Last check failed: {0}|आख़िरी जाँच नहीं हुई: {
 · coach {0} from the engine|· इंजन से {0} कोच|· એન્જિનથી {0} કોચ
 {0} of {1}|{1} में से {0}|{1} માંથી {0}
 Anand to IIT Guwahati and back · {0} to {1}|आनंद से IIT गुवाहाटी और वापस · {0} से {1}|આનંદ થી IIT ગુવાહાટી અને પાછા · {0} થી {1}
+A fully waitlisted e-ticket is cancelled and refunded automatically. Pick another train from Plan B.|पूरी तरह वेटलिस्ट ई-टिकट अपने आप रद्द होकर पैसे लौट जाते हैं। प्लान बी से दूसरी ट्रेन चुनें।|સંપૂર્ણ વેઇટલિસ્ટ ઈ-ટિકિટ આપોઆપ રદ થઈને પૈસા પાછા આવે છે. પ્લાન બીમાંથી બીજી ટ્રેન પસંદ કરો.
+Still waitlisted after the chart: the ticket auto-cancels and refunds. Pick another train from Plan B.|चार्ट के बाद भी वेटलिस्ट: टिकट अपने आप रद्द होकर पैसे लौट जाते हैं। प्लान बी से दूसरी ट्रेन चुनें।|ચાર્ટ પછી પણ વેઇટલિસ્ટ: ટિકિટ આપોઆપ રદ થઈને પૈસા પાછા આવે છે. પ્લાન બીમાંથી બીજી ટ્રેન પસંદ કરો.
 `;

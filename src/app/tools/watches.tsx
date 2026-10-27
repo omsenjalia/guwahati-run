@@ -22,7 +22,7 @@ async function call(method: "POST" | "PATCH" | "DELETE", body: unknown) {
   return r;
 }
 
-/** Extra PNRs (friends, Tatkal) and a train's waitlist between two stations without a ticket, checked in the background with alerts. */
+/** Extra PNRs (friends, other bookings) and a train's waitlist between two stations without a ticket, checked in the background with alerts. */
 export default function Watches() {
   const live = useFeed().live;
   const [mode, setMode] = useState<"pnr" | "route" | null>(null);

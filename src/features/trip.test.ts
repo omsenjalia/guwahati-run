@@ -3,6 +3,7 @@ import { LEGS } from "@/data/trip";
 import { EMPTY_LIVE } from "@/lib/live-types";
 import { effectiveLocations, FRESH_MS } from "@/lib/locations";
 import { ms } from "@/lib/time";
+import { parseStatus } from "@/lib/trip-engine";
 import { coachKind, coachList, focusLeg, isSeated, myStatus, stopsFor, trainLegs } from "./trip";
 
 describe("coach position", () => {
@@ -21,10 +22,15 @@ describe("coach position", () => {
 
 describe("tickets", () => {
   it("shows PNR mode for waitlisted, coach mode once RAC or confirmed", () => {
+    expect(isSeated(parseStatus("GNWL 17").kind)).toBe(false);
+    expect(isSeated(parseStatus("RAC").kind)).toBe(true);
+    expect(isSeated(parseStatus("RAC 12").kind)).toBe(true);
+    // Every ticket in the data is confirmed or RAC, so the coach mode is on.
     const ne = LEGS.find((l) => l.id === "L2")!;
-    expect(isSeated(myStatus(ne, EMPTY_LIVE, "oms").kind)).toBe(false);
-    const live = { ...EMPTY_LIVE, legs: { L2: { legId: "L2" as const, passengers: [{ person: "oms" as const, booked: "GNWL 83", current: "RAC 12" }] } } };
-    expect(myStatus(ne, live, "oms").kind).toBe("RAC");
+    expect(myStatus(ne, EMPTY_LIVE, "oms").kind).toBe("RAC");
+    expect(isSeated(myStatus(ne, EMPTY_LIVE, "oms").kind)).toBe(true);
+    const live = { ...EMPTY_LIVE, legs: { L2: { legId: "L2" as const, passengers: [{ person: "oms" as const, booked: "GNWL 83", current: "B2 34" }] } } };
+    expect(myStatus(ne, live, "oms").kind).toBe("CNF");
     expect(isSeated(myStatus(ne, live, "oms").kind)).toBe(true);
   });
   it("lists our train tickets in trip order", () => {
