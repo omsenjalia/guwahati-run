@@ -12,6 +12,7 @@ import { useEffect } from "react";
 import { AppState, Pressable, ScrollView, Text, useColorScheme } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { loadSession, useAuth } from "@/core/auth";
+import { LangProvider, activeLang, tr } from "@/i18n";
 import { useFeedSync } from "@/core/data";
 import { checkAlerts, startAlerts } from "@/features/alerts";
 import { useTheme } from "@/ui/theme";
@@ -34,7 +35,8 @@ export default function RootLayout() {
   if (!ready || !fontsLoaded) return null;
   const base = scheme === "dark" ? DarkTheme : DefaultTheme;
   return (
-    <SafeAreaProvider>
+    <LangProvider>
+      <SafeAreaProvider>
       <ThemeProvider value={{ ...base, colors: { ...base.colors, background: c.bg, card: c.surface, text: c.text, primary: c.primary, border: c.border } }}>
         <StatusBar style={scheme === "dark" ? "light" : "dark"} />
         {session && <FeedSync />}
@@ -51,8 +53,9 @@ export default function RootLayout() {
             </Stack.Protected>
           </Stack.Protected>
         </Stack>
-      </ThemeProvider>
-    </SafeAreaProvider>
+        </ThemeProvider>
+      </SafeAreaProvider>
+    </LangProvider>
   );
 }
 
@@ -62,19 +65,20 @@ export default function RootLayout() {
  */
 export function ErrorBoundary({ error, retry }: { error: Error; retry: () => Promise<void> }) {
   const c = useTheme();
+  const lang = activeLang();
   // The splash screen may still be covering the app.
   useEffect(() => {
     void SplashScreen.hideAsync().catch(() => {});
   }, []);
   return (
     <ScrollView style={{ flex: 1, backgroundColor: c.bg }} contentContainerStyle={{ padding: 24, paddingTop: 72, gap: 16 }}>
-      <Text style={{ color: c.text, fontSize: 22, fontWeight: "700" }}>Something went wrong</Text>
-      <Text style={{ color: c.muted, fontSize: 15 }}>Send a screenshot of this to Om.</Text>
+      <Text style={{ color: c.text, fontSize: 22, fontWeight: "700" }}>{tr("Something went wrong", lang)}</Text>
+      <Text style={{ color: c.muted, fontSize: 15 }}>{tr("Send a screenshot of this to Om.", lang)}</Text>
       <Text selectable style={{ color: c.bad, fontSize: 13, fontFamily: "monospace" }}>
         {describeError(error)}
       </Text>
       <Pressable onPress={() => void retry()} style={{ backgroundColor: c.primary, borderRadius: 12, padding: 14, alignItems: "center" }}>
-        <Text style={{ color: c.onPrimary, fontSize: 16, fontWeight: "600" }}>Try again</Text>
+        <Text style={{ color: c.onPrimary, fontSize: 16, fontWeight: "600" }}>{tr("Try again", lang)}</Text>
       </Pressable>
     </ScrollView>
   );

@@ -2,6 +2,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import type { ComponentProps, ReactNode } from "react";
 import { ActivityIndicator, Alert, Platform, Pressable, StyleSheet, TextInput, View, type StyleProp, type TextInputProps, type ViewStyle } from "react-native";
+import { activeLang, tr } from "@/i18n";
 import { T } from "./text";
 import { font, radius, toneColors, useTheme, type Tone } from "./theme";
 
@@ -194,6 +195,7 @@ export function Input({ label, mono, style, ...rest }: TextInputProps & { label?
         placeholderTextColor={c.faint}
         accessibilityLabel={label}
         {...rest}
+        placeholder={rest.placeholder ? tr(rest.placeholder, activeLang()) : undefined}
         style={[
           styles.input,
           { backgroundColor: c.surface, borderColor: c.border, color: c.text },
@@ -297,11 +299,14 @@ export function LinkRow({ icon, label, sub, onPress, tone }: { icon: IconName; l
 
 /** Yes/no question; resolves true on yes (window.confirm on the web build). */
 export function confirm(title: string, message: string, yes = "OK"): Promise<boolean> {
-  if (Platform.OS === "web") return Promise.resolve(window.confirm(`${title}\n\n${message}`));
+  const lang = activeLang();
+  const t = tr(title, lang);
+  const m = tr(message, lang);
+  if (Platform.OS === "web") return Promise.resolve(window.confirm(`${t}\n\n${m}`));
   return new Promise((resolve) =>
-    Alert.alert(title, message, [
-      { text: "Cancel", style: "cancel", onPress: () => resolve(false) },
-      { text: yes, style: "destructive", onPress: () => resolve(true) },
+    Alert.alert(t, m, [
+      { text: tr("Cancel", lang), style: "cancel", onPress: () => resolve(false) },
+      { text: tr(yes, lang), style: "destructive", onPress: () => resolve(true) },
     ]),
   );
 }

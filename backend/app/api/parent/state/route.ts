@@ -17,7 +17,7 @@ export async function GET(request: Request) {
   const [legs, overrides, states, locs, checkins, expenses, watches] = await Promise.all([
     db.from("leg_live").select("leg_id, data"),
     db.from("overrides").select("leg_id, data"),
-    db.from("app_state").select("key, value").in("key", ["weather", "schedules", "heartbeat", "ticket-choice"]),
+    db.from("app_state").select("key, value").in("key", ["weather", "schedules", "heartbeat"]),
     db.from("locations").select("person, lat, lon, accuracy, updated_at"),
     db.from("checkins").select("person, place, lat, lon, created_at").order("created_at", { ascending: false }).limit(40),
     db.from("expenses").select("id, title, amount, category, spent_on, note, created_by, created_at"),

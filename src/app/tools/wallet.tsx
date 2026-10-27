@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Modal, ScrollView, View } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { PLACES, TEAM, type Leg } from "@/data/trip";
+import { legIdAliases, PLACES, TEAM, type Leg } from "@/data/trip";
 import { useFeed, useNow } from "@/core/data";
 import { openDoc, useDocs } from "@/features/docs";
 import { trainLegs } from "@/features/trip";
@@ -29,12 +29,12 @@ export default function Wallet() {
   const { rows: docs } = useDocs();
   const [tte, setTte] = useState<Leg | null>(null);
   const [error, setError] = useState("");
-  const tickets = trainLegs(live).filter((l) => l.pnr);
+  const tickets = trainLegs().filter((l) => l.pnr);
 
   return (
     <Page title="Ticket wallet" subtitle="Works offline">
       {tickets.map((leg) => {
-        const pdf = docs?.find((d) => d.kind === "ticket" && d.leg_id === leg.id);
+        const pdf = docs?.find((d) => d.kind === "ticket" && d.leg_id && legIdAliases(leg.id).includes(d.leg_id));
         const ok = canBoard(leg, live);
         return (
           <Card key={leg.id} style={[{ gap: 10 }, ms(leg.arrive) < now && { opacity: 0.55 }]}>
@@ -42,7 +42,6 @@ export default function Wallet() {
               <View style={{ flex: 1 }}>
                 <T v="caption" color="muted" num>
                   {leg.train?.number} · {leg.travelClass}
-                  {leg.backupFor ? " · Backup" : ""}
                 </T>
                 <T v="heading">{leg.train?.name}</T>
               </View>

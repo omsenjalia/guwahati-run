@@ -32,7 +32,7 @@ function paperHtml(live: LiveState, now: number) {
       const l = leg ? live.legs[leg.id] : undefined;
       return `<tr><td>${stamp(s.start)}<br><span class="m">to ${hhmm(s.end)}</span></td>
 <td><b>${esc(s.title)}</b>${leg?.travelClass ? ` (${leg.travelClass})` : ""}${leg?.modeHint ? `<div class="m">${esc(leg.modeHint)}</div>` : ""}</td>
-<td>${leg ? `${esc(PLACES[leg.from].name)} to ${esc(PLACES[leg.to].name)}` : s.place ? esc(PLACES[s.place].name) : ""}${l?.platform ? `<div class="m">Platform ${esc(l.platform)}</div>` : ""}</td>
+<td>${leg ? esc(leg.title ?? `${PLACES[leg.from].name} to ${PLACES[leg.to].name}`) : s.place ? esc(PLACES[s.place].name) : ""}${l?.platform ? `<div class="m">Platform ${esc(l.platform)}</div>` : ""}</td>
 <td>${leg?.pnr ?? ""}${leg?.pnr ? `<div>${esc(statusOf(leg, live))}</div>` : ""}</td></tr>`;
     })
     .join("");

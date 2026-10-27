@@ -3,7 +3,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { Modal, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { BACKUPS, LEGS, PLACES, type Leg } from "@/data/trip";
+import { LEGS, PLACES, type Leg } from "@/data/trip";
 import { api } from "@/core/api";
 import { useAuth } from "@/core/auth";
 import { clockOffset, useFeed, useNow } from "@/core/data";
@@ -36,9 +36,9 @@ export default function TrainScreen() {
   const live = feed.live;
   const now = useNow(5_000);
   const allTrains = useAllTrains() && isDeveloper(session);
-  const legs = allTrains ? trainLegs(live) : tripHalf(trainLegs(live), now);
+  const legs = allTrains ? trainLegs() : tripHalf(trainLegs(), now);
   const [picked, setPicked] = useState<string | null>(null);
-  const testLeg = test ? [...LEGS, ...BACKUPS].find((l) => l.id === test) : undefined;
+  const testLeg = test ? LEGS.find((l) => l.id === test) : undefined;
   const leg = testLeg ?? legs.find((l) => l.id === picked) ?? focusLeg(legs, live, now);
   const run = useLoad(async () => (testLeg ? api<TestRun>(`/api/dev/live-test?leg=${testLeg.id}`) : null), testLeg?.id ?? "");
   const l = testLeg ? run.data?.live : live.legs[leg.id];
@@ -124,7 +124,6 @@ function Tracked({ leg, track, live, now, mapKey }: { leg: Leg; track: Track; li
             ? `Live running status${live?.stale ? " (last known: sources are down)" : ""}.`
             : `Timetable. Live tracking starts 3 hours before departure (${hhmm(ms(leg.depart) - 3 * 3600_000)} on ${dayMonth(leg.depart)}).`}
         </T>
-        {leg.backupFor && <Pill label="Backup ticket: used only if the North East Express doesn't clear" tone="warn" icon="lifebuoy" />}
       </Card>
 
       <View style={[styles.mapBox, { backgroundColor: c.surface2, borderColor: c.border }]}>

@@ -42,17 +42,10 @@ export const STATION_GUIDES: StationGuide[] = [
   {
     id: "DLI",
     exit: "Main exit on the Chandni Chowk side (platform 1).",
-    transport: "Chandni Chowk metro (Yellow Line) is right across the road from the main exit. Change at Rajiv Chowk to the Blue Line for Anand Vihar.",
-    food: "Stalls on platform 1. Chandni Chowk food lanes open late morning, not at 05:00.",
+    transport: "15910 Avadh Assam leaves from platform 16 at 07:22: no change of station after the Yoga Express arrives at 04:50.",
+    food: "Stalls on platform 1 open early. Chandni Chowk food lanes open late morning, not at 05:00.",
     facilities: "Cloakroom and waiting rooms near platform 1. Washrooms at the main concourse.",
-    tip: "Arriving at 04:50: wait inside the station until the first metro rather than outside.",
-  },
-  {
-    id: "ANVT",
-    exit: "Follow signs to the foot overbridge for the metro and ISBT.",
-    transport: "Anand Vihar metro (Blue and Pink Lines) connects by foot overbridge.",
-    food: "Food court and stalls inside the terminal. Buy breakfast and water before the 07:40 train.",
-    facilities: "AC waiting hall and cloakroom in the terminal building.",
+    tip: "Arriving at 04:50: wait inside the station, have breakfast, and be on platform 16 by 06:50.",
   },
   {
     id: "KYQ",

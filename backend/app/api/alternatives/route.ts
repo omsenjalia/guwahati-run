@@ -1,8 +1,8 @@
-import { NE_ALTERNATIVES } from "@/data/trip";
+import { ALTERNATE_TRAINS } from "@/data/trip";
 import { getAvailability, getLiveRunningStatus } from "@/lib/providers/index.ts";
 
 /**
- * Plan B for 12506: live seats and times on the other Delhi to Guwahati
+ * Plan B for 15910: live seats and times on the other Delhi to Guwahati
  * trains for 29 Oct. Team-only (proxy.ts). Each train is fetched
  * independently, so one failure doesn't hide the rest.
  */
@@ -21,14 +21,14 @@ export type Alternative = {
 const dmy = (ymd: string) => ymd.split("-").reverse().join("-");
 
 export async function GET() {
-  const date = NE_ALTERNATIVES.date;
+  const date = ALTERNATE_TRAINS.date;
   const list = await Promise.all(
-    NE_ALTERNATIVES.trains.map(async (t): Promise<Alternative> => {
+    ALTERNATE_TRAINS.trains.map(async (t): Promise<Alternative> => {
       const base = { number: t.number, name: t.name, from: t.fromName, to: t.toName, classes: [] };
       try {
         const [times, ...avail] = await Promise.allSettled([
           getLiveRunningStatus(t.number, date, t.from),
-          ...NE_ALTERNATIVES.classes.map((c) =>
+          ...ALTERNATE_TRAINS.classes.map((c) =>
             getAvailability({ trainNo: t.number, from: t.from, to: t.to, date: dmy(date), travelClass: c, quota: "GN" }),
           ),
         ]);
