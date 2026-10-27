@@ -6,7 +6,7 @@ import * as trip from "@/data/trip";
  * differs, the app fetches /api/trip and patches the built-in lists and
  * objects in place, so every screen (and helper holding a reference to a
  * leg) sees the new plan without an app update.
- * shortcut: plain string/number exports (TATKAL_BOOKER, the IRCTC links) can't be patched; changing those needs a new APK.
+ * shortcut: plain string/number exports (BOOKING_OWNER, the IRCTC links) can't be patched; changing those needs a new APK.
  */
 
 type Obj = Record<string, unknown>;

@@ -71,6 +71,8 @@ export function parseStatus(raw: string | undefined): ParsedStatus {
   if (s.startsWith("CNF")) return { kind: "CNF", label: "CNF" };
   const rac = s.match(/RAC\s*(\d+)/);
   if (rac) return { kind: "RAC", label: `RAC ${rac[1]}`, number: +rac[1] };
+  // "RAC" on its own: allotted a place but no number/berth until the chart is out.
+  if (s === "RAC") return { kind: "RAC", label: "RAC" };
   const wl = s.match(/(PQWL|RLWL|GNWL|TQWL|RSWL|WL)\s*(\d+)/);
   if (wl) return { kind: "WL", label: `${wl[1]} ${wl[2]}`, number: +wl[2] };
   return { kind: "UNKNOWN", label: raw ?? "" };
@@ -121,7 +123,7 @@ export function legSituation(leg: Leg, live: LiveState): Situation {
   if (!pax.length) return { kind: "unreserved", health: "green", title: "Unreserved", advice: "" };
   const kinds = pax.map((p) => parseStatus(p.current).kind);
   const charted = live.legs[leg.id]?.chartPrepared ?? false;
-  const chartAt = `${dayMonth(chartTime(leg.depart))} ${hhmm(chartTime(leg.depart))}`;
+  const chartAt = `${dayMonth(chartTimeFor(leg))} ${hhmm(chartTimeFor(leg))}`;
   const n = (k: string) => kinds.filter((x) => x === k).length;
   const chances = pax.map((p) => p.confirmChance).filter((c): c is number => c !== undefined);
   const odds = chances.length
@@ -138,7 +140,7 @@ export function legSituation(leg: Leg, live: LiveState): Situation {
           kind: "waitlisted",
           health: "red",
           title: "Still waitlisted after the chart",
-          advice: "A fully waitlisted e-ticket is cancelled and refunded automatically. Use the Tatkal ticket or one of the alternatives in Plan B.",
+          advice: "A fully waitlisted e-ticket is cancelled and refunded automatically. Pick another train from Plan B.",
         }
       : {
           kind: "waitlisted",
@@ -173,9 +175,12 @@ export const worst = (hs: Health[]): Health =>
 /* --------------------------------------------------------------- chart */
 
 /**
- * Indian Railways first-chart rule (from July 2025): trains leaving between
- * 05:01 and 14:00 are charted at 21:00 the previous day; all others about
- * 8 hours before departure. Live data overrides this when available.
+ * Indian Railways first-chart rule (Railway Board revision of December 2025,
+ * which replaced the July 2025 rule of 21:00 and 8 hours): trains leaving
+ * between 05:01 and 14:00 are charted by 20:00 the previous day; all others
+ * at least 10 hours before departure. The chart is prepared at the train's
+ * origin station, so a leg booked from further along the route should pass
+ * that departure (Leg.chartDepart). Live data overrides this when available.
  */
 export function chartTime(departIso: string) {
   const d = ms(departIso);
@@ -187,12 +192,15 @@ export function chartTime(departIso: string) {
   );
   const minutes = istHour * 60 + istMinute;
   if (minutes > 5 * 60 && minutes <= 14 * 60) {
-    // 21:00 IST on the previous day.
+    // 20:00 IST on the previous day.
     const midnight = d - minutes * MIN;
-    return midnight - 3 * HOUR;
+    return midnight - 4 * HOUR;
   }
-  return d - 8 * HOUR;
+  return d - 10 * HOUR;
 }
+
+/** The chart time for one of our legs, from the departure the chart is made at. */
+export const chartTimeFor = (leg: Leg) => chartTime(leg.chartDepart ?? leg.depart);
 
 /* --------------------------------------------------------------- steps */
 
@@ -217,7 +225,7 @@ function legTimes(leg: Leg, live: LiveState, prevArrive?: number) {
 const legTitle = (leg: Leg) =>
   leg.train
     ? `${leg.train.number} ${leg.train.name}`
-    : `${PLACES[leg.from].short} to ${PLACES[leg.to].short}`;
+    : (leg.title ?? `${PLACES[leg.from].short} to ${PLACES[leg.to].short}`);
 
 /** Every step of the trip, sorted, with live-adjusted times. */
 export function buildSteps(live: LiveState): Step[] {
@@ -431,7 +439,8 @@ export type ConnectionState = {
 };
 
 /** Transfer time assumed between arrival and the next departure, minutes. */
-const TRANSFER_MIN: Record<string, number> = { L1b: 60, L3b: 30 };
+// L1b is a wait at the same station, so it takes no transfer time.
+const TRANSFER_MIN: Record<string, number> = { L1b: 0, L3b: 30 };
 
 export function connectionStates(live: LiveState): ConnectionState[] {
   const steps = buildSteps(live);

@@ -22,7 +22,7 @@ async function call(method: "POST" | "PATCH" | "DELETE", body: unknown) {
   return r;
 }
 
-/** Extra PNRs (friends, Tatkal) and a train's waitlist between two stations without a ticket, checked in the background with alerts. */
+/** Extra PNRs (friends, other bookings) and a train's waitlist between two stations without a ticket, checked in the background with alerts. */
 export default function Watches() {
   const live = useFeed().live;
   const [mode, setMode] = useState<"pnr" | "route" | null>(null);
@@ -156,10 +156,10 @@ function WatchForm({ mode, onClose }: { mode: "pnr" | "route"; onClose: () => vo
           <Input label="PNR number" value={pnr} onChangeText={setPnr} keyboardType="number-pad" maxLength={12} placeholder="10 digits" />
         ) : (
           <>
-            <Input label="Train number" value={trainNo} onChangeText={setTrainNo} keyboardType="number-pad" maxLength={5} placeholder="e.g. 12506" />
+            <Input label="Train number" value={trainNo} onChangeText={setTrainNo} keyboardType="number-pad" maxLength={5} placeholder="e.g. 15910" />
             <View style={{ flexDirection: "row", gap: 10 }}>
               <View style={{ flex: 1 }}>
-                <Input label="From station" value={from} onChangeText={(v) => setFrom(v.toUpperCase())} autoCapitalize="characters" placeholder="e.g. ANVT" />
+                <Input label="From station" value={from} onChangeText={(v) => setFrom(v.toUpperCase())} autoCapitalize="characters" placeholder="e.g. DLI" />
               </View>
               <View style={{ flex: 1 }}>
                 <Input label="To station" value={to} onChangeText={(v) => setTo(v.toUpperCase())} autoCapitalize="characters" placeholder="e.g. KYQ" />

@@ -1,4 +1,4 @@
-import { LEGS } from "@/data/trip";
+import { LEGS, legIdAliases } from "@/data/trip";
 import type { DocRow } from "@/lib/documents";
 import type { Expense } from "@/lib/expenses";
 
@@ -12,7 +12,7 @@ export type ClaimDoc = { id: string; label: string; have: boolean; detail: strin
 export function claimDocuments(docs: DocRow[], expenses: Expense[]): ClaimDoc[] {
   const named = (re: RegExp) => docs.filter((d) => d.kind === "document" && re.test(d.title ?? ""));
   const trains = LEGS.filter((l) => l.train);
-  const tickets = trains.filter((l) => docs.some((d) => d.kind === "ticket" && d.leg_id === l.id)).length;
+  const tickets = trains.filter((l) => docs.some((d) => d.kind === "ticket" && d.leg_id && legIdAliases(l.id).includes(d.leg_id))).length;
   const reg = expenses.filter((e) => e.category === "registration");
   const regBills = docs.filter((d) => d.kind === "receipt" && reg.some((e) => e.id === d.expense_id)).length;
   const certs = docs.filter((d) => d.kind === "certificate").length;

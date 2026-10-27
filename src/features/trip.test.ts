@@ -3,6 +3,7 @@ import { LEGS } from "@/data/trip";
 import { EMPTY_LIVE } from "@/lib/live-types";
 import { effectiveLocations, FRESH_MS } from "@/lib/locations";
 import { ms } from "@/lib/time";
+import { parseStatus } from "@/lib/trip-engine";
 import { coachKind, coachList, focusLeg, isSeated, myStatus, stopsFor, trainLegs } from "./trip";
 
 describe("coach position", () => {
@@ -21,19 +22,22 @@ describe("coach position", () => {
 
 describe("tickets", () => {
   it("shows PNR mode for waitlisted, coach mode once RAC or confirmed", () => {
+    expect(isSeated(parseStatus("GNWL 17").kind)).toBe(false);
+    expect(isSeated(parseStatus("RAC").kind)).toBe(true);
+    expect(isSeated(parseStatus("RAC 12").kind)).toBe(true);
+    // Every ticket in the data is confirmed or RAC, so the coach mode is on.
     const ne = LEGS.find((l) => l.id === "L2")!;
-    expect(isSeated(myStatus(ne, EMPTY_LIVE, "oms").kind)).toBe(false);
-    const live = { ...EMPTY_LIVE, legs: { L2: { legId: "L2" as const, passengers: [{ person: "oms" as const, booked: "GNWL 83", current: "RAC 12" }] } } };
-    expect(myStatus(ne, live, "oms").kind).toBe("RAC");
+    expect(myStatus(ne, EMPTY_LIVE, "oms").kind).toBe("RAC");
+    expect(isSeated(myStatus(ne, EMPTY_LIVE, "oms").kind)).toBe(true);
+    const live = { ...EMPTY_LIVE, legs: { L2: { legId: "L2" as const, passengers: [{ person: "oms" as const, booked: "GNWL 83", current: "B2 34" }] } } };
+    expect(myStatus(ne, live, "oms").kind).toBe("CNF");
     expect(isSeated(myStatus(ne, live, "oms").kind)).toBe(true);
   });
-  it("drops the backup ticket once we know which one we use", () => {
-    expect(trainLegs(EMPTY_LIVE).map((l) => l.id)).toContain("B1");
-    const decided = { ...EMPTY_LIVE, state: { "ticket-choice": { winner: "L2", loser: "B1", at: 0 } } };
-    expect(trainLegs(decided).map((l) => l.id)).not.toContain("B1");
+  it("lists our train tickets in trip order", () => {
+    expect(trainLegs().map((l) => l.id)).toEqual(["L0", "L1", "L2", "L3", "L4"]);
   });
   it("focuses the train we're on, else the next one", () => {
-    const legs = trainLegs(EMPTY_LIVE);
+    const legs = trainLegs();
     expect(focusLeg(legs, EMPTY_LIVE, ms("2026-10-20T10:00:00+05:30")).id).toBe("L0");
     expect(focusLeg(legs, EMPTY_LIVE, ms("2026-10-29T12:00:00+05:30")).id).toBe("L2");
     expect(focusLeg(legs, EMPTY_LIVE, ms("2026-12-01T00:00:00+05:30")).id).toBe("L4");

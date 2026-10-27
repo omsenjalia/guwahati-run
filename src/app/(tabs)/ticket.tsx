@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useState } from "react";
 import { Linking, ScrollView, StyleSheet, View } from "react-native";
-import { DEADLINES, IRCTC_BOOK_URL, IRCTC_PNR_URL, NE_ALTERNATIVES, TEAM, type Berth, type Leg, type PersonId } from "@/data/trip";
+import { ALTERNATE_TRAINS, DEADLINES, IRCTC_BOOK_URL, IRCTC_PNR_URL, TEAM, type Berth, type Leg, type PersonId } from "@/data/trip";
 import { api } from "@/core/api";
 import { useAuth } from "@/core/auth";
 import { refresh, useFeed, useNow } from "@/core/data";
@@ -13,9 +13,8 @@ import { coachKind, coachList, firstName, focusLeg, isSeated, myStatus, personIn
 import { useAllTrains } from "@/core/dev-prefs";
 import { isDeveloper } from "@/lib/auth";
 import type { LiveState, PassengerLive } from "@/lib/live-types";
-import { choiceText, storedChoice } from "@/lib/ticket-choice";
 import { ago, dayMonth, hhmm } from "@/lib/time";
-import { chartTime, legBerths, legPassengers, legSituation, parseStatus, personBerth } from "@/lib/trip-engine";
+import { chartTimeFor, legBerths, legPassengers, legSituation, parseStatus, personBerth } from "@/lib/trip-engine";
 import { Avatar, avatarColor, Button, Card, InfoRow, Pill, Section } from "@/ui/kit";
 import { Screen } from "@/ui/screen";
 import { T } from "@/ui/text";
@@ -32,7 +31,7 @@ export default function TicketScreen() {
   const now = useNow();
   const me = session!.person;
   const allTrains = useAllTrains() && isDeveloper(session);
-  const legs = allTrains ? trainLegs(live) : tripHalf(trainLegs(live), now);
+  const legs = allTrains ? trainLegs() : tripHalf(trainLegs(), now);
   const [picked, setPicked] = useState<string | null>(null);
   const leg = legs.find((l) => l.id === picked) ?? focusLeg(legs, live, now);
   const status = myStatus(leg, live, me);
@@ -52,7 +51,7 @@ function PnrView({ leg, live, me, now }: { leg: Leg; live: LiveState; me: Person
   const l = live.legs[leg.id];
   const s = myStatus(leg, live, me);
   const situation = legSituation(leg, live);
-  const chartAt = chartTime(leg.depart);
+  const chartAt = chartTimeFor(leg);
   const charted = !!l?.chartPrepared;
   return (
     <>
@@ -132,8 +131,7 @@ function PnrView({ leg, live, me, now }: { leg: Leg; live: LiveState; me: Person
       {leg.pnr && <PnrHistory key={`h-${leg.id}`} legId={leg.id} />}
       {leg.pnr && <CheckNow key={leg.id} leg={leg} />}
       <Button label="Check on IRCTC" icon="open-in-new" kind="secondary" onPress={() => void Linking.openURL(IRCTC_PNR_URL)} />
-      {(leg.id === "L2" || leg.backupFor === "L2") && <ChoiceBanner live={live} />}
-      {(leg.id === "L2" || leg.backupFor === "L2") && <PlanB />}
+      {leg.id === "L2" && <PlanB />}
     </>
   );
 }
@@ -185,32 +183,6 @@ function PnrHistory({ legId }: { legId: string }) {
   );
 }
 
-/** North East vs backup: the rule while both are waitlisted, then which PNR to cancel once one clears. */
-function ChoiceBanner({ live }: { live: LiveState }) {
-  const choice = storedChoice(live);
-  if (!choice) {
-    return (
-      <Card>
-        <T v="caption" color="muted">
-          Two tickets for 29 Oct. Whichever of 12506 North East or the backup clears first (anyone confirmed or RAC), we keep; if both clear together, North East. The app
-          alerts everyone to cancel the other.
-        </T>
-      </Card>
-    );
-  }
-  const t = choiceText(choice);
-  return (
-    <Card style={{ gap: 8 }}>
-      <Pill label="Action" tone="bad" solid />
-      <T v="heading">{t.title}</T>
-      <T v="body" color="muted">
-        {t.action}
-      </T>
-      <Button label={`Cancel ${t.lose.train!.number} on IRCTC`} icon="open-in-new" onPress={() => void Linking.openURL("https://www.irctc.co.in/nget/txn/cancel-ticket")} />
-    </Card>
-  );
-}
-
 type Alt = { number: string; name: string; from: string; to: string; depart?: string; arrive?: string; classes: { travelClass: string; status: string; confirmChance?: number }[]; error?: string };
 
 /** Other Delhi to Guwahati trains on 29 Oct, with seats right now. */
@@ -249,7 +221,7 @@ function Alternatives() {
   );
 }
 
-/** If the North East Express doesn't clear: the Tatkal decision and other trains that day. */
+/** If the Avadh Assam Express doesn't clear: other trains that day. */
 function PlanB() {
   const d = DEADLINES.filter((x) => x.leg === "L2");
   const [showAlt, setShowAlt] = useState(false);
@@ -261,13 +233,13 @@ function PlanB() {
         ))}
         <InfoRow
           icon="train-variant"
-          label={`Other trains on ${dayMonth(NE_ALTERNATIVES.date)}`}
-          value={NE_ALTERNATIVES.trains.map((t) => `${t.number} ${t.name} (${t.fromName} to ${t.toName})`).join("\n")}
+          label={`Other trains on ${dayMonth(ALTERNATE_TRAINS.date)}`}
+          value={ALTERNATE_TRAINS.trains.map((t) => `${t.number} ${t.name} (${t.fromName} to ${t.toName})`).join("\n")}
         />
         {showAlt ? <Alternatives /> : <Button label="Live seats on other trains" icon="seat-passenger" kind="secondary" onPress={() => setShowAlt(true)} />}
         <View style={{ flexDirection: "row", gap: 10 }}>
           <Button label="IRCTC" icon="train" kind="secondary" style={{ flex: 1 }} onPress={() => void Linking.openURL(IRCTC_BOOK_URL)} />
-          <Button label="Flights" icon="airplane" kind="secondary" style={{ flex: 1 }} onPress={() => void Linking.openURL(NE_ALTERNATIVES.flightsUrl)} />
+          <Button label="Flights" icon="airplane" kind="secondary" style={{ flex: 1 }} onPress={() => void Linking.openURL(ALTERNATE_TRAINS.flightsUrl)} />
         </View>
       </Card>
     </Section>

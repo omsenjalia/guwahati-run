@@ -2,11 +2,10 @@
  * The background brain. Supabase's scheduler calls /api/jobs/tick every
  * 5 minutes; this decides which jobs are due and runs them:
  *
- *   PNR sync      North East Express and its backup (15910): every 6h until
- *                 25 Oct, hourly from 26 Oct, every 15 min from 28 Oct 16:00
- *                 until the chart is out. Stops once charted, and stops for
- *                 the ticket we won't use once one of them clears. Every
- *                 other ticket: every 3h in the 3 days before departure.
+ *   PNR sync      The Avadh Assam Express (15910): every 6h until 25 Oct,
+ *                 hourly from 26 Oct, every 15 min from 28 Oct 16:00 until
+ *                 the chart is out, then it stops. Every other ticket: every
+ *                 3h in the 3 days before departure.
  *   Live status   every tick (5 min) from 3h before departure to 1h after arrival
  *   Weather       every 3h
  *   Train runs    once a day: each train's recent runs and how late it was
@@ -18,8 +17,7 @@
  * in job_runs for the system health panel.
  */
 import * as trip from "@/data/trip";
-import { BACKUPS, LEGS, PLACES, type Berth, type Leg, type PersonId } from "@/data/trip";
-import type { TicketChoice } from "@/lib/ticket-choice";
+import { LEGS, PLACES, type Berth, type Leg, type PersonId } from "@/data/trip";
 import { runDelays, saveRuns } from "@/lib/delay-runs";
 import { ROUTES } from "@/data/routes";
 import { AllProvidersFailed, getLiveRunningStatus, getPnrStatus } from "@/lib/providers/index.ts";
@@ -82,20 +80,18 @@ export async function runTick(opts: { force?: JobName[]; now?: number } = {}) {
 
   results.push(await logged("seed", () => seedTrip()));
 
-  // PNR sync (the loser of North East vs backup is no longer watched)
-  const { data: choiceRow } = await db.from("app_state").select("value").eq("key", "ticket-choice").maybeSingle();
-  const loser = (choiceRow?.value as TicketChoice | undefined)?.loser;
-  const pnrLegs = [...LEGS, ...BACKUPS].filter((l) => {
-    if (!l.pnr || l.id === loser) return false;
+  // PNR sync
+  const pnrLegs = LEGS.filter((l) => {
+    if (!l.pnr) return false;
     if (force.has("pnr-sync")) return !!l.tracked;
     const interval = pnrInterval(l, now, live.get(l.id));
     return interval !== null && isDue(live.get(l.id)?.pnrUpdatedAt, interval, now);
   });
   if (pnrLegs.length) results.push(await logged("pnr-sync", () => syncPnrs(pnrLegs, live)));
 
-  // Live running status (the backup train too, until it loses)
-  const liveLegs = [...LEGS, ...BACKUPS].filter(
-    (l) => l.train && l.id !== loser && (force.has("live-status") || liveDue(l, now, live.get(l.id))),
+  // Live running status
+  const liveLegs = LEGS.filter(
+    (l) => l.train && (force.has("live-status") || liveDue(l, now, live.get(l.id))),
   );
   if (liveLegs.length) results.push(await logged("live-status", () => syncLive(liveLegs, live)));
 
@@ -106,7 +102,7 @@ export async function runTick(opts: { force?: JobName[]; now?: number } = {}) {
   // Timetables for the meal planner (once a day)
   const { data: sch } = await db.from("app_state").select("updated_at").eq("key", "schedules").maybeSingle();
   if (force.has("schedules") || isDue(sch ? Date.parse(sch.updated_at) : undefined, 24 * HOUR, now)) {
-    results.push(await logged("schedules", () => syncSchedules(loser)));
+    results.push(await logged("schedules", () => syncSchedules()));
   }
 
   // Past runs for the delay averages (once a day)
@@ -213,7 +209,7 @@ export const PNR_REFRESH_COOLDOWN = 2 * MIN;
  * counts too), so ConfirmTkt isn't hammered.
  */
 export async function refreshPnr(legId: string, now = Date.now()): Promise<{ status: number; result?: JobResult; error?: string }> {
-  const leg = [...LEGS, ...BACKUPS].find((l) => l.id === legId && l.pnr);
+  const leg = LEGS.find((l) => l.id === legId && l.pnr);
   if (!leg) return { status: 404, error: "No ticket with that id" };
   const db = serverDb();
   const key = `pnr-refresh:${leg.id}`;
@@ -375,11 +371,11 @@ async function syncLive(legs: Leg[], live: Map<string, LegLive>) {
 /* ----------------------------------------------------------- schedules */
 
 /** Each train's stops on our travel date, between our boarding and alighting stations. */
-async function syncSchedules(loser?: string) {
+async function syncSchedules() {
   const value: Record<string, StopTime[]> = {};
   const lines: string[] = [];
   let source: string | undefined;
-  for (const leg of [...LEGS, ...BACKUPS].filter((l) => l.kind === "train" && l.id !== loser)) {
+  for (const leg of LEGS.filter((l) => l.kind === "train")) {
     const board = PLACES[leg.from].code!;
     const dest = PLACES[leg.to].code!;
     try {
@@ -407,7 +403,7 @@ async function syncSchedules(loser?: string) {
 
 /** Saves runs that started today, yesterday and the day before (long trains are still running a day later). */
 async function syncTrainRuns(now: number) {
-  const trains = [...new Set([...LEGS, ...BACKUPS].flatMap((l) => (l.train ? [l.train.number] : [])))];
+  const trains = [...new Set(LEGS.flatMap((l) => (l.train ? [l.train.number] : [])))];
   const dates = [0, 1, 2].map((d) => istDateKey(now - d * 24 * HOUR));
   // Marked first: if this fails (say the table is missing) it waits a day instead of retrying every tick.
   const { error } = await serverDb().from("app_state").upsert({ key: "train-runs", value: { at: now }, updated_at: new Date(now).toISOString() });

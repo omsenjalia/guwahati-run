@@ -1,4 +1,6 @@
+import type { ReactNode } from "react";
 import { Text, type TextProps, type TextStyle } from "react-native";
+import { tr, useLang } from "@/i18n";
 import { font, useTheme, type Palette } from "./theme";
 
 const variants = {
@@ -19,20 +21,38 @@ type Props = TextProps & {
   center?: boolean;
 };
 
+/**
+ * Children in the chosen language: a lone string is looked up whole, and a run
+ * of strings and numbers is joined first so sentences with times ("Chart
+ * around 28 Oct 12:50") still match their translation.
+ */
+function translate(children: ReactNode, lang: ReturnType<typeof useLang>["lang"]): ReactNode {
+  if (typeof children === "string") return tr(children, lang);
+  if (!Array.isArray(children)) return children;
+  const simple = children.filter((c) => c !== null && c !== undefined && c !== false);
+  if (simple.every((c) => typeof c === "string" || typeof c === "number")) return tr(simple.join(""), lang);
+  return children.map((c) => (typeof c === "string" ? tr(c, lang) : c));
+}
+
 /** Every piece of text in the app. color takes a palette key or a raw colour. */
-export function T({ v = "body", color = "text", num, center, style, ...rest }: Props) {
+export function T({ v = "body", color = "text", num, center, style, children, ...rest }: Props) {
   const c = useTheme();
+  const { lang } = useLang();
   const col = (c as Record<string, unknown>)[color];
+  // Manrope has no Devanagari or Gujarati glyphs, so those languages use the phone's own font.
+  const variant = lang === "en" ? variants[v] : { ...variants[v], fontFamily: undefined };
   return (
     <Text
       {...rest}
       style={[
-        variants[v],
+        variant,
         { color: typeof col === "string" ? col : color },
         num && { fontVariant: ["tabular-nums"] },
         center && { textAlign: "center" },
         style,
       ]}
-    />
+    >
+      {translate(children, lang)}
+    </Text>
   );
 }

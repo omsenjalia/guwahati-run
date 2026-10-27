@@ -1,4 +1,4 @@
-import { LEGS } from "@/data/trip";
+import { LEGS, legIdAliases } from "@/data/trip";
 import type { Expense } from "@/lib/expenses";
 import type { DocRow } from "@/lib/documents";
 
@@ -16,7 +16,7 @@ export function expectedReceipts(docs: DocRow[], expenses: Expense[]): Expected[
   const tickets = LEGS.filter((l) => l.train).map((l) => ({
     id: `ticket-${l.id}`,
     label: `Ticket: ${l.train!.number} ${l.train!.name}`,
-    have: docs.some((d) => d.kind === "ticket" && d.leg_id === l.id),
+    have: docs.some((d) => d.kind === "ticket" && d.leg_id && legIdAliases(l.id).includes(d.leg_id)),
     hint: "Add ticket (PDF from IRCTC)",
   }));
   const registration = {

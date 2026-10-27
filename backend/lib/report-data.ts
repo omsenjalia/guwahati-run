@@ -1,4 +1,4 @@
-import { GRANT, LEGS, PLACES, REPORT, TEAM, rebookingLoss } from "@/data/trip";
+import { GRANT, LEGS, PLACES, REPORT, TEAM, legIdAliases, rebookingLoss } from "@/data/trip";
 import { CATEGORIES, categoryLabel, type Expense } from "@/lib/expenses";
 import type { DocRow } from "@/lib/documents";
 import { dayMonth, hhmm } from "@/lib/time";
@@ -19,7 +19,7 @@ export type ReportRow = {
   ref?: string;
   date: string;
   category: string;
-  /** Short name, e.g. "12506 North East Express" or the expense title. */
+  /** Short name, e.g. "15910 Avadh Assam Express" or the expense title. */
   label: string;
   description: string;
   amount: number;
@@ -36,7 +36,9 @@ export type ReportRow = {
  * everything, so totals don't flicker).
  */
 export function fareCounts(legId: string, docs: DocRow[] | null) {
-  return !docs || docs.some((d) => d.kind === "ticket" && d.leg_id === legId);
+  if (!docs) return true;
+  const ids = legIdAliases(legId as (typeof LEGS)[number]["id"]);
+  return docs.some((d) => d.kind === "ticket" && d.leg_id && ids.includes(d.leg_id));
 }
 
 export function reportRows(expenses: Expense[], docs: DocRow[] | null): ReportRow[] {
@@ -45,7 +47,8 @@ export function reportRows(expenses: Expense[], docs: DocRow[] | null): ReportRo
 
   for (const leg of LEGS.filter((l) => l.train && l.fareTotal)) {
     const sleeper = GRANT.sleeperFarePerPerson[leg.id];
-    const tickets = files.filter((d) => d.kind === "ticket" && d.leg_id === leg.id);
+    const ids = legIdAliases(leg.id);
+    const tickets = files.filter((d) => d.kind === "ticket" && d.leg_id && ids.includes(d.leg_id));
     // The cancellation charge below was paid either way, so it stays.
     if (fareCounts(leg.id, docs)) rows.push({
       date: leg.depart.slice(0, 10),
