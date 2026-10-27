@@ -34,7 +34,7 @@ export function FloatingTabBar({ state, emitter, navigateToTab, specs }: BottomT
               style={styles.item}
             >
               <View style={[styles.iconWrap, focused && { backgroundColor: c.primarySoft }]}>
-                <MaterialCommunityIcons name={focused ? spec.activeIcon : spec.icon} size={22} color={focused ? c.primary : c.muted} />
+                <MaterialCommunityIcons name={focused ? spec.activeIcon : spec.icon} size={21} color={focused ? c.primary : c.muted} />
               </View>
               <T v="caption" color={focused ? c.primary : c.muted} style={{ fontSize: 11, fontFamily: focused ? font.bold : font.semibold }} numberOfLines={1}>
                 {spec.label}
@@ -56,12 +56,13 @@ const styles = StyleSheet.create({
     borderRadius: radius.xl,
     borderWidth: StyleSheet.hairlineWidth,
     paddingVertical: 8,
-    paddingHorizontal: 6,
+    paddingHorizontal: 4,
     shadowOpacity: 0.12,
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 6 },
     elevation: 10,
   },
   item: { flex: 1, alignItems: "center", gap: 2 },
-  iconWrap: { width: 52, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center" },
+  // Seven tabs on a 360 dp phone: 44 dp keeps every button inside its slot.
+  iconWrap: { width: 44, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center" },
 });
