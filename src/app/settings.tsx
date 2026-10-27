@@ -9,6 +9,7 @@ import { API_URL } from "@/core/config";
 import { clearFeed, useFeed, useNow } from "@/core/data";
 import { sharingState, startSharing, useShareStatus, type ShareState } from "@/features/location";
 import { person, personIndex } from "@/features/trip";
+import { LangPicker } from "@/i18n/picker";
 import { isDeveloper } from "@/lib/auth";
 import { ago } from "@/lib/time";
 import { Avatar, Button, Card, IconButton, InfoRow, LinkRow, Section } from "@/ui/kit";
@@ -49,6 +50,15 @@ export default function Settings() {
           </T>
         </View>
       </Card>
+
+      <Section title="Language">
+        <Card style={{ gap: 10 }}>
+          <T v="caption" color="muted">
+            Everything in the app, in the language you pick. Applies on this phone.
+          </T>
+          <LangPicker label={false} />
+        </Card>
+      </Section>
 
       {session.role === "team" && (
         <Section title="Location sharing">
