@@ -22,8 +22,14 @@ export type ReportRow = {
   /** Short name, e.g. "15910 Avadh Assam Express" or the expense title. */
   label: string;
   description: string;
+  /** What we actually paid, for all 4. */
   amount: number;
-  /** What the SSIP policy reimburses for this row, for all 4 (sleeper rate for 3A). */
+  /**
+   * What the SSIP policy pays for this row, for all 4. A 3A ticket is claimed
+   * at the sleeper fare (see GRANT.sleeperFarePerPerson), so for those rows
+   * this is deliberately lower than `amount`; never report `amount` as the
+   * claim.
+   */
   eligible: number;
   /** Bills proving this row (e.g. a fee receipt and its payment screenshot). */
   docIds: string[];
@@ -46,17 +52,21 @@ export function reportRows(expenses: Expense[], docs: DocRow[] | null): ReportRo
   const files = docs ?? [];
 
   for (const leg of LEGS.filter((l) => l.train && l.fareTotal)) {
+    const paid = leg.fareTotal!;
     const sleeper = GRANT.sleeperFarePerPerson[leg.id];
+    const claimed = sleeper !== undefined ? sleeper * STUDENTS : paid;
     const ids = legIdAliases(leg.id);
     const tickets = files.filter((d) => d.kind === "ticket" && d.leg_id && ids.includes(d.leg_id));
+    // The claim is the sleeper fare, so say so on the row itself.
+    const basis = claimed < paid - 0.5 ? `, ${leg.travelClass} booked, claimed at the sleeper fare` : "";
     // The cancellation charge below was paid either way, so it stays.
     if (fareCounts(leg.id, docs)) rows.push({
       date: leg.depart.slice(0, 10),
       category: "Train",
       label: `${leg.train!.number} ${leg.train!.name} (${leg.travelClass})`,
-      description: `${leg.train!.number} ${leg.train!.name}, ${PLACES[leg.from].short} to ${PLACES[leg.to].short}, ${leg.travelClass}${leg.pnr ? `, PNR ${leg.pnr}` : ""}`,
-      amount: leg.fareTotal!,
-      eligible: sleeper !== undefined ? sleeper * STUDENTS : leg.fareTotal!,
+      description: `${leg.train!.number} ${leg.train!.name}, ${PLACES[leg.from].short} to ${PLACES[leg.to].short}, ${leg.travelClass}${leg.pnr ? `, PNR ${leg.pnr}` : ""}${basis}`,
+      amount: paid,
+      eligible: claimed,
       docIds: tickets.map((d) => d.id),
     });
     if (leg.rebooking) {
@@ -97,13 +107,26 @@ export function reportRows(expenses: Expense[], docs: DocRow[] | null): ReportRo
 
 export function reportTotals(rows: ReportRow[]) {
   const byCategory = new Map<string, number>();
-  for (const r of rows) byCategory.set(r.category, (byCategory.get(r.category) ?? 0) + r.amount);
+  const claimedByCategory = new Map<string, number>();
+  for (const r of rows) {
+    byCategory.set(r.category, (byCategory.get(r.category) ?? 0) + r.amount);
+    claimedByCategory.set(r.category, (claimedByCategory.get(r.category) ?? 0) + r.eligible);
+  }
   const total = rows.reduce((t, r) => t + r.amount, 0);
+  const claimed = rows.reduce((t, r) => t + r.eligible, 0);
   // Per student only for the funding page: the college funds each student.
   const perStudent = total / STUDENTS;
-  const eligiblePerStudent = rows.reduce((t, r) => t + r.eligible, 0) / STUDENTS;
+  const claimedPerStudent = claimed / STUDENTS;
   const requested = REPORT.requestedPerStudent * STUDENTS;
-  return { byCategory: [...byCategory.entries()], total, perStudent, eligiblePerStudent, requested };
+  return {
+    byCategory: [...byCategory.entries()],
+    claimedByCategory: [...claimedByCategory.entries()],
+    total,
+    claimed,
+    perStudent,
+    eligiblePerStudent: claimedPerStudent,
+    requested,
+  };
 }
 
 /** Auto-filled trip summary paragraph (editable in the Grant tab before export). */
@@ -142,11 +165,11 @@ const csvCell = (v: string | number) => {
 export function reportCsv(rows: ReportRow[]) {
   const t = reportTotals(rows);
   const lines: (string | number)[][] = [
-    ["Ref", "Date", "Category", "Description", "Amount (Rs)"],
-    ...rows.map((r) => [r.ref ?? "", r.date, r.category, r.description, r.amount]),
+    ["Ref", "Date", "Category", "Description", "Paid (Rs)", "Claimed (Rs)"],
+    ...rows.map((r) => [r.ref ?? "", r.date, r.category, r.description, r.amount, r.eligible]),
     [],
-    ...t.byCategory.map(([c, v]) => ["", "", c, "Subtotal", v]),
-    ["", "", "", "Grand total", t.total],
+    ...t.byCategory.map(([c, v]) => ["", "", c, "Paid subtotal", v, t.claimedByCategory.find(([k]) => k === c)?.[1] ?? 0]),
+    ["", "", "", "Total", t.total, t.claimed],
   ];
   // Byte-order mark so Excel opens the file as UTF-8.
   return "﻿" + lines.map((l) => l.map(csvCell).join(",")).join("\r\n");
