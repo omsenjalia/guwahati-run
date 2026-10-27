@@ -4,7 +4,7 @@ import { EVENT, REPORT, TEAM } from "@/data/trip";
 import type { DocRow } from "@/lib/documents";
 import type { Expense } from "@/lib/expenses";
 import { readBlob } from "@/lib/github";
-import { defaultSummary, legTimeline, reportRows, reportTotals, type ReportRow } from "@/lib/report-data";
+import { defaultSummary, legTimeline, reportAmount, reportRows, reportTotals, type ReportRow } from "@/lib/report-data";
 import { dayMonth, stamp } from "@/lib/time";
 
 /**
@@ -180,39 +180,24 @@ function tripSummary(w: Writer, summary: string) {
 function expenseTable(w: Writer, rows: ReportRow[], t: ReturnType<typeof reportTotals>) {
   w.newPage();
   w.text("Expenses", { size: 18, bold: true, gap: 4 });
-  w.text(
-    "Every ticket and bill. Paid is what we spent; Claimed is what the SSIP policy pays, which for a 3A ticket is the sleeper fare. " +
-      "Ref is the receipt number in the appendix; '-' means no bill attached.",
-    { size: 9, color: GREY, gap: 6 },
-  );
+  w.text("Every ticket and bill. Ref is the receipt number in the appendix; '-' means no bill attached.", { size: 9, color: GREY, gap: 6 });
   w.table(
-    [
-      { title: "Ref", width: 32 },
-      { title: "Date", width: 42 },
-      { title: "Category", width: 60 },
-      { title: "Description" },
-      { title: "Paid", width: 58, align: "right" },
-      { title: "Claimed", width: 58, align: "right" },
-    ],
-    rows.map((r) => [r.ref ?? "-", dayMonth(`${r.date}T12:00:00+05:30`), r.category, r.description, money(r.amount), money(r.eligible)]),
+    [{ title: "Ref", width: 36 }, { title: "Date", width: 46 }, { title: "Category", width: 76 }, { title: "Description" }, { title: "Amount", width: 84, align: "right" }],
+    rows.map((r) => [r.ref ?? "-", dayMonth(`${r.date}T12:00:00+05:30`), r.category, r.description, money(reportAmount(r))]),
   );
-  w.ensure(140);
+  w.ensure(120);
   w.text("Subtotals by category", { size: 12, bold: true, gap: 2 });
   w.table(
-    [{ title: "Category" }, { title: "Paid", width: 90, align: "right" }, { title: "Claimed", width: 90, align: "right" }],
-    [
-      ...t.byCategory.map(([c, v]) => [c, money(v), money(t.claimedByCategory.find(([k]) => k === c)?.[1] ?? 0)]),
-      ["Grand total", money(t.total), money(t.claimed)],
-    ],
+    [{ title: "Category" }, { title: "Amount", width: 110, align: "right" }],
+    [...t.byCategory.map(([c, v]) => [c, money(v)]), ["Grand total", money(t.total)]],
     { boldLast: true },
   );
-  const saved = t.total - t.claimed;
-  w.text(
-    saved > 0.5
-      ? `Claimed is ${money(saved)} less than paid: the 3A tickets are claimed at the sleeper fare, as the policy pays the most economical class.`
-      : "Claimed equals paid: every cost here is covered in full.",
-    { size: 9, color: GREY, gap: 4 },
-  );
+  if (t.paid - t.total > 0.5) {
+    w.text(
+      `Train fares are shown at the sleeper fare, the most economical class the SSIP policy pays. Actual 3A fares came to ${money(t.paid - t.total)} more.`,
+      { size: 9, color: GREY, gap: 4 },
+    );
+  }
 }
 
 function requestedVsSpent(w: Writer, t: ReturnType<typeof reportTotals>) {
@@ -224,7 +209,7 @@ function requestedVsSpent(w: Writer, t: ReturnType<typeof reportTotals>) {
     [{ title: "Student" }, { title: "Spend (total / 4)", width: 100, align: "right" }, { title: "Eligible (SSIP)", width: 100, align: "right" }, { title: "Requested", width: 90, align: "right" }],
     [
       ...TEAM.map((p) => [p.name, money(t.perStudent), money(eligible), money(req)]),
-      ["Team", money(t.total), money(eligible * TEAM.length), money(t.requested)],
+      ["Team", money(t.paid), money(eligible * TEAM.length), money(t.requested)],
     ],
     { boldLast: true },
   );
@@ -233,11 +218,11 @@ function requestedVsSpent(w: Writer, t: ReturnType<typeof reportTotals>) {
       `local travel to and from the venue, and the registration fee. Food, accommodation and the Yoga Express cancellation charge are not included.`,
     { size: 10, color: GREY, gap: 8 },
   );
-  const gap = t.total - t.requested;
+  const gap = t.paid - t.requested;
   w.text(
     gap > 0
-      ? `The team spent ${money(t.total)}, which is ${money(gap)} more than the ${money(t.requested)} requested.`
-      : `The team spent ${money(t.total)}, within the ${money(t.requested)} requested.`,
+      ? `The team spent ${money(t.paid)}, which is ${money(gap)} more than the ${money(t.requested)} requested.`
+      : `The team spent ${money(t.paid)}, within the ${money(t.requested)} requested.`,
     { size: 11, gap: 40 },
   );
   w.text("Student signatures", { size: 10, color: GREY, gap: 18 });
