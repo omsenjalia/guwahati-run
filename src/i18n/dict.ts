@@ -5,15 +5,16 @@
  * Entries may use {0}, {1} for values the app fills in ("{0} min late"), so a
  * sentence built in code still gets translated. Anything missing here is shown
  * in English, so a gap never breaks a screen. Translations live in
- * dict-ui.ts, dict-data.ts and dict-live.ts, joined below.
+ * dict-ui.ts, dict-data.ts, dict-live.ts and dict-food.ts, joined below.
  */
 import { DATA } from "./dict-data";
+import { FOOD_DICT } from "./dict-food";
 import { LIVE } from "./dict-live";
 import { UI } from "./dict-ui";
 
 export type Entry = [string, string];
 
-const RAW = [UI, DATA, LIVE].join("\n");
+const RAW = [UI, DATA, LIVE, FOOD_DICT].join("\n");
 
 export const DICT: Record<string, Entry> = {};
 

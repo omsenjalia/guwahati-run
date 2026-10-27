@@ -104,19 +104,13 @@ Garib Rath usually has no bedding. Carry a bedsheet each.|गरीब रथ �
 Garib Rath has no bedding. Carry a bedsheet each.|गरीब रथ में बिस्तर नहीं होता। हर एक के लिए चादर ले जाएँ।|ગરીબ રથમાં બિસ્તર હોતું નથી. દરેક માટે ચાદર લઈ જાઓ.
 Carry a bedsheet for the Garib Rath|गरीब रथ के लिए चादर ले जाएँ|ગરીબ રથ માટે ચાદર લઈ જાઓ
 Bedsheet for Garib Rath|गरीब रथ के लिए चादर|ગરીબ રથ માટે ચાદર
-You are already at Delhi Jn. If 15910 is missed, book the next Delhi to Guwahati train on IRCTC (AC Tatkal for tomorrow opens 10:00).|आप पहले से दिल्ली जं. पर हैं। अगर 15910 छूट जाए, तो IRCTC पर अगली दिल्ली–गुवाहाटी ट्रेन बुक करें (कल का AC तत्काल 10:00 पर खुलता है)।|તમે પહેલેથી દિલ્હી જં. પર છો. જો 15910 ચૂકી જાય, તો IRCTC પર આગલી દિલ્હી–ગુવાહાટી ટ્રેન બુક કરો (આવતીકાલનું AC તત્કાલ 10:00 વાગ્યે ખૂલે છે).
-Tatkal 12918 Gujarat Sampark Kranti (Nizamuddin 13:25 to Anand 01:58) and cancel the Garib Rath before its chart.|तत्काल 12918 गुजरात सम्पर्क क्रांति (निज़ामुद्दीन 13:25 से आनंद 01:58) और गरीब रथ को उसके चार्ट से पहले रद्द करें।|તત્કાલ 12918 ગુજરાત સંપર્ક ક્રાંતિ (નિઝામુદ્દીન 13:25 થી આનંદ 01:58) અને ગરીબ રથ ચાર્ટ પહેલાં રદ કરો.
-# The Tatkal decision and the plan B cards
-Avadh Assam Tatkal decision (only if still WL)|अवध असम तत्काल फ़ैसला (सिर्फ़ अगर अभी WL)|અવધ અસમ તત્કાલ નિર્ણય (ફક્ત જો હજી WL)
+You are already at Delhi Jn. If 15910 is missed, book the next Delhi to Guwahati train on IRCTC.|आप पहले से दिल्ली जं. पर हैं। अगर 15910 छूट जाए, तो IRCTC पर अगली दिल्ली–गुवाहाटी ट्रेन बुक करें (कल का AC तत्काल 10:00 पर खुलता है)।|તમે પહેલેથી દિલ્હી જં. પર છો. જો 15910 ચૂકી જાય, તો IRCTC પર આગલી દિલ્હી–ગુવાહાટી ટ્રેન બુક કરો (આવતીકાલનું AC તત્કાલ 10:00 વાગ્યે ખૂલે છે).
+# Plan B trains for the day 15910 doesn't clear
 Confirmation chance is under about 70% or GNWL is still above about 15-20.|कन्फ़र्मेशन की संभावना लगभग 70% से कम है या GNWL अभी भी लगभग 15-20 से ऊपर है।|કન્ફર્મેશનની શક્યતા લગભગ 70% થી ઓછી છે અથવા GNWL હજી લગભગ 15-20 થી ઉપર છે.
-Book Tatkal 3A for all 4 for 29 Oct, Delhi Jn to Kamakhya. We'll be in Ahmedabad that morning (Yoga leaves 11:25), so book from there.|29 अक्टूबर के लिए चारों के 3A तत्काल बुक करें, दिल्ली जं. से कामाख्या। उस सुबह हम अहमदाबाद में होंगे (योगा 11:25 पर), इसलिए वहीं से बुक करें।|29 ઑક્ટોબર માટે ચારેય માટે 3A તત્કાલ બુક કરો, દિલ્હી જં. થી કામાખ્યા. તે સવારે અમે અમદાવાદમાં હોઈશું (યોગા 11:25 વાગ્યે), એટલે ત્યાંથી બુક કરો.
 Chart for 15910 Avadh Assam Exp|15910 अवध असम एक्स. का चार्ट|15910 અવધ અસમ એક્સ.નો ચાર્ટ
 Chart for 12215 Garib Rath|12215 गरीब रथ का चार्ट|12215 ગરીબ રથનો ચાર્ટ
 All 4 still waitlisted after charting.|चार्ट के बाद भी चारों वेटलिस्ट।|ચાર્ટ પછી પણ ચારેય વેઇટલિસ્ટ.
 All 4 still waitlisted after charting.|चार्ट के बाद भी चारों वेटलिस्ट।|ચાર્ટ પછી પણ ચારેય વેઇટલિસ્ટ.
-All 4 still waitlisted after the chart: the ticket auto-cancels and refunds. Book a Tatkal ticket, or pick one of the Plan B alternatives.|चार्ट के बाद भी चारों वेटलिस्ट: टिकट अपने आप रद्द होकर पैसे लौट जाते हैं। तत्काल टिकट बुक करें या प्लान बी में से कोई विकल्प चुनें।|ચાર્ટ પછી પણ ચારેય વેઇટલિસ્ટ: ટિકિટ આપોઆપ રદ થઈને પૈસા પાછા આવે છે. તત્કાલ ટિકિટ બુક કરો અથવા પ્લાન બીમાંથી વિકલ્પ પસંદ કરો.
-A fully waitlisted e-ticket is cancelled and refunded automatically. Use the Tatkal ticket or one of the alternatives in Plan B.|पूरी तरह वेटलिस्ट ई-टिकट अपने आप रद्द होकर पैसे लौट जाते हैं। तत्काल टिकट या प्लान बी का कोई विकल्प लें।|સંપૂર્ણ વેઇટલિસ્ટ ઈ-ટિકિટ આપોઆપ રદ થઈને પૈસા પાછા આવે છે. તત્કાલ ટિકિટ અથવા પ્લાન બીનો વિકલ્પ લો.
-The ticket auto-cancels and refunds. Use the Tatkal ticket, or pick another Delhi to Guwahati option for 29 Oct. If even 1 of us is confirmed or RAC, all 4 can board.|टिकट अपने आप रद्द होकर पैसे लौट जाते हैं। तत्काल टिकट लें, या 29 अक्टूबर के लिए दिल्ली–गुवाहाटी का दूसरा विकल्प चुनें। अगर हम में से 1 भी कन्फ़र्म या RAC हो, तो चारों चढ़ सकते हैं।|ટિકિટ આપોઆપ રદ થઈને પૈસા પાછા આવે છે. તત્કાલ ટિકિટ લો, અથવા 29 ઑક્ટોબર માટે દિલ્હી–ગુવાહાટીનો બીજો વિકલ્પ પસંદ કરો. જો અમારામાંથી 1 પણ કન્ફર્મ કે RAC હોય, તો ચારેય ચડી શકે છે.
 Decide: is 15658 Brahmaputra 3h+ late?|फ़ैसला: क्या 15658 ब्रह्मपुत्र 3 घंटे+ लेट है?|નિર્ણય: શું 15658 બ્રહ્મપુત્ર 3 કલાક+ મોડી છે?
 Live running status shows 3 hours or more delay.|लाइव रनिंग स्टेटस 3 घंटे या ज़्यादा देरी दिखाता है।|લાઇવ રનિંગ સ્ટેટસ 3 કલાક કે વધુ મોડું બતાવે છે.
 We switched to 12918.|हम 12918 पर शिफ़्ट हो गए।|અમે 12918 પર જતા રહ્યા.
@@ -358,4 +352,9 @@ Delay must be a number of minutes.|देरी मिनटों की सं
 # Weather
 Partly cloudy|कुछ बादल|થોડા વાદળ
 Fog or haze|कोहरा या धुंध|ધુમ્મસ
+# 15910 is RAC, so the chart is a milestone, not a decision
+The chart is out: our coach and berths are final.|चार्ट निकल गया: हमारा कोच और बर्थ तय हैं।|ચાર્ટ નીકળી ગયો: અમારો કોચ અને બર્થ નક્કી છે.
+Open the Ticket tab and note the coach and berth. Nothing else to do.|टिकट टैब खोलें और कोच-बर्थ देख लें। और कुछ नहीं करना।|ટિકિટ ટૅબ ખોલો અને કોચ-બર્થ જોઈ લો. બીજું કંઈ કરવાનું નથી.
+Book 12918 Gujarat Sampark Kranti (Nizamuddin 13:25 to Anand 01:58) and cancel the Garib Rath before its chart.|12918 गुजरात सम्पर्क क्रांति (निज़ामुद्दीन 13:25 से आनंद 01:58) बुक करें और गरीब रथ उसके चार्ट से पहले रद्द करें।|12918 ગુજરાત સંપર્ક ક્રાંતિ (નિઝામુદ્દીન 13:25 થી આનંદ 01:58) બુક કરો અને ગરીબ રથ તેના ચાર્ટ પહેલાં રદ કરો.
+Ticket booker|टिकट बुकर|ટિકિટ બુકર
 `;

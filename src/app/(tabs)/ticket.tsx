@@ -221,7 +221,7 @@ function Alternatives() {
   );
 }
 
-/** If the Avadh Assam Express doesn't clear: the Tatkal decision and other trains that day. */
+/** If the Avadh Assam Express doesn't clear: other trains that day. */
 function PlanB() {
   const d = DEADLINES.filter((x) => x.leg === "L2");
   const [showAlt, setShowAlt] = useState(false);
