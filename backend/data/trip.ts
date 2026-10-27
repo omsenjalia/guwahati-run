@@ -686,10 +686,14 @@ export const GRANT = {
   /** Larger events may get more, case by case, up to this per event. */
   maxPerEventCaseByCase: 50000,
   /**
-   * 3A legs are claimed at the sleeper fare per person (the policy pays the
-   * most economical class). Garib Rath is 3A-only, so it's claimed in full.
+   * Every train leg is a 3A ticket, but the policy pays the most economical
+   * class, so each is claimed at the sleeper fare per person. Garib Rath has
+   * no sleeper class at all, so it is claimed at the Mail/Express sleeper fare
+   * on the same Anand-Delhi run (Rs. 490 over 1,016 km): the rate of fares we
+   * actually hold, Rs. 900 over 1,938 km and Rs. 825 over 2,028 km, sits either
+   * side of that once distance is taken into account.
    */
-  sleeperFarePerPerson: { L2: 900, L3: 825 } as Partial<Record<LegId, number>>,
+  sleeperFarePerPerson: { L2: 900, L3: 825, L4: 490 } as Partial<Record<LegId, number>>,
   /**
    * Things for the claim that aren't uploads (the HOD approval is a hard
    * copy). Everything else on the college's list (invitation, tickets,
