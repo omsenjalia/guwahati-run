@@ -2,7 +2,7 @@ import { Tabs } from "expo-router/js-tabs";
 import { useEffect } from "react";
 import { useAuth } from "@/core/auth";
 import { useNow } from "@/core/data";
-import { EVENT } from "@/data/trip";
+import { TRIP_SPAN } from "@/data/trip";
 import { tr, useLang } from "@/i18n";
 import { ms } from "@/lib/time";
 import { keepSendingWhileOpen, sharingState } from "@/features/location";
@@ -32,7 +32,7 @@ export default function TabsLayout() {
   const now = useNow();
   const role = useAuth().session?.role ?? "parent";
   // The pantry car price list is only useful while we are on the trip.
-  const onTrip = now < ms(EVENT.end);
+  const onTrip = now >= ms(TRIP_SPAN.start) && now < ms(TRIP_SPAN.end);
 
   useEffect(() => {
     if (role !== "team") return;
