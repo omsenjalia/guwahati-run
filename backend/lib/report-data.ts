@@ -47,6 +47,15 @@ export function fareCounts(legId: string, docs: DocRow[] | null) {
   return docs.some((d) => d.kind === "ticket" && d.leg_id && ids.includes(d.leg_id));
 }
 
+/**
+ * The figure the report shows for a row. Normally what we paid, except where
+ * the policy pays less than we did: a 3A ticket is claimed at the sleeper fare,
+ * so the report shows that lower number instead of the full 3A fare. Food, stay
+ * and the cancellation charge are not covered by the policy, but they were
+ * still spent, so they stay in the table at what they cost.
+ */
+export const reportAmount = (r: ReportRow) => (r.eligible > 0 && r.eligible < r.amount - 0.5 ? r.eligible : r.amount);
+
 export function reportRows(expenses: Expense[], docs: DocRow[] | null): ReportRow[] {
   const rows: ReportRow[] = [];
   const files = docs ?? [];
@@ -106,27 +115,18 @@ export function reportRows(expenses: Expense[], docs: DocRow[] | null): ReportRo
 }
 
 export function reportTotals(rows: ReportRow[]) {
+  // Totals use the report figure, so the table and its subtotals add up.
   const byCategory = new Map<string, number>();
-  const claimedByCategory = new Map<string, number>();
-  for (const r of rows) {
-    byCategory.set(r.category, (byCategory.get(r.category) ?? 0) + r.amount);
-    claimedByCategory.set(r.category, (claimedByCategory.get(r.category) ?? 0) + r.eligible);
-  }
-  const total = rows.reduce((t, r) => t + r.amount, 0);
-  const claimed = rows.reduce((t, r) => t + r.eligible, 0);
-  // Per student only for the funding page: the college funds each student.
-  const perStudent = total / STUDENTS;
-  const claimedPerStudent = claimed / STUDENTS;
+  for (const r of rows) byCategory.set(r.category, (byCategory.get(r.category) ?? 0) + reportAmount(r));
+  const total = rows.reduce((t, r) => t + reportAmount(r), 0);
+  /** What we actually spent, before the sleeper-fare rule. */
+  const paid = rows.reduce((t, r) => t + r.amount, 0);
+  // Per student only for the funding page, which compares what we really spent
+  // with what the policy pays: "spend" is the money that left our accounts.
+  const perStudent = paid / STUDENTS;
+  const eligiblePerStudent = rows.reduce((t, r) => t + r.eligible, 0) / STUDENTS;
   const requested = REPORT.requestedPerStudent * STUDENTS;
-  return {
-    byCategory: [...byCategory.entries()],
-    claimedByCategory: [...claimedByCategory.entries()],
-    total,
-    claimed,
-    perStudent,
-    eligiblePerStudent: claimedPerStudent,
-    requested,
-  };
+  return { byCategory: [...byCategory.entries()], total, paid, perStudent, eligiblePerStudent, requested };
 }
 
 /** Auto-filled trip summary paragraph (editable in the Grant tab before export). */
@@ -165,11 +165,11 @@ const csvCell = (v: string | number) => {
 export function reportCsv(rows: ReportRow[]) {
   const t = reportTotals(rows);
   const lines: (string | number)[][] = [
-    ["Ref", "Date", "Category", "Description", "Paid (Rs)", "Claimed (Rs)"],
-    ...rows.map((r) => [r.ref ?? "", r.date, r.category, r.description, r.amount, r.eligible]),
+    ["Ref", "Date", "Category", "Description", "Amount (Rs)"],
+    ...rows.map((r) => [r.ref ?? "", r.date, r.category, r.description, reportAmount(r)]),
     [],
-    ...t.byCategory.map(([c, v]) => ["", "", c, "Paid subtotal", v, t.claimedByCategory.find(([k]) => k === c)?.[1] ?? 0]),
-    ["", "", "", "Total", t.total, t.claimed],
+    ...t.byCategory.map(([c, v]) => ["", "", c, "Subtotal", v]),
+    ["", "", "", "Grand total", t.total],
   ];
   // Byte-order mark so Excel opens the file as UTF-8.
   return "﻿" + lines.map((l) => l.map(csvCell).join(",")).join("\r\n");
