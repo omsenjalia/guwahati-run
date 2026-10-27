@@ -257,4 +257,83 @@ Arrival platform|पहुँचने का प्लेटफ़ॉर्म|
 Expected departure|अनुमानित प्रस्थान|અપેક્ષિત પ્રસ્થાન
 Expected arrival|अनुमानित आगमन|અપેક્ષિત આગમન
 Delay at arrival (minutes)|पहुँचते समय देरी (मिनट)|પહોંચતી વખતે મોડું (મિનિટ)
+
+# words that were still falling through as English
+Food|खाना|ખાવાનું
+Accommodation|ठहरने का खर्च|રહેવાનો ખર્ચ
+Alerts|अलर्ट|એલર્ટ
+Arrived|पहुँच गया|પહોંચી ગયું
+Call|कॉल करें|કૉલ કરો
+Cab|कैब|કૅબ
+Check-in|चेक-इन|ચેક-ઇન
+Close|बंद करें|બંધ કરો
+Connections|कनेक्शन|કનેક્શન
+Covered|पूरा हुआ|પૂરું થયું
+Date|तारीख़|તારીખ
+Description|विवरण|વિગત
+Dinner|डिनर|ડિનર
+Directions|रास्ता|રસ્તો
+Document|दस्तावेज़|દસ્તાવેજ
+Doing|चल रहा है|ચાલુ છે
+Done|हो गया|થઈ ગયું
+E-ticket|ई-टिकट|ઈ-ટિકિટ
+Exit|बाहर निकलें|બહાર નીકળો
+Facilities|सुविधाएँ|સુવિધાઓ
+Flights|फ़्लाइट|ફ્લાઇટ
+Grant|अनुमति दें|પરવાનગી આપો
+Guides|गाइड|ગાઇડ
+Hackathon|हैकाथॉन|હેકાથોન
+Help|मदद|મદદ
+Journal|डायरी|ડાયરી
+Leg|चरण|પડાવ
+Lunch|लंच|લંચ
+Map|नक्शा|નકશો
+Maps|नक्शे|નકશા
+Metro|मेट्रो|મેટ્રો
+Name|नाम|નામ
+Other|अन्य|બીજું
+Parent|माता-पिता|વાલી
+People|लोग|લોકો
+Photos|फ़ोटो|ફોટા
+Plan B|प्लान बी|પ્લાન બી
+Power|बिजली|વીજળી
+Prep|तैयारी|તૈયારી
+Registration|रजिस्ट्रेशन|રજિસ્ટ્રેશન
+Route|रास्ता|માર્ગ
+Schedule|कार्यक्रम|કાર્યક્રમ
+Server|सर्वर|સર્વર
+Stations|स्टेशन|સ્ટેશન
+Status|स्थिति|સ્થિતિ
+Stay|ठहरना|રહેવું
+Stop|रोकें|બંધ કરો
+Student|छात्र|વિદ્યાર્થી
+Team|टीम|ટીમ
+Time|समय|સમય
+Weather|मौसम|હવામાન
+Yes|हाँ|હા
+Bill|बिल|બિલ
+Camera|कैमरा|કૅમેરા
+Certificate|सर्टिफ़िकेट|સર્ટિફિકેટ
+Category|श्रेणी|શ્રેણી
+Class|क्लास|ક્લાસ
+Amount|रकम|રકમ
+Amount (₹)|रकम (₹)|રકમ (₹)
+Requested|माँगा गया|માંગ્યું
+System|सिस्टम|સિસ્ટમ
+Waitlisted|वेटलिस्ट|વેઇટલિસ્ટ
+Add PNR|PNR जोड़ें|PNR ઉમેરો
+PNR number|PNR नंबर|PNR નંબર
+PNR tracker|PNR ट्रैकर|PNR ટ્રેકર
+Platform|प्लेटफ़ॉर्म|પ્લેટફોર્મ
+At station|स्टेशन पर|સ્ટેશન પર
+In train|ट्रेन में|ટ્રેનમાં
+What you get|क्या मिलेगा|શું મળશે
+Item|चीज़|વસ્તુ
+Train food prices (veg)|ट्रेन के खाने के दाम (वेज)|ટ્રેનના ખાવાના દામ (વેજ)
+College|कॉलेज|કૉલેજ
+SOS|एसओएस|એસઓએસ
+Cancelled|रद्द|રદ
+Unknown|पता नहीं|ખબર નથી
+Open IRCTC|IRCTC खोलें|IRCTC ખોલો
+e-Catering|ई-केटरिंग|ઈ-કેટરિંગ
 `;
