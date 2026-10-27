@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { FOOD, FOOD_ITEMS, FOOD_SOURCE, FOOD_VEG } from "@/data/food";
 import { LEGS, TRIP_SPAN } from "@/data/trip";
+import { DICT } from "@/i18n/dict";
 
 describe("food prices", () => {
   it("lists vegetarian dishes only", () => {
@@ -41,5 +42,19 @@ describe("trip window", () => {
       expect(new Date(l.depart).getTime()).toBeGreaterThanOrEqual(new Date(TRIP_SPAN.start).getTime());
       expect(new Date(l.arrive).getTime()).toBeLessThanOrEqual(new Date(TRIP_SPAN.end).getTime());
     }
+  });
+});
+
+describe("food translations", () => {
+  it("names every dish and section in Hindi and Gujarati", () => {
+    const missing: string[] = [];
+    for (const s of FOOD_VEG) {
+      for (const text of [s.title, s.note, ...s.items.flatMap((i) => [i.name, i.portion])]) {
+        if (!text) continue;
+        const entry = (DICT as Record<string, [string, string]>)[text];
+        if (!entry || !entry[0] || !entry[1]) missing.push(text);
+      }
+    }
+    expect(missing).toEqual([]);
   });
 });
