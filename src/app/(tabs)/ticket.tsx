@@ -14,7 +14,7 @@ import { useAllTrains } from "@/core/dev-prefs";
 import { isDeveloper } from "@/lib/auth";
 import type { LiveState, PassengerLive } from "@/lib/live-types";
 import { ago, dayMonth, hhmm } from "@/lib/time";
-import { chartTime, legBerths, legPassengers, legSituation, parseStatus, personBerth } from "@/lib/trip-engine";
+import { chartTimeFor, legBerths, legPassengers, legSituation, parseStatus, personBerth } from "@/lib/trip-engine";
 import { Avatar, avatarColor, Button, Card, InfoRow, Pill, Section } from "@/ui/kit";
 import { Screen } from "@/ui/screen";
 import { T } from "@/ui/text";
@@ -51,7 +51,7 @@ function PnrView({ leg, live, me, now }: { leg: Leg; live: LiveState; me: Person
   const l = live.legs[leg.id];
   const s = myStatus(leg, live, me);
   const situation = legSituation(leg, live);
-  const chartAt = chartTime(leg.depart);
+  const chartAt = chartTimeFor(leg);
   const charted = !!l?.chartPrepared;
   return (
     <>

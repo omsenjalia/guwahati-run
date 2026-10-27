@@ -5,7 +5,7 @@
 import { CONNECTIONS, DEADLINES, LEGS, type Deadline } from "@/data/trip";
 import type { LiveState } from "@/lib/live-types";
 import { HOUR, MIN, duration, hhmm, ms, stamp } from "@/lib/time";
-import { chartTime, legPassengers, legSituation, parseStatus } from "@/lib/trip-engine";
+import { chartTimeFor, legPassengers, legSituation, parseStatus } from "@/lib/trip-engine";
 
 export type Verdict = {
   id: string;
@@ -54,7 +54,7 @@ export function evaluate(d: Deadline, live: LiveState, now: number): Verdict {
     case "aa-chart": {
       if (!charted) {
         return now < at
-          ? v("upcoming", `Chart expected around ${stamp(chartTime(leg.depart))}. ${sit.title}.`)
+          ? v("upcoming", `Chart expected around ${stamp(chartTimeFor(leg))}. ${sit.title}.`)
           : v("upcoming", "Chart is late. Still checking every 15 minutes.");
       }
       if (sit.kind === "waitlisted") {
