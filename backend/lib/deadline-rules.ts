@@ -5,8 +5,7 @@
 import { CONNECTIONS, DEADLINES, LEGS, type Deadline } from "@/data/trip";
 import type { LiveState } from "@/lib/live-types";
 import { HOUR, MIN, duration, hhmm, ms, stamp } from "@/lib/time";
-import { canBoard, chartTime, legPassengers, legSituation, parseStatus } from "@/lib/trip-engine";
-import { BACKUP } from "@/lib/ticket-choice";
+import { chartTime, legPassengers, legSituation, parseStatus } from "@/lib/trip-engine";
 
 export type Verdict = {
   id: string;
@@ -38,11 +37,10 @@ export function evaluate(d: Deadline, live: LiveState, now: number): Verdict {
   const charted = live.legs[leg.id]?.chartPrepared ?? false;
 
   switch (d.id) {
-    case "ne-tatkal": {
-      // AC Tatkal for 12506, 28 Oct 10:00. Only matters while still waitlisted.
+    case "aa-tatkal": {
+      // AC Tatkal for 15910, 28 Oct 10:00. Only matters while still waitlisted.
       if (now > at + 2 * HOUR) return v("passed", "Tatkal window has passed.");
       if (sit.kind !== "waitlisted") return v("ok", `No action: ${sit.title.toLowerCase()}.`);
-      if (canBoard(BACKUP, live)) return v("ok", `No action: the backup ${BACKUP.train!.number} ${BACKUP.train!.name} has seats.`);
       const wl = maxWl(leg.id, live);
       const chance = minChance(leg.id, live);
       const risky = wl > 15 || (chance !== undefined && chance < 70);
@@ -53,15 +51,14 @@ export function evaluate(d: Deadline, live: LiveState, now: number): Verdict {
         ? v("upcoming", `Likely needed: still GNWL ${wl}${odds}. Decided on the morning of 28 Oct.`)
         : v("action", `Still GNWL ${wl}${odds}. Book Tatkal for all 4 when it opens at ${hhmm(at)}.`);
     }
-    case "ne-chart": {
+    case "aa-chart": {
       if (!charted) {
         return now < at
           ? v("upcoming", `Chart expected around ${stamp(chartTime(leg.depart))}. ${sit.title}.`)
           : v("upcoming", "Chart is late. Still checking every 15 minutes.");
       }
       if (sit.kind === "waitlisted") {
-        if (canBoard(BACKUP, live)) return v("ok", `12506 didn't clear, but the backup ${BACKUP.train!.number} has seats: take it from Delhi Jn.`);
-        return v("action", "All 4 still waitlisted after the chart: the ticket auto-cancels and refunds. Use the backup if it clears, a Tatkal ticket, or the Plan B alternatives.");
+        return v("action", "All 4 still waitlisted after the chart: the ticket auto-cancels and refunds. Book a Tatkal ticket, or pick one of the Plan B alternatives.");
       }
       return v("ok", `Chart done: ${sit.title.toLowerCase()}.`);
     }

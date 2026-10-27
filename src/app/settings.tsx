@@ -99,7 +99,7 @@ export default function Settings() {
       {isDeveloper(session) && (
         <Section title="Developer">
           <Card>
-            <LinkRow icon="wrench-outline" tone="accent" label="Developer options" sub="Backup train, live data, jobs, trip plan" onPress={() => router.push("/tools/dev")} />
+            <LinkRow icon="wrench-outline" tone="accent" label="Developer options" sub="Live data, jobs, trip plan" onPress={() => router.push("/tools/dev")} />
           </Card>
         </Section>
       )}
