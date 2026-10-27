@@ -121,7 +121,7 @@ export function legSituation(leg: Leg, live: LiveState): Situation {
   if (!pax.length) return { kind: "unreserved", health: "green", title: "Unreserved", advice: "" };
   const kinds = pax.map((p) => parseStatus(p.current).kind);
   const charted = live.legs[leg.id]?.chartPrepared ?? false;
-  const chartAt = `${dayMonth(chartTime(leg.depart))} ${hhmm(chartTime(leg.depart))}`;
+  const chartAt = `${dayMonth(chartTimeFor(leg))} ${hhmm(chartTimeFor(leg))}`;
   const n = (k: string) => kinds.filter((x) => x === k).length;
   const chances = pax.map((p) => p.confirmChance).filter((c): c is number => c !== undefined);
   const odds = chances.length
@@ -173,9 +173,12 @@ export const worst = (hs: Health[]): Health =>
 /* --------------------------------------------------------------- chart */
 
 /**
- * Indian Railways first-chart rule (from July 2025): trains leaving between
- * 05:01 and 14:00 are charted at 21:00 the previous day; all others about
- * 8 hours before departure. Live data overrides this when available.
+ * Indian Railways first-chart rule (Railway Board revision of December 2025,
+ * which replaced the July 2025 rule of 21:00 and 8 hours): trains leaving
+ * between 05:01 and 14:00 are charted by 20:00 the previous day; all others
+ * at least 10 hours before departure. The chart is prepared at the train's
+ * origin station, so a leg booked from further along the route should pass
+ * that departure (Leg.chartDepart). Live data overrides this when available.
  */
 export function chartTime(departIso: string) {
   const d = ms(departIso);
@@ -187,12 +190,15 @@ export function chartTime(departIso: string) {
   );
   const minutes = istHour * 60 + istMinute;
   if (minutes > 5 * 60 && minutes <= 14 * 60) {
-    // 21:00 IST on the previous day.
+    // 20:00 IST on the previous day.
     const midnight = d - minutes * MIN;
-    return midnight - 3 * HOUR;
+    return midnight - 4 * HOUR;
   }
-  return d - 8 * HOUR;
+  return d - 10 * HOUR;
 }
+
+/** The chart time for one of our legs, from the departure the chart is made at. */
+export const chartTimeFor = (leg: Leg) => chartTime(leg.chartDepart ?? leg.depart);
 
 /* --------------------------------------------------------------- steps */
 
