@@ -231,7 +231,8 @@ export const EVENT = {
   start: "2026-10-31T09:00:00+05:30",
   end: "2026-11-01T10:00:00+05:30",
   /** Hackathon mode (nav swap, schedule) is on during this window. */
-  modeStart: "2026-10-30T18:00:00+05:30",
+  // From our arrival at IIT (the 15910 reaches Kamakhya 00:35 on 31 Oct and we are at IIT by ~01:50).
+  modeStart: "2026-10-31T01:50:00+05:30",
   modeEnd: "2026-11-01T10:00:00+05:30",
 };
 
@@ -453,6 +454,20 @@ export const LEGS: Leg[] = [
 
 /** Money lost on a cancelled earlier booking (paid minus refund). */
 export const rebookingLoss = (leg: Leg) => (leg.rebooking ? leg.rebooking.oldPaid - leg.rebooking.refunded : 0);
+
+/**
+ * Leg ids that used to exist, mapped to the leg that replaced them. Uploaded
+ * documents and saved rows still carry the old id (the 15910 ticket was
+ * uploaded as the backup "B1" before it became our main train), so anything
+ * that looks a leg up in saved data goes through this.
+ */
+export const LEGACY_LEG_IDS: Record<string, LegId> = { B1: "L2" };
+
+/** Every saved id that belongs to this leg, current and old. */
+export const legIdAliases = (id: LegId): string[] => [id, ...Object.keys(LEGACY_LEG_IDS).filter((old) => LEGACY_LEG_IDS[old] === id)];
+
+/** The leg a saved id belongs to now (an old backup id maps to its replacement). */
+export const currentLegId = (saved: string): string => LEGACY_LEG_IDS[saved] ?? saved;
 
 /* ---------------------------------------------------------- connections */
 
@@ -685,7 +700,7 @@ export const GRANT = {
    * 3A legs are claimed at the sleeper fare per person (the policy pays the
    * most economical class). Garib Rath is 3A-only, so it's claimed in full.
    */
-  sleeperFarePerPerson: { L2: 825, L3: 825 } as Partial<Record<LegId, number>>,
+  sleeperFarePerPerson: { L2: 900, L3: 825 } as Partial<Record<LegId, number>>,
   /**
    * Things for the claim that aren't uploads (the HOD approval is a hard
    * copy). Everything else on the college's list (invitation, tickets,
