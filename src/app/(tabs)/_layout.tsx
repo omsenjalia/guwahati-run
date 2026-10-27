@@ -1,6 +1,7 @@
 import { Tabs } from "expo-router/js-tabs";
 import { useEffect } from "react";
 import { useAuth } from "@/core/auth";
+import { tr, useLang } from "@/i18n";
 import { keepSendingWhileOpen, sharingState } from "@/features/location";
 import { FloatingTabBar, type TabSpec } from "@/ui/tab-bar";
 import { useTheme } from "@/ui/theme";
@@ -23,6 +24,7 @@ const VISIBLE = {
 
 export default function TabsLayout() {
   const c = useTheme();
+  const { lang } = useLang();
   const role = useAuth().session?.role ?? "parent";
 
   useEffect(() => {
@@ -31,11 +33,11 @@ export default function TabsLayout() {
     void sharingState().then((s) => s !== "off" && keepSendingWhileOpen());
   }, [role]);
 
-  const specs = Object.fromEntries(VISIBLE[role].map((k) => [k, SPECS[k]]));
+  const specs = Object.fromEntries(VISIBLE[role].map((k) => [k, { ...SPECS[k], label: tr(SPECS[k].label, lang) }]));
   return (
     <Tabs screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: c.bg } }} tabBar={(props) => <FloatingTabBar {...props} specs={specs} />}>
       {Object.keys(SPECS).map((name) => (
-        <Tabs.Screen key={name} name={name} options={{ title: SPECS[name].label, href: VISIBLE[role].includes(name) ? undefined : null }} />
+        <Tabs.Screen key={name} name={name} options={{ title: tr(SPECS[name].label, lang), href: VISIBLE[role].includes(name) ? undefined : null }} />
       ))}
     </Tabs>
   );

@@ -6,19 +6,20 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TEAM, TRIP, type PersonId } from "@/data/trip";
 import { saveSession, signIn, type Role, type Session } from "@/core/auth";
 import { startSharing } from "@/features/location";
+import { LangPicker } from "@/i18n/picker";
 import { personIndex } from "@/features/trip";
 import { Avatar, Button, Icon, type IconName } from "@/ui/kit";
 import { T } from "@/ui/text";
 import { font, radius, useTheme } from "@/ui/theme";
 import { dayMonth } from "@/lib/time";
 
-type Step = "role" | "person" | "password" | "location";
+type Step = "language" | "role" | "person" | "password" | "location";
 
-/** Sign up / sign in: attendee or parent -> who -> password -> (attendees) location sharing. */
+/** Sign in: language -> attendee or parent -> who -> password -> (attendees) location sharing. */
 export default function Onboarding() {
   const c = useTheme();
   const insets = useSafeAreaInsets();
-  const [step, setStep] = useState<Step>("role");
+  const [step, setStep] = useState<Step>("language");
   const [role, setRole] = useState<Role>("team");
   const [who, setWho] = useState<PersonId | null>(null);
   const [password, setPassword] = useState("");
@@ -29,7 +30,7 @@ export default function Onboarding() {
 
   const back = () => {
     setError("");
-    setStep(step === "password" ? "person" : "role");
+    setStep(step === "password" ? "person" : step === "person" ? "role" : "language");
   };
 
   async function submit() {
@@ -77,13 +78,26 @@ export default function Onboarding() {
         </LinearGradient>
 
         <View style={[styles.sheet, { backgroundColor: c.bg, paddingBottom: insets.bottom + 24 }]}>
-          {step !== "role" && step !== "location" && (
+          {step !== "language" && step !== "role" && step !== "location" && (
             <Pressable onPress={back} hitSlop={10} style={styles.back} accessibilityRole="button" accessibilityLabel="Back">
               <Icon name="arrow-left" size={18} color={c.muted} />
               <T v="label" color="muted">
                 Back
               </T>
             </Pressable>
+          )}
+
+          {step === "language" && (
+            <>
+              <T v="title">Choose your language</T>
+              <T v="body" color="muted">
+                Everything in the app will be in this language. You can change it later in Settings.
+              </T>
+              <View style={{ gap: 12, marginTop: 6 }}>
+                <LangPicker label={false} />
+              </View>
+              <Button label="Continue" icon="arrow-right" onPress={() => setStep("role")} />
+            </>
           )}
 
           {step === "role" && (
