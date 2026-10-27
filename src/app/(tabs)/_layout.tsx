@@ -2,9 +2,8 @@ import { Tabs } from "expo-router/js-tabs";
 import { useEffect } from "react";
 import { useAuth } from "@/core/auth";
 import { useNow } from "@/core/data";
-import { TRIP_SPAN } from "@/data/trip";
+import { shownTabs } from "@/core/tabs";
 import { tr, useLang } from "@/i18n";
-import { ms } from "@/lib/time";
 import { keepSendingWhileOpen, sharingState } from "@/features/location";
 import { FloatingTabBar, type TabSpec } from "@/ui/tab-bar";
 import { useTheme } from "@/ui/theme";
@@ -20,19 +19,11 @@ const SPECS: Record<string, TabSpec> = {
   more: { label: "More", icon: "dots-grid", activeIcon: "dots-grid" },
 };
 
-/** Parents follow the trip; attendees get their ticket (PNR, then coach) instead of the map. */
-const VISIBLE = {
-  parent: ["index", "train", "plan", "location", "money", "more"],
-  team: ["index", "train", "ticket", "food", "plan", "money", "more"],
-};
-
 export default function TabsLayout() {
   const c = useTheme();
   const { lang } = useLang();
   const now = useNow();
   const role = useAuth().session?.role ?? "parent";
-  // The pantry car price list is only useful while we are on the trip.
-  const onTrip = now >= ms(TRIP_SPAN.start) && now < ms(TRIP_SPAN.end);
 
   useEffect(() => {
     if (role !== "team") return;
@@ -40,7 +31,8 @@ export default function TabsLayout() {
     void sharingState().then((s) => s !== "off" && keepSendingWhileOpen());
   }, [role]);
 
-  const shown = VISIBLE[role].filter((k) => k !== "food" || onTrip);
+  // The pantry car list only while we are around the journey (see core/tabs).
+  const shown = shownTabs(role, now);
   const specs = Object.fromEntries(shown.map((k) => [k, { ...SPECS[k], label: tr(SPECS[k].label, lang) }]));
   return (
     <Tabs screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: c.bg } }} tabBar={(props) => <FloatingTabBar {...props} specs={specs} />}>
