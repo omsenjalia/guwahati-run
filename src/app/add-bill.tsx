@@ -4,7 +4,7 @@ import * as ImagePicker from "expo-image-picker";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { Image, Pressable, StyleSheet, View } from "react-native";
-import { BACKUPS, LEGS, type LegId } from "@/data/trip";
+import { LEGS, type LegId } from "@/data/trip";
 import { useAuth } from "@/core/auth";
 import { refresh, useFeed } from "@/core/data";
 import { db, ensureDb } from "@/core/db";
@@ -25,7 +25,7 @@ const KINDS = [
   { value: "document", label: "Document" },
   { value: "certificate", label: "Certificate" },
 ] as const;
-const TRAINS = [...LEGS.filter((l) => l.train), ...BACKUPS];
+const TRAINS = LEGS.filter((l) => l.train);
 /** Paperwork the college asks for (the report checklist looks for these names). */
 const DOC_NAMES = ["Invitation letter", "Event schedule"];
 
@@ -173,7 +173,7 @@ function Form({ editing, initialKind }: { editing?: Expense; initialKind?: Kind 
           <T v="label" color="muted">
             Which train
           </T>
-          <Chips options={TRAINS.map((l) => ({ value: l.id, label: `${l.train!.number}${l.backupFor ? " (backup)" : ""}` }))} value={legId} onChange={setLegId} />
+          <Chips options={TRAINS.map((l) => ({ value: l.id, label: l.train!.number }))} value={legId} onChange={setLegId} />
           <T v="caption" color="faint">
             {TRAINS.find((l) => l.id === legId)?.train?.name}
           </T>

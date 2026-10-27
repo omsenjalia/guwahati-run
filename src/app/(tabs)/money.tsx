@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { BACKUPS, TEAM } from "@/data/trip";
+import { TEAM } from "@/data/trip";
 import { useAuth } from "@/core/auth";
 import { useFeed } from "@/core/data";
 import { Hero } from "@/features/bits";
@@ -110,11 +110,6 @@ function MoneyView({ docs, team }: { docs: DocRow[] | null; team?: boolean }) {
           <Card style={{ gap: 12 }}>
             {tickets.map((r, i) => (
               <TicketRow key={i} row={r} />
-            ))}
-            {BACKUPS.map((b) => (
-              <T key={b.id} v="caption" color="faint">
-                Not counted: backup {b.train!.number} {b.train!.name}, to be cancelled for a refund unless we use it.
-              </T>
             ))}
             {team && (
               <T v="caption" color="faint">

@@ -5,19 +5,19 @@ import type { LiveRunningStatus } from "@/lib/providers/types.ts";
 describe("average delay per stop", () => {
   it("keeps only passed stops with times, early counts as 0", () => {
     const run: LiveRunningStatus = {
-      trainNo: "12506",
+      trainNo: "15910",
       startDate: "2026-10-18",
       found: true,
       departed: true,
       terminated: false,
       stations: [
-        { code: "ANVT", name: "A", passed: true, dayCount: 1, delayDepMin: -3 },
-        { code: "CNB", name: "B", passed: true, dayCount: 1, delayArrMin: 20, delayDepMin: 25 },
-        { code: "PRYJ", name: "C", passed: true, dayCount: 1 },
-        { code: "KYQ", name: "D", passed: false, dayCount: 2, delayArrMin: 60 },
+        { code: "DLI", name: "A", passed: true, dayCount: 2, delayDepMin: -3 },
+        { code: "LKO", name: "B", passed: true, dayCount: 2, delayArrMin: 20, delayDepMin: 25 },
+        { code: "GKP", name: "C", passed: true, dayCount: 2 },
+        { code: "KYQ", name: "D", passed: false, dayCount: 4, delayArrMin: 60 },
       ],
     };
-    expect(runDelays(run)).toEqual({ startDate: "2026-10-18", delays: { ANVT: 0, CNB: 20 } });
+    expect(runDelays(run)).toEqual({ startDate: "2026-10-18", delays: { DLI: 0, LKO: 20 } });
     expect(runDelays({ ...run, stations: run.stations.slice(2) })).toBeNull();
   });
 

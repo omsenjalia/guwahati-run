@@ -450,7 +450,7 @@ function Details({
   } else if (leg?.kind === "transfer") {
     const from = PLACES[leg.from];
     const to = PLACES[leg.to];
-    add("map-marker-outline", `From ${from.name} to ${to.name}`);
+    add("map-marker-outline", leg.title ?? `From ${from.name} to ${to.name}`);
     add("transit-transfer", leg.modeHint);
     add(
       "clock-outline",

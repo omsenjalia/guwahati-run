@@ -60,7 +60,7 @@ export default function TripFile() {
       </Card>
       {!file && !note && <T v="caption">Loading from GitHub</T>}
       {file && <Input mono multiline value={text} onChangeText={setText} autoCapitalize="none" autoCorrect={false} spellCheck={false} style={{ minHeight: 480 }} />}
-      {file && <Input label="What did you change? (optional)" value={message} onChangeText={setMessage} placeholder="e.g. New platform for 12506" />}
+      {file && <Input label="What did you change? (optional)" value={message} onChangeText={setMessage} placeholder="e.g. New platform for 15910" />}
       {!!note && (
         <T v="label" color={note.ok ? "good" : "bad"}>
           {note.text}
