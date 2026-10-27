@@ -1,4 +1,4 @@
-import { BACKUPS, LEGS } from "@/data/trip";
+import { LEGS } from "@/data/trip";
 import { ROUTES } from "@/data/routes";
 import { MAX_RUNS, averageDelays, loadRuns, runDelays, saveRuns, type SavedRun } from "@/lib/delay-runs";
 import type { Delays } from "@/lib/live-types";
@@ -18,7 +18,7 @@ const cache = new Map<string, Delays>();
  */
 export async function GET(request: Request) {
   const id = new URL(request.url).searchParams.get("leg");
-  const leg = [...LEGS, ...BACKUPS].find((l) => l.id === id && l.train);
+  const leg = LEGS.find((l) => l.id === id && l.train);
   const trainNo = leg?.train?.number;
   const origin = trainNo && ROUTES[trainNo]?.[0]?.[0];
   if (!trainNo || !origin) return Response.json({ error: "No train with that id" }, { status: 404 });

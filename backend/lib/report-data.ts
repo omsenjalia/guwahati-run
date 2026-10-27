@@ -19,7 +19,7 @@ export type ReportRow = {
   ref?: string;
   date: string;
   category: string;
-  /** Short name, e.g. "12506 North East Express" or the expense title. */
+  /** Short name, e.g. "15910 Avadh Assam Express" or the expense title. */
   label: string;
   description: string;
   amount: number;

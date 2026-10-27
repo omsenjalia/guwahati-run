@@ -30,9 +30,9 @@ export function checkTripSource(text: string): string | null {
     return `The file doesn't run: ${e instanceof Error ? e.message : String(e)}`;
   }
   const t = mod.exports;
-  for (const name of ["TEAM", "LEGS", "BACKUPS", "PLACES", "EVENT"]) if (!t[name]) return `${name} is missing`;
+  for (const name of ["TEAM", "LEGS", "PLACES", "EVENT"]) if (!t[name]) return `${name} is missing`;
   type LegLike = { id?: string; depart?: string; arrive?: string };
-  const legs = [...(t.LEGS as LegLike[]), ...(t.BACKUPS as LegLike[])];
+  const legs = t.LEGS as LegLike[];
   for (const l of legs) {
     if (!l.id) return "A leg has no id";
     if (Number.isNaN(Date.parse(l.depart ?? "")) || Number.isNaN(Date.parse(l.arrive ?? ""))) {

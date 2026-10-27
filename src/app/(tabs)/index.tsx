@@ -30,7 +30,7 @@ export default function Home() {
 
   const steps = buildSteps(live);
   const state = computeNow(steps, now);
-  const legs = trainLegs(live);
+  const legs = trainLegs();
   const next = focusLeg(legs, live, now);
   const health = tripHealth(live, now);
   const conns = connectionStates(live).filter((x) => x.outboundDepart > now);
@@ -163,7 +163,7 @@ function checkpointLabel(state: NowState): string {
   if (state.phase === "pre-trip") return s.from ? PLACES[s.from].name : "Home";
   const active = state.focusMode === "active";
   if (s.kind === "train") return active ? `On ${s.leg?.train?.name ?? "the train"}` : PLACES[s.from!].name;
-  if (s.kind === "transfer") return active ? `On the way to ${PLACES[s.to!].short}` : PLACES[s.from!].name;
+  if (s.kind === "transfer") return active ? (s.leg?.title ?? `On the way to ${PLACES[s.to!].short}`) : PLACES[s.from!].name;
   if (s.kind === "event") return "Hackathon venue, IIT Guwahati";
   return s.place ? PLACES[s.place].name : "On the way";
 }

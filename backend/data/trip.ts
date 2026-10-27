@@ -30,7 +30,6 @@ export type PlaceId =
   | "ADI"
   | "SBIB"
   | "DLI"
-  | "ANVT"
   | "KYQ"
   | "IITG"
   | "DEE"
@@ -48,7 +47,7 @@ export type Place = {
   lon: number;
 };
 
-export type LegId = "L0" | "L0b" | "L1" | "L1b" | "L2" | "L2b" | "L3" | "L3b" | "L4" | "B1";
+export type LegId = "L0" | "L0b" | "L1" | "L1b" | "L2" | "L2b" | "L3" | "L3b" | "L4";
 
 export type LegKind = "train" | "transfer";
 
@@ -68,6 +67,8 @@ export type Leg = {
   train?: { number: string; name: string };
   /** For transfers: what we expect; the transfer planner recalculates live. */
   modeHint?: string;
+  /** Friendly title for a step that isn't a journey (e.g. waiting at a station). */
+  title?: string;
   depart: string;
   arrive: string;
   /** True when times are estimates (transfers). */
@@ -81,10 +82,8 @@ export type Leg = {
    * the status as last checked by hand; only `tracked` legs update live.
    */
   passengers?: { person: PersonId; booked: string; current?: string }[];
-  /** True for tickets the app still polls (North East Express and its backup). */
+  /** True for tickets the app still polls (the Avadh Assam Express). */
   tracked?: boolean;
-  /** A backup booking for this leg (kept only until we know which one we use). */
-  backupFor?: LegId;
   /** We get off before the ticket's destination (e.g. booked to Haridwar). */
   ticketTo?: string;
   /** A cancelled earlier booking for this leg: what it cost and what came back. */
@@ -127,7 +126,7 @@ export type TransferOption = {
   walkMin: number;
 };
 
-export type DeadlineId = "ne-tatkal" | "ne-chart" | "bp-late" | "gr-chart";
+export type DeadlineId = "aa-tatkal" | "aa-chart" | "bp-late" | "gr-chart";
 
 export type Deadline = {
   id: DeadlineId;
@@ -200,7 +199,7 @@ export const TEAM: Person[] = [
   },
 ];
 
-/** Has an Aadhaar-verified IRCTC account. Books North East Tatkal on 28 Oct if needed. */
+/** Has an Aadhaar-verified IRCTC account. Books Avadh Assam Tatkal on 28 Oct if needed. */
 export const TATKAL_BOOKER: PersonId = "oms";
 
 /* -------------------------------------------------------------- places */
@@ -211,7 +210,6 @@ export const PLACES: Record<PlaceId, Place> = {
   ADI: { id: "ADI", name: "Ahmedabad Junction (Kalupur)", short: "Ahmedabad", city: "Ahmedabad", code: "ADI", lat: 23.0264, lon: 72.6009 },
   SBIB: { id: "SBIB", name: "Sabarmati BG", short: "Sabarmati", city: "Ahmedabad", code: "SBIB", lat: 23.0784, lon: 72.5895 },
   DLI: { id: "DLI", name: "Delhi Junction (Old Delhi)", short: "Delhi Jn", city: "Delhi", code: "DLI", lat: 28.6616, lon: 77.2275 },
-  ANVT: { id: "ANVT", name: "Anand Vihar Terminal", short: "Anand Vihar", city: "Delhi", code: "ANVT", lat: 28.6502, lon: 77.3152 },
   KYQ: { id: "KYQ", name: "Kamakhya Junction", short: "Kamakhya", city: "Guwahati", code: "KYQ", lat: 26.1578, lon: 91.6935 },
   IITG: { id: "IITG", name: "IIT Guwahati", short: "IIT Guwahati", city: "Guwahati", lat: 26.1878, lon: 91.6916 },
   DEE: { id: "DEE", name: "Delhi Sarai Rohilla", short: "Sarai Rohilla", city: "Delhi", code: "DEE", lat: 28.6631, lon: 77.1867 },
@@ -274,7 +272,7 @@ export const DEMO_CHECKLIST = [
 
 /* ----------------------------------------------------------------- legs */
 // Each leg lists passengers in the order printed on its e-ticket (passenger 1-4).
-// The North East tracker matches live statuses to people by this order.
+// The 15910 tracker matches live statuses to people by this order.
 
 export const LEGS: Leg[] = [
   {
@@ -341,33 +339,41 @@ export const LEGS: Leg[] = [
     id: "L1b",
     kind: "transfer",
     from: "DLI",
-    to: "ANVT",
-    modeHint: "Chandni Chowk (Yellow Line) to Rajiv Chowk, then Blue Line to Anand Vihar",
+    to: "DLI",
+    // 15910 leaves from Delhi Jn itself, where the Yoga Express arrives: no change of station.
+    title: "Wait at Delhi Jn",
+    modeHint: "No change of station: breakfast and wait at Delhi Jn, then platform 16 for 15910",
     depart: "2026-10-29T05:15:00+05:30",
-    arrive: "2026-10-29T06:15:00+05:30",
+    arrive: "2026-10-29T07:00:00+05:30",
     approx: true,
   },
   {
     id: "L2",
     kind: "train",
-    from: "ANVT",
+    from: "DLI",
     to: "KYQ",
-    train: { number: "12506", name: "North East Express" },
-    km: 1856,
-    depart: "2026-10-29T07:40:00+05:30",
-    arrive: "2026-10-30T16:25:00+05:30",
+    // Avadh Assam Express, Lalgarh Jn to Dibrugarh. It reaches Delhi Jn on day 2
+    // of its run (07:07, departs 07:22) and Kamakhya on day 4 (00:35).
+    train: { number: "15910", name: "Avadh Assam Express" },
+    km: 1938,
+    depart: "2026-10-29T07:22:00+05:30",
+    arrive: "2026-10-31T00:35:00+05:30",
     travelClass: "3A",
-    pnr: "2164635217",
-    bookedStatus: "GNWL 81-84",
+    pnr: "2960910157",
+    bookedStatus: "GNWL 55-58",
     // Ticket order. Last known status (11 Oct); the tracker replaces it live.
     passengers: [
-      { person: "heet", booked: "GNWL 81", current: "GNWL 44" },
-      { person: "omk", booked: "GNWL 82", current: "GNWL 45" },
-      { person: "oms", booked: "GNWL 83", current: "GNWL 46" },
-      { person: "sujal", booked: "GNWL 84", current: "GNWL 47" },
+      { person: "heet", booked: "GNWL 55", current: "GNWL 16" },
+      { person: "omk", booked: "GNWL 57", current: "GNWL 18" },
+      { person: "sujal", booked: "GNWL 58", current: "GNWL 19" },
+      { person: "oms", booked: "GNWL 56", current: "GNWL 17" },
     ],
-    fareTotal: 8275.4,
+    fareTotal: 9095.4,
     tracked: true,
+    notes: [
+      "Leaves from Delhi Jn itself (platform 16), so no cross-city transfer.",
+      "Reaches Kamakhya 00:35 on 31 Oct, in time for 9:00 reporting.",
+    ],
   },
   {
     id: "L2b",
@@ -375,8 +381,8 @@ export const LEGS: Leg[] = [
     from: "KYQ",
     to: "IITG",
     modeHint: "Cab from Kamakhya to IIT Guwahati",
-    depart: "2026-10-30T16:45:00+05:30",
-    arrive: "2026-10-30T17:45:00+05:30",
+    depart: "2026-10-31T01:00:00+05:30",
+    arrive: "2026-10-31T01:50:00+05:30",
     approx: true,
   },
   {
@@ -437,43 +443,6 @@ export const LEGS: Leg[] = [
   },
 ];
 
-/* -------------------------------------------------------------- backups */
-// Extra bookings held in case a waitlisted ticket doesn't clear. Not part of
-// the itinerary, the money totals or the report: the one we don't use gets
-// cancelled for a refund.
-
-export const BACKUPS: Leg[] = [
-  {
-    id: "B1",
-    kind: "train",
-    backupFor: "L2",
-    from: "DLI",
-    to: "KYQ",
-    train: { number: "15910", name: "Avadh Assam Express" },
-    km: 1938,
-    // The e-ticket prints 22:50 on 28 Oct: that's the start at Pili Bangan.
-    // At Delhi Jn it leaves 07:22 on 29 Oct (timetable, day 2).
-    depart: "2026-10-29T07:22:00+05:30",
-    arrive: "2026-10-31T00:35:00+05:30",
-    travelClass: "3A",
-    pnr: "2960910157",
-    bookedStatus: "GNWL 55-58",
-    // Ticket order. Last known status (11 Oct); the tracker replaces it live.
-    passengers: [
-      { person: "heet", booked: "GNWL 55", current: "GNWL 16" },
-      { person: "omk", booked: "GNWL 57", current: "GNWL 18" },
-      { person: "sujal", booked: "GNWL 58", current: "GNWL 19" },
-      { person: "oms", booked: "GNWL 56", current: "GNWL 17" },
-    ],
-    fareTotal: 9095.4,
-    tracked: true,
-    notes: [
-      "Backup for 12506. Leaves from Delhi Jn itself (where the Yoga Express arrives), so no cross-city transfer.",
-      "Reaches Kamakhya 00:35 on 31 Oct: in time for 9:00 reporting, but we'd miss the hostel night on 30 Oct.",
-    ],
-  },
-];
-
 /** Money lost on a cancelled earlier booking (paid minus refund). */
 export const rebookingLoss = (leg: Leg) => (leg.rebooking ? leg.rebooking.oldPaid - leg.rebooking.refunded : 0);
 
@@ -486,10 +455,10 @@ export const CONNECTIONS: Connection[] = [
     inbound: "L1",
     transfer: "L1b",
     outbound: "L2",
-    plannedBufferMin: 170,
-    note: "Delhi Jn 04:50 to Anand Vihar 07:40, cross-city.",
+    plannedBufferMin: 152,
+    note: "Same station: Delhi Jn 04:50, 15910 leaves Delhi Jn 07:22.",
     planB: {
-      text: "Go straight to Anand Vihar by cab. If 12506 will still be missed, book the next train to Guwahati on IRCTC (AC Tatkal for tomorrow opens 10:00).",
+      text: "You are already at Delhi Jn. If 15910 is missed, book the next Delhi to Guwahati train on IRCTC (AC Tatkal for tomorrow opens 10:00).",
       owner: "oms",
       link: { label: "Open IRCTC", href: "https://www.irctc.co.in/nget/train-search" },
     },
@@ -512,8 +481,9 @@ export const CONNECTIONS: Connection[] = [
 
 /* ------------------------------------------------------------ transfers */
 // Used by the transfer planner to pick metro or cab from the live arrival time.
-// Metro hours: Ahmedabad Phase 1 runs 06:20 to 22:00; Delhi Yellow Line from
-// Chandni Chowk starts about 05:57. Confirm in the DMRC / GMRC apps before the trip.
+// Metro hours: Ahmedabad Phase 1 runs 06:20 to 22:00. Confirm in the GMRC app
+// before the trip. There is no Delhi transfer any more: 15910 leaves from
+// Delhi Jn, where the Yoga Express arrives.
 
 export const TRANSFERS: Partial<Record<LegId, TransferOption>> = {
   L0b: {
@@ -532,28 +502,11 @@ export const TRANSFERS: Partial<Record<LegId, TransferOption>> = {
     cab: { minutes: 30, fareTotal: 250, label: "Cab or auto" },
     walkMin: 10,
   },
-  L1b: {
-    metro: {
-      route: "Chandni Chowk to Rajiv Chowk (Yellow Line), then Blue Line to Anand Vihar",
-      lines: [
-        { name: "Yellow Line", color: "#eab308" },
-        { name: "Blue Line", color: "#2563eb" },
-      ],
-      interchange: "Rajiv Chowk",
-      minutes: 50,
-      // First Yellow Line train from Chandni Chowk is about 05:57 (aggregators, Oct 2026).
-      firstTrain: "06:00",
-      lastTrain: "23:30",
-      farePerPerson: 45,
-    },
-    cab: { minutes: 40, fareTotal: 450, label: "Cab" },
-    walkMin: 15,
-  },
   L2b: { cab: { minutes: 50, fareTotal: 600, label: "Cab" }, walkMin: 10 },
   L3b: { cab: { minutes: 25, fareTotal: 150, label: "Auto or cab" }, walkMin: 10 },
 };
 
-/* ------------------------------------------------------------- backups */
+/* ------------------------------------------------------ fallback trains */
 
 export const FALLBACK_TRAINS = {
   /** Used if 15658 is running 3h+ late on 2 Nov. */
@@ -572,15 +525,14 @@ export const IRCTC_BOOK_URL = "https://www.irctc.co.in/nget/train-search";
 export const IRCTC_PNR_URL = "https://www.indianrail.gov.in/enquiry/PNR/PnrEnquiry.html?locale=en";
 
 /**
- * If 12506 is fully waitlisted after its chart: other Delhi to Guwahati
+ * If 15910 is fully waitlisted after its chart: other Delhi to Guwahati
  * trains on 29 Oct. Times and seats are fetched live (Plan B card).
  */
-export const NE_ALTERNATIVES = {
+export const ALTERNATE_TRAINS = {
   date: "2026-10-29",
   trains: [
     { number: "12424", name: "Dibrugarh Rajdhani", from: "NDLS", fromName: "New Delhi", to: "GHY", toName: "Guwahati" },
     { number: "15657", name: "Brahmaputra Express", from: "DLI", fromName: "Delhi Jn", to: "KYQ", toName: "Kamakhya" },
-    { number: "15910", name: "Avadh Assam Express", from: "DLI", fromName: "Delhi Jn", to: "GHY", toName: "Guwahati" },
   ],
   classes: ["3A", "SL"],
   flightsUrl: "https://www.google.com/travel/flights?q=Flights%20from%20DEL%20to%20GAU%20on%202026-10-29%20one%20way",
@@ -590,20 +542,20 @@ export const NE_ALTERNATIVES = {
 
 export const DEADLINES: Deadline[] = [
   {
-    id: "ne-tatkal",
+    id: "aa-tatkal",
     at: "2026-10-28T10:00:00+05:30",
-    title: "NE Tatkal decision (only if still WL)",
+    title: "Avadh Assam Tatkal decision (only if still WL)",
     condition: "Confirmation chance is under about 70% or GNWL is still above about 15-20.",
     action:
-      "Book Tatkal 3A for all 4 for 29 Oct, Anand Vihar to Kamakhya. We'll be in Ahmedabad that morning (Yoga leaves 11:25), so book from there.",
+      "Book Tatkal 3A for all 4 for 29 Oct, Delhi Jn to Kamakhya. We'll be in Ahmedabad that morning (Yoga leaves 11:25), so book from there.",
     leg: "L2",
     owner: "oms",
     link: { label: "Open IRCTC", href: IRCTC_BOOK_URL },
   },
   {
-    id: "ne-chart",
+    id: "aa-chart",
     at: "2026-10-28T21:00:00+05:30",
-    title: "Chart for 12506 North East Exp",
+    title: "Chart for 15910 Avadh Assam Exp",
     condition: "All 4 still waitlisted after charting.",
     action:
       "The ticket auto-cancels and refunds. Use the Tatkal ticket, or pick another Delhi to Guwahati option for 29 Oct. If even 1 of us is confirmed or RAC, all 4 can board.",
@@ -638,11 +590,13 @@ export const BLOCKS: Block[] = [
   {
     id: "settle",
     kind: "stay",
-    title: "Check in at IIT Guwahati, rest",
-    start: "2026-10-30T17:45:00+05:30",
+    title: "Reach IIT Guwahati, freshen up and rest",
+    start: "2026-10-31T01:50:00+05:30",
     end: "2026-10-31T09:30:00+05:30",
     place: "IITG",
-    notes: ["Hostel room and dinner are included in our fee (team Visonaris, WC4U2026-18). Carry the fee receipt."],
+    notes: [
+      "We reach IIT from Kamakhya around 01:50, so the hostel night and dinner on 30 Oct are spent on the train. Hostel and meals are included in our fee (team Visonaris, WC4U2026-18): carry the fee receipt and ask at the desk for a room.",
+    ],
   },
   {
     id: "hackathon",
@@ -684,7 +638,7 @@ export const USEFUL_NUMBERS = [
 /* ------------------------------------------------------------ reminders */
 
 export const REMINDERS = [
-  "Om Senjalia: name is SENJALIYA on the North East Exp ticket. Carry an original photo ID.",
+  "Om Senjalia: name is SENJALIYA on the Avadh Assam Exp ticket. Carry an original photo ID.",
   "Garib Rath has no bedding. Carry a bedsheet each.",
   "Arrival at Anand is 01:42 on 4 Nov. Rapido or auto home, stay together.",
 ];

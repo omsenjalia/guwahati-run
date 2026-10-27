@@ -29,7 +29,7 @@ export default function Wallet() {
   const { rows: docs } = useDocs();
   const [tte, setTte] = useState<Leg | null>(null);
   const [error, setError] = useState("");
-  const tickets = trainLegs(live).filter((l) => l.pnr);
+  const tickets = trainLegs().filter((l) => l.pnr);
 
   return (
     <Page title="Ticket wallet" subtitle="Works offline">
@@ -42,7 +42,6 @@ export default function Wallet() {
               <View style={{ flex: 1 }}>
                 <T v="caption" color="muted" num>
                   {leg.train?.number} · {leg.travelClass}
-                  {leg.backupFor ? " · Backup" : ""}
                 </T>
                 <T v="heading">{leg.train?.name}</T>
               </View>

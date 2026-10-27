@@ -217,7 +217,7 @@ function legTimes(leg: Leg, live: LiveState, prevArrive?: number) {
 const legTitle = (leg: Leg) =>
   leg.train
     ? `${leg.train.number} ${leg.train.name}`
-    : `${PLACES[leg.from].short} to ${PLACES[leg.to].short}`;
+    : (leg.title ?? `${PLACES[leg.from].short} to ${PLACES[leg.to].short}`);
 
 /** Every step of the trip, sorted, with live-adjusted times. */
 export function buildSteps(live: LiveState): Step[] {
@@ -431,7 +431,8 @@ export type ConnectionState = {
 };
 
 /** Transfer time assumed between arrival and the next departure, minutes. */
-const TRANSFER_MIN: Record<string, number> = { L1b: 60, L3b: 30 };
+// L1b is a wait at the same station, so it takes no transfer time.
+const TRANSFER_MIN: Record<string, number> = { L1b: 0, L3b: 30 };
 
 export function connectionStates(live: LiveState): ConnectionState[] {
   const steps = buildSteps(live);

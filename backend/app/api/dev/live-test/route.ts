@@ -1,4 +1,4 @@
-import { BACKUPS, LEGS } from "@/data/trip";
+import { LEGS } from "@/data/trip";
 import { ROUTES } from "@/data/routes";
 import { isDeveloper, sessionFrom } from "@/lib/auth";
 import { getLiveRunningStatus } from "@/lib/providers/index.ts";
@@ -14,7 +14,7 @@ export const maxDuration = 60;
 export async function GET(request: Request) {
   if (!isDeveloper(await sessionFrom(request))) return Response.json({ error: "Developer only" }, { status: 403 });
   const id = new URL(request.url).searchParams.get("leg");
-  const leg = [...LEGS, ...BACKUPS].find((l) => l.id === id && l.train);
+  const leg = LEGS.find((l) => l.id === id && l.train);
   const origin = leg && ROUTES[leg.train!.number]?.[0]?.[0];
   if (!leg || !origin) return Response.json({ error: "No train with that id" }, { status: 404 });
   const errors: string[] = [];

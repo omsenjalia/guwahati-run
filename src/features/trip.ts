@@ -1,8 +1,7 @@
-import { BACKUPS, LEGS, PLACES, TEAM, type Leg, type PersonId } from "@/data/trip";
+import { LEGS, PLACES, TEAM, type Leg, type PersonId } from "@/data/trip";
 import type { LiveState } from "@/lib/live-types";
 import type { StopTime } from "@/lib/meal-planner";
 import type { StationStatus } from "@/lib/providers/types.ts";
-import { storedChoice } from "@/lib/ticket-choice";
 import { legPassengers, parseStatus, type ParsedStatus } from "@/lib/trip-engine";
 import { ms } from "@/lib/time";
 import type { Tone } from "@/ui/theme";
@@ -13,19 +12,9 @@ export const person = (id: PersonId) => TEAM.find((p) => p.id === id)!;
 export const personIndex = (id: PersonId) => TEAM.findIndex((p) => p.id === id);
 export const firstName = (id: PersonId) => person(id).name.split(" ")[0];
 
-/**
- * Our train tickets in trip order. The North East Express and its backup are
- * both listed until the background job decides which one we use.
- */
-export function trainLegs(live: LiveState): Leg[] {
-  const choice = storedChoice(live);
-  const legs = LEGS.filter((l) => l.kind === "train");
-  const out: Leg[] = [];
-  for (const l of legs) {
-    if (choice?.winner !== BACKUPS[0].id || l.id !== BACKUPS[0].backupFor) out.push(l);
-    for (const b of BACKUPS) if (b.backupFor === l.id && choice?.loser !== b.id) out.push(b);
-  }
-  return out;
+/** Our train tickets in trip order. */
+export function trainLegs(): Leg[] {
+  return LEGS.filter((l) => l.kind === "train");
 }
 
 /** Going trains (Anand to Guwahati) until the end of 31 Oct, then only the trains home. */
@@ -40,11 +29,10 @@ const liveStart = (l: Leg, live: LiveState) => ms(live.legs[l.id]?.expectedDepar
 
 /** The train to show first: the one we're on, else the next one, else the last. */
 export function focusLeg(legs: Leg[], live: LiveState, now: number): Leg {
-  const main = legs.filter((l) => !l.backupFor);
   return (
-    main.find((l) => liveStart(l, live) - 3 * 3600_000 <= now && now <= liveEnd(l, live) + 30 * 60_000) ??
-    main.find((l) => liveStart(l, live) > now) ??
-    main[main.length - 1]
+    legs.find((l) => liveStart(l, live) - 3 * 3600_000 <= now && now <= liveEnd(l, live) + 30 * 60_000) ??
+    legs.find((l) => liveStart(l, live) > now) ??
+    legs[legs.length - 1]
   );
 }
 

@@ -3,10 +3,9 @@
  * alerts. Everything they conclude is stored in app_state so every phone
  * shows the same verdicts, and each alert is sent only once.
  *
- *   connections   buffer for both Delhi transfers, green/amber/red, plan B
+ *   connections   buffer for both Delhi connections, green/amber/red, plan B
  *   transfers     metro or cab for each transfer, from the live ETA
  *   deadlines     every backup rule evaluated: "action needed" or "no action"
- *   ticket choice North East vs backup: first to clear wins, cancel the other
  *   wake          "Wake up, Delhi in 45 min" from the live ETA
  *   leave IIT     1 Nov: 30 min before and at the "leave IIT by" time
  *   briefing      07:00 IST daily summary during the trip
@@ -21,7 +20,6 @@ import { evaluate, type Verdict } from "@/lib/deadline-rules";
 import { planTransfers, type TransferPlan } from "@/lib/transfer-planner";
 import { buildSteps, computeNow, connectionStates, type ConnectionState, type Health } from "@/lib/trip-engine";
 import { returnLeaveBy } from "@/lib/phases";
-import { choiceText, decideChoice, type TicketChoice } from "@/lib/ticket-choice";
 
 const name = (id: string) => TEAM.find((p) => p.id === id)?.short ?? id;
 
@@ -30,13 +28,12 @@ type Store = {
   transfers?: Record<string, TransferPlan>;
   deadlines?: Record<string, Verdict>;
   sent?: Record<string, number>;
-  "ticket-choice"?: TicketChoice;
 };
 
 
 export async function runWatchers(legs: Map<string, LegLive>, now: number) {
   const db = serverDb();
-  const keys = ["connections", "transfers", "deadlines", "sent", "ticket-choice"];
+  const keys = ["connections", "transfers", "deadlines", "sent"];
   const { data } = await db.from("app_state").select("key, value").in("key", keys);
   const prev: Store = Object.fromEntries((data ?? []).map((r) => [r.key, r.value]));
   const sent = { ...(prev.sent ?? {}) };
@@ -49,13 +46,6 @@ export async function runWatchers(legs: Map<string, LegLive>, now: number) {
   };
 
   const live: LiveState = { legs: Object.fromEntries(legs), state: {} };
-
-  /* ---- North East vs backup ------------------------------------------- */
-  const choice = decideChoice(prev["ticket-choice"], live, now);
-  if (choice && !prev["ticket-choice"]) {
-    const t = choiceText(choice);
-    once(`ticket-choice-${choice.winner}`, { kind: "pnr", title: t.title, body: t.action, url: "/tickets" });
-  }
 
   /* ---- connections ---------------------------------------------------- */
   const conns = connectionStates(live);
@@ -182,7 +172,6 @@ export async function runWatchers(legs: Map<string, LegLive>, now: number) {
     { key: "transfers", value: Object.fromEntries(plans.map((p) => [p.legId, p])) },
     { key: "deadlines", value: verdicts },
     { key: "sent", value: sent },
-    ...(choice ? [{ key: "ticket-choice", value: choice }] : []),
     ...(briefing ? [{ key: "briefing", value: briefing }] : []),
   ].map((r) => ({ ...r, updated_at: new Date(now).toISOString() }));
   const { error } = await db.from("app_state").upsert(rows);

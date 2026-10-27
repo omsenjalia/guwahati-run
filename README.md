@@ -21,7 +21,7 @@ Sign in as **an attendee** (your name + your password) or **a parent** (whose pa
 
 Attendees' phones send their location every 30 minutes, also with the app closed (Android shows a small "sharing location" notification).
 
-The server does the rest automatically: Supabase calls `/api/jobs/tick` every 5 minutes to track PNRs (every ticket in the 3 days before departure, the North East Express more often), live running status, weather and timetables, and to send alerts.
+The server does the rest automatically: Supabase calls `/api/jobs/tick` every 5 minutes to track PNRs (every ticket in the 3 days before departure, the Avadh Assam Express more often), live running status, weather and timetables, and to send alerts.
 
 ## Structure
 
