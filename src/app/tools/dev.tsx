@@ -1,7 +1,6 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
-import type { LegId } from "@/data/trip";
 import { api } from "@/core/api";
 import { useAuth } from "@/core/auth";
 import { refresh, useFeed, useNow } from "@/core/data";
@@ -11,16 +10,15 @@ import { LegChip } from "@/features/bits";
 import { firstName, trainLegs } from "@/features/trip";
 import { isDeveloper } from "@/lib/auth";
 import type { LegLive } from "@/lib/live-types";
-import { BACKUP, PRIMARY, storedChoice, type TicketChoice } from "@/lib/ticket-choice";
-import { ago, stamp } from "@/lib/time";
-import { Button, Card, Chips, confirm, Empty, InfoRow, Input, LinkRow, Pill, Section } from "@/ui/kit";
+import { ago } from "@/lib/time";
+import { Button, Card, Chips, confirm, Empty, Input, LinkRow, Pill, Section } from "@/ui/kit";
 import { Page } from "@/ui/screen";
 import { T } from "@/ui/text";
 
 /**
- * Developer options, Om only (the server checks too): switch the backup
- * train off, override live train data, run background jobs, edit any saved
- * value, and edit the trip plan itself.
+ * Developer options, Om only (the server checks too): override live train
+ * data, run background jobs, edit any saved value, and edit the trip plan
+ * itself.
  */
 
 type StateRow = { key: string; value: unknown; updated_at: string };
@@ -52,7 +50,6 @@ export default function Dev() {
         </T>
       )}
       <ThisPhoneCard />
-      <TicketChoiceCard onSaved={reload} />
       <LiveTestCard />
       <OverrideCard overrides={data?.overrides ?? []} onSaved={reload} />
       <JobsCard onRan={reload} />
@@ -89,66 +86,11 @@ function ThisPhoneCard() {
   );
 }
 
-/* ------------------------------------------------------- ticket choice */
-
-/** North East vs backup: pick the winner by hand (turns the other one off everywhere). */
-function TicketChoiceCard({ onSaved }: { onSaved: () => Promise<void> }) {
-  const live = useFeed().live;
-  const choice = storedChoice(live);
-  const [busy, setBusy] = useState(false);
-  const [note, setNote] = useState("");
-  const name = (id: LegId) => (id === PRIMARY.id ? `${PRIMARY.train!.number} North East` : `${BACKUP.train!.number} ${BACKUP.train!.name}`);
-
-  async function set(next: TicketChoice | null) {
-    const msg = next ? `Use ${name(next.winner)}. ${name(next.loser)} disappears from every phone and stops being tracked.` : "Watch both tickets again until one clears.";
-    if (!(await confirm("Change the ticket choice?", msg, "Change"))) return;
-    setBusy(true);
-    setNote("");
-    await save("app_state", "ticket-choice", next).catch((e) => setNote(e instanceof Error ? e.message : String(e)));
-    await onSaved();
-    setBusy(false);
-  }
-
-  return (
-    <Section title="Backup train">
-      <Card style={{ gap: 12 }}>
-        <InfoRow
-          icon={choice ? "check-decagram" : "help-circle-outline"}
-          tone={choice ? "good" : "warn"}
-          label="Ticket choice"
-          value={choice ? `Using ${name(choice.winner)}; ${name(choice.loser)} is off (since ${stamp(choice.at)})` : "Not decided: both tickets are shown and tracked"}
-        />
-        <Button
-          label={`Use North East, turn off ${BACKUP.train!.number}`}
-          icon="train"
-          kind={choice?.winner === PRIMARY.id ? "secondary" : "primary"}
-          loading={busy}
-          disabled={choice?.winner === PRIMARY.id}
-          onPress={() => void set({ winner: PRIMARY.id, loser: BACKUP.id, at: Date.now() })}
-        />
-        <Button
-          label={`Use ${BACKUP.train!.number}, turn off North East`}
-          icon="lifebuoy"
-          kind="secondary"
-          disabled={busy || choice?.winner === BACKUP.id}
-          onPress={() => void set({ winner: BACKUP.id, loser: PRIMARY.id, at: Date.now() })}
-        />
-        {choice && <Button label="Undo: show and track both" icon="undo" kind="ghost" disabled={busy} onPress={() => void set(null)} />}
-        {!!note && (
-          <T v="caption" color="bad">
-            {note}
-          </T>
-        )}
-      </Card>
-    </Section>
-  );
-}
-
 /* ------------------------------------------------------- live test */
 
 /** Opens the Train tab on the latest real run of one of our trains, to see live tracking work before the trip. */
 function LiveTestCard() {
-  const legs = trainLegs(useFeed().live);
+  const legs = trainLegs();
   return (
     <Section title="Test live tracking">
       <Card style={{ gap: 12 }}>
@@ -178,8 +120,7 @@ const tri = (v?: boolean): Tri => (v === undefined ? "auto" : v ? "yes" : "no");
 
 /** Hand-set live fields for one train; they win over fetched data until cleared. */
 function OverrideCard({ overrides, onSaved }: { overrides: OverrideRow[]; onSaved: () => Promise<void> }) {
-  const live = useFeed().live;
-  const legs = trainLegs(live);
+  const legs = trainLegs();
   const [legId, setLegId] = useState<string>(legs[0]?.id ?? "L1");
   const leg = legs.find((l) => l.id === legId) ?? legs[0];
   const current = overrides.find((o) => o.leg_id === leg?.id);
@@ -198,7 +139,7 @@ function OverrideCard({ overrides, onSaved }: { overrides: OverrideRow[]; onSave
 
 function OverrideForm({ legId, saved, onSaved }: { legId: string; saved?: Partial<LegLive>; onSaved: () => Promise<void> }) {
   const live = useFeed().live;
-  const leg = trainLegs(live).find((l) => l.id === legId)!;
+  const leg = trainLegs().find((l) => l.id === legId)!;
   const fetched = live.legs[leg.id];
   const o = saved ?? {};
   const [platform, setPlatform] = useState(o.platform ?? "");
@@ -361,7 +302,7 @@ function JobsCard({ onRan }: { onRan: () => Promise<void> }) {
 
 /* ---------------------------------------------------------- app_state */
 
-/** Every saved value (weather, schedules, ticket choice, watches...) as editable JSON. */
+/** Every saved value (weather, schedules, watches...) as editable JSON. */
 function StateCard({ rows, onSaved }: { rows: StateRow[] | null; onSaved: () => Promise<void> }) {
   const now = useNow();
   const [open, setOpen] = useState<string | null>(null);

@@ -2,7 +2,7 @@
   "expo": {
     "name": "Guwahati Run",
     "slug": "guwahati-run",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "guwahatirun",
@@ -10,6 +10,7 @@
     "backgroundColor": "#0B1220",
     "android": {
       "package": "com.omsenjalia.guwahatirun",
+      "versionCode": 2,
       "adaptiveIcon": {
         "backgroundColor": "#0B1220",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

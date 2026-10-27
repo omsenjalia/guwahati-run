@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { BACKUPS, LEGS } from "@/data/trip";
+import { LEGS } from "@/data/trip";
 import { RETURN_FROM, tripHalf } from "./trip";
 import { ms } from "@/lib/time";
 
-const legs = [...LEGS, ...BACKUPS].filter((l) => l.kind === "train");
+const legs = LEGS.filter((l) => l.kind === "train");
 
 describe("tripHalf", () => {
   it("shows only the trains to Guwahati up to 31 Oct", () => {
