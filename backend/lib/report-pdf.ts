@@ -180,17 +180,38 @@ function tripSummary(w: Writer, summary: string) {
 function expenseTable(w: Writer, rows: ReportRow[], t: ReturnType<typeof reportTotals>) {
   w.newPage();
   w.text("Expenses", { size: 18, bold: true, gap: 4 });
-  w.text("Every ticket and bill. Ref is the receipt number in the appendix; '-' means no bill attached.", { size: 9, color: GREY, gap: 6 });
-  w.table(
-    [{ title: "Ref", width: 36 }, { title: "Date", width: 46 }, { title: "Category", width: 76 }, { title: "Description" }, { title: "Amount", width: 84, align: "right" }],
-    rows.map((r) => [r.ref ?? "-", dayMonth(`${r.date}T12:00:00+05:30`), r.category, r.description, money(r.amount)]),
+  w.text(
+    "Every ticket and bill. Paid is what we spent; Claimed is what the SSIP policy pays, which for a 3A ticket is the sleeper fare. " +
+      "Ref is the receipt number in the appendix; '-' means no bill attached.",
+    { size: 9, color: GREY, gap: 6 },
   );
-  w.ensure(120);
+  w.table(
+    [
+      { title: "Ref", width: 32 },
+      { title: "Date", width: 42 },
+      { title: "Category", width: 60 },
+      { title: "Description" },
+      { title: "Paid", width: 58, align: "right" },
+      { title: "Claimed", width: 58, align: "right" },
+    ],
+    rows.map((r) => [r.ref ?? "-", dayMonth(`${r.date}T12:00:00+05:30`), r.category, r.description, money(r.amount), money(r.eligible)]),
+  );
+  w.ensure(140);
   w.text("Subtotals by category", { size: 12, bold: true, gap: 2 });
   w.table(
-    [{ title: "Category" }, { title: "Amount", width: 110, align: "right" }],
-    [...t.byCategory.map(([c, v]) => [c, money(v)]), ["Grand total", money(t.total)]],
+    [{ title: "Category" }, { title: "Paid", width: 90, align: "right" }, { title: "Claimed", width: 90, align: "right" }],
+    [
+      ...t.byCategory.map(([c, v]) => [c, money(v), money(t.claimedByCategory.find(([k]) => k === c)?.[1] ?? 0)]),
+      ["Grand total", money(t.total), money(t.claimed)],
+    ],
     { boldLast: true },
+  );
+  const saved = t.total - t.claimed;
+  w.text(
+    saved > 0.5
+      ? `Claimed is ${money(saved)} less than paid: the 3A tickets are claimed at the sleeper fare, as the policy pays the most economical class.`
+      : "Claimed equals paid: every cost here is covered in full.",
+    { size: 9, color: GREY, gap: 4 },
   );
 }
 
