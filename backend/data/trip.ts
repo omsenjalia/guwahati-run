@@ -756,3 +756,14 @@ export const TRIP = {
   timezone: "Asia/Kolkata",
   perPersonEachWayTarget: 3000,
 };
+
+/**
+ * The trip's own window, read off LEGS instead of typed in: it opens with the
+ * first departure and closes when the last leg arrives home. Anything that
+ * should only exist while we are away (the pantry car price list) keys off this,
+ * so adding a train or changing a time moves the window with it.
+ */
+export const TRIP_SPAN = {
+  start: LEGS.reduce((a, l) => (new Date(l.depart).getTime() < new Date(a).getTime() ? l.depart : a), LEGS[0].depart),
+  end: LEGS.reduce((a, l) => (new Date(l.arrive).getTime() > new Date(a).getTime() ? l.arrive : a), LEGS[0].arrive),
+};

@@ -11,7 +11,7 @@
  *   briefing      07:00 IST daily summary during the trip
  *   settle        Splitwise reminder after the trip
  */
-import { CONNECTIONS, DEADLINES, EVENT, LEGS, PLACES, REST_PLAN, BOOKING_OWNER, TEAM } from "@/data/trip";
+import { CONNECTIONS, DEADLINES, EVENT, LEGS, PLACES, REST_PLAN, BOOKING_OWNER, TEAM, TRIP_SPAN } from "@/data/trip";
 import type { LegLive, LiveState } from "@/lib/live-types";
 import { notify, type Alert } from "@/lib/notify";
 import { serverDb } from "@/lib/supabase/server";
@@ -147,8 +147,9 @@ export async function runWatchers(legs: Map<string, LegLive>, now: number) {
   }
 
   /* ---- morning briefing ---------------------------------------------- */
-  const tripStart = ms("2026-10-27T00:00:00+05:30");
-  const tripEnd = ms("2026-11-04T23:59:00+05:30");
+  // Straight off the legs: morning briefings only while the trip is running.
+  const tripStart = ms(TRIP_SPAN.start);
+  const tripEnd = ms(TRIP_SPAN.end);
   const istMin = Math.floor(((now + 5.5 * HOUR) % (24 * HOUR)) / MIN);
   let briefing: { at: number; title: string; body: string } | undefined;
   if (now >= tripStart && now <= tripEnd && istMin >= 7 * 60 && istMin < 7 * 60 + 30) {
@@ -157,7 +158,8 @@ export async function runWatchers(legs: Map<string, LegLive>, now: number) {
   }
 
   /* ---- settle up ------------------------------------------------------ */
-  if (now >= ms("2026-11-04T10:00:00+05:30") && now < ms("2026-11-07T00:00:00+05:30")) {
+  // Ten hours after we are home, then for two days.
+  if (now >= tripEnd + 10 * HOUR && now < tripEnd + 58 * HOUR) {
     once("settle-up", {
       kind: "settle",
       title: "Home safe? Settle up in Splitwise",
