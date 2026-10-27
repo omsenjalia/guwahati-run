@@ -71,6 +71,8 @@ export function parseStatus(raw: string | undefined): ParsedStatus {
   if (s.startsWith("CNF")) return { kind: "CNF", label: "CNF" };
   const rac = s.match(/RAC\s*(\d+)/);
   if (rac) return { kind: "RAC", label: `RAC ${rac[1]}`, number: +rac[1] };
+  // "RAC" on its own: allotted a place but no number/berth until the chart is out.
+  if (s === "RAC") return { kind: "RAC", label: "RAC" };
   const wl = s.match(/(PQWL|RLWL|GNWL|TQWL|RSWL|WL)\s*(\d+)/);
   if (wl) return { kind: "WL", label: `${wl[1]} ${wl[2]}`, number: +wl[2] };
   return { kind: "UNKNOWN", label: raw ?? "" };
@@ -138,7 +140,7 @@ export function legSituation(leg: Leg, live: LiveState): Situation {
           kind: "waitlisted",
           health: "red",
           title: "Still waitlisted after the chart",
-          advice: "A fully waitlisted e-ticket is cancelled and refunded automatically. Use the Tatkal ticket or one of the alternatives in Plan B.",
+          advice: "A fully waitlisted e-ticket is cancelled and refunded automatically. Pick another train from Plan B.",
         }
       : {
           kind: "waitlisted",
