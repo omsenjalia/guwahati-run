@@ -71,6 +71,11 @@ export type Leg = {
   title?: string;
   depart: string;
   arrive: string;
+  /**
+   * Departure the reservation chart is prepared at, when that isn't our
+   * boarding station (the chart is made where the train starts).
+   */
+  chartDepart?: string;
   /** True when times are estimates (transfers). */
   approx?: boolean;
   travelClass?: "SL" | "3A" | "UR";
@@ -358,6 +363,9 @@ export const LEGS: Leg[] = [
     km: 1938,
     depart: "2026-10-29T07:22:00+05:30",
     arrive: "2026-10-31T00:35:00+05:30",
+    // The ticket is booked from Pili Bangan (PGK), where 15910 starts its run
+    // at 22:50 on 28 Oct: that is where the chart is prepared.
+    chartDepart: "2026-10-28T22:50:00+05:30",
     travelClass: "3A",
     pnr: "2960910157",
     bookedStatus: "GNWL 55-58",
@@ -554,7 +562,8 @@ export const DEADLINES: Deadline[] = [
   },
   {
     id: "aa-chart",
-    at: "2026-10-28T21:00:00+05:30",
+    // 10 hours before 15910 leaves Pili Bangan (22:50 on 28 Oct), where the chart is made.
+    at: "2026-10-28T12:50:00+05:30",
     title: "Chart for 15910 Avadh Assam Exp",
     condition: "All 4 still waitlisted after charting.",
     action:
@@ -575,7 +584,8 @@ export const DEADLINES: Deadline[] = [
   },
   {
     id: "gr-chart",
-    at: "2026-11-02T21:00:00+05:30",
+    // 20:00 the previous day for a 08:55 departure.
+    at: "2026-11-02T20:00:00+05:30",
     title: "Chart for 12215 Garib Rath",
     condition: "We switched to 12918.",
     action: "Cancel 12215 before this time for a refund.",
