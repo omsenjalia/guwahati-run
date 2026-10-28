@@ -36,7 +36,13 @@ describe("the trip window that shows the Food tab", () => {
 
   it("keeps the order of the team tabs", () => {
     const midTrip = ms(TRIP_SPAN.start) + DAY;
-    expect(shownTabs("team", midTrip)).toEqual(["index", "train", "ticket", "food", "plan", "money", "more"]);
+    expect(shownTabs("team", midTrip)).toEqual(["index", "train", "ticket", "food", "plan", "money", "chat", "more"]);
     expect(VISIBLE.parent).not.toContain("ticket");
+  });
+
+  it("shows Chat to everyone, always (the server keeps parents PNR-free)", () => {
+    expect(shownTabs("team", ms(TRIP_SPAN.start) - DAY - 1)).toContain("chat");
+    expect(shownTabs("parent", ms(TRIP_SPAN.start) - DAY - 1)).toContain("chat");
+    expect(shownTabs("parent", ms(TRIP_SPAN.end))).toContain("chat");
   });
 });
