@@ -9,7 +9,30 @@ Ticket|टिकट|ટિકિટ
 Plan|प्लान|પ્લાન
 Location|लोकेशन|લોકેશન
 Money|पैसा|પૈસા
+Chat|चैट|ચેટ
 More|और|વધુ
+# Chat assistant
+Ask about the trip|यात्रा के बारे में पूछें|પ્રવાસ વિશે પૂછો
+New conversation|नई बातचीत|નવી વાતચીત
+Start a new conversation?|नई बातचीत शुरू करें?|નવી વાતચીત શરૂ કરવી?
+This clears the chat on this phone.|इससे इस फ़ोन की चैट साफ़ हो जाएगी।|આનાથી આ ફોનની ચેટ સાફ થઈ જશે.
+Clear|साफ़ करें|સાફ કરો
+Send|भेजें|મોકલો
+Thinking|सोच रहा हूँ|વિચારું છું
+What do you want to know?|आप क्या जानना चाहते हैं?|તમે શું જાણવા માગો છો?
+Answers come from the live data the app already collects: trains, tickets, weather, IRCTC food prices and money.|जवाब उसी लाइव डेटा से आते हैं जो ऐप पहले से जमा करता है: ट्रेन, टिकट, मौसम, IRCTC खाने के दाम और पैसा।|જવાબો એ જ લાઇવ ડેટામાંથી આવે છે જે એપ પહેલેથી ભેગો કરે છે: ટ્રેન, ટિકિટ, હવામાન, IRCTC ભોજનના ભાવ અને પૈસા.
+Ask about trains, seats, weather…|ट्रेन, सीट, मौसम के बारे में पूछें…|ટ્રેન, સીટ, હવામાન વિશે પૂછો…
+AI is off on the server, so answers come straight from trip data. Add a Groq key to switch it on (SETUP.md).|सर्वर पर AI बंद है, इसलिए जवाब सीधे यात्रा डेटा से आते हैं। इसे चालू करने के लिए Groq की लगाएँ (SETUP.md)।|સર્વર પર AI બંધ છે, એટલે જવાબો સીધા પ્રવાસ ડેટામાંથી આવે છે. તેને ચાલુ કરવા Groq કી ઉમેરો (SETUP.md).
+What's my next train and seat?|मेरी अगली ट्रेन और सीट कौन सी है?|મારી આગલી ટ્રેન અને સીટ કઈ છે?
+Is my ticket confirmed? Check now|क्या मेरा टिकट कन्फर्म है? अभी देखें|મારી ટિકિટ કન્ફર્મ છે? હમણાં જુઓ
+Will we make the Delhi connection?|क्या हम दिल्ली का कनेक्शन पकड़ पाएँगे?|શું અમે દિલ્હીનું કનેક્શન પકડી શકીશું?
+What's the weather in Guwahati?|गुवाहाटी में मौसम कैसा है?|ગુવાહાટીમાં હવામાન કેવું છે?
+What does a veg meal cost on the train?|ट्रेन में वेज खाना कितने का है?|ટ્રેનમાં શાકાહારી ભોજન કેટલાનું છે?
+How much have we spent so far?|अब तक हमने कितना खर्च किया है?|અત્યાર સુધી અમે કેટલો ખર્ચ કર્યો છે?
+Where is the team right now?|टीम अभी कहाँ है?|ટીમ અત્યારે ક્યાં છે?
+Is their train on time?|क्या उनकी ट्रेन समय पर है?|શું એમની ટ્રેન સમયસર છે?
+When do they reach Guwahati?|वे गुवाहाटी कब पहुँचेंगे?|તેઓ ગુવાહાટી ક્યારે પહોંચશે?
+What is the plan for today?|आज का प्लान क्या है?|આજનો પ્લાન શું છે?
 Settings|सेटिंग्स|સેટિંગ્સ
 Language|भाषा|ભાષા
 Back|वापस|પાછળ

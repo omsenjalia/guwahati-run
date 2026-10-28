@@ -16,6 +16,7 @@ const SPECS: Record<string, TabSpec> = {
   plan: { label: "Plan", icon: "map-legend", activeIcon: "map-legend" },
   location: { label: "Location", icon: "map-marker-outline", activeIcon: "map-marker" },
   money: { label: "Money", icon: "wallet-outline", activeIcon: "wallet" },
+  chat: { label: "Chat", icon: "message-text-outline", activeIcon: "message-text" },
   more: { label: "More", icon: "dots-grid", activeIcon: "dots-grid" },
 };
 

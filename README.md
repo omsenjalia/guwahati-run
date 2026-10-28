@@ -18,10 +18,13 @@ Sign in as **an attendee** (your name + your password) or **a parent** (whose pa
 | Plan | The whole trip day by day, times shifted live by delays | Same |
 | Location | Map and list of everyone; if a phone's location is off, a friend's fix is used | |
 | Money | Total spent, per person, by category, grant estimate | Same, plus **Add a bill** (photo or PDF, goes to `documents/` and the college report) |
+| Chat | Ask the assistant where they are, if the train is on time, when they arrive (never PNR numbers) | Same, plus their own seat/PNR status with a live "check now", connections, IRCTC food prices, delay history |
 
 Attendees' phones send their location every 30 minutes, also with the app closed (Android shows a small "sharing location" notification).
 
 The server does the rest automatically: Supabase calls `/api/jobs/tick` every 5 minutes to track PNRs (every ticket in the 3 days before departure, the Avadh Assam Express more often), live running status, weather and timetables, and to send alerts.
+
+The **Chat** assistant (like WeatherGPT's) answers from that same collected data. With `GROQ_API_KEY` set on the server (never in the app) it reasons over the trip context with Groq and can call read-only tools for fresh checks (live PNR/running status, weather, IRCTC food prices, delay history); without a key it still answers the common questions straight from the collected data. See `backend/lib/chat*.ts` and SETUP.md.
 
 ## Structure
 
