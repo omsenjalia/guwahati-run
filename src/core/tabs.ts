@@ -11,10 +11,14 @@ export type TabRole = "team" | "parent";
 /** A day: the Food tab opens the day before the first train, not at departure. */
 export const DAY = 24 * 60 * 60 * 1000;
 
-/** Parents follow the trip; attendees also get their ticket and the pantry car list. */
+/**
+ * Parents follow the trip; attendees also get their ticket and the pantry
+ * car list. Chat is for both: the server only ever serves a parent the
+ * parent-safe view (no PNR numbers; see backend/lib/chat-context.ts).
+ */
 export const VISIBLE: Record<TabRole, string[]> = {
-  parent: ["index", "train", "plan", "location", "money", "more"],
-  team: ["index", "train", "ticket", "food", "plan", "money", "more"],
+  parent: ["index", "train", "plan", "location", "money", "chat", "more"],
+  team: ["index", "train", "ticket", "food", "plan", "money", "chat", "more"],
 };
 
 /**
