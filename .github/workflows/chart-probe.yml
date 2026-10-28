@@ -1,0 +1,69 @@
+name: Chart probe (temporary)
+
+# Temporary helper: reads IRCTC's public reservation-chart JSON API for
+# 19031 on 28 Oct 2026 so the vacancy can be seen from the sandbox.
+# Delete this file once the numbers are known.
+
+on:
+  push:
+    branches: [arena/74bee799-guwahati-run]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Query IRCTC online-charts
+        run: |
+          cat > probe.mjs <<'EOF'
+          const BASE = "https://www.irctc.co.in";
+          const H = {
+            "Content-Type": "application/json",
+            Accept: "application/json, text/plain, */*",
+            Origin: BASE,
+            Referer: `${BASE}/online-charts/`,
+            "User-Agent":
+              "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36",
+          };
+          const post = async (path, body) => {
+            const r = await fetch(BASE + path, { method: "POST", headers: H, body: JSON.stringify(body) });
+            const t = await r.text();
+            return { status: r.status, text: t };
+          };
+          const j = (x) => { try { return JSON.parse(x); } catch { return null; } };
+
+          const comp = await post("/online-charts/api/trainComposition", {
+            trainNo: "19031", jDate: "2026-10-28", boardingStation: "SBIB",
+          });
+          console.log("COMP_STATUS", comp.status);
+          console.log("COMP", comp.text.slice(0, 6000));
+          const c = j(comp.text);
+          const base = {
+            trainNo: "19031",
+            boardingStation: "SBIB",
+            remoteStation: c?.remote ?? "SBIB",
+            trainSourceStation: c?.from ?? "SBIB",
+            jDate: c?.trainStartDate ?? "2026-10-28",
+          };
+          console.log("BASE", JSON.stringify(base));
+
+          for (const chartType of [1, 2]) {
+            for (const cls of ["SL"]) {
+              const v = await post("/online-charts/api/vacantBerth", { ...base, cls, chartType });
+              console.log(`VACANT cls=${cls} chart=${chartType} status=${v.status}`);
+              console.log("VACANT_BODY", v.text.slice(0, 20000));
+            }
+          }
+
+          for (const chartType of [1, 2]) {
+            const cc = await post("/online-charts/api/coachComposition", { ...base, coach: "S5", cls: "SL" });
+            console.log(`COACH S5 status=${cc.status} (chart ${chartType})`);
+            console.log("COACH_BODY", cc.text.slice(0, 40000));
+            break;
+          }
+EOF
+          node probe.mjs
