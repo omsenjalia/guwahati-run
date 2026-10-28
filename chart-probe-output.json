@@ -1,0 +1,11 @@
+{
+ "COMP_STATUS": 403,
+ "COMP_BODY": "<HTML><HEAD>\n<TITLE>Access Denied</TITLE>\n</HEAD><BODY>\n<H1>Access Denied</H1>\n \nYou don't have permission to access \"http&#58;&#47;&#47;www&#46;irctc&#46;co&#46;in&#47;online&#45;charts&#47;api&#47;trainComposition\" on this server.<P>\nReference&#32;&#35;18&#46;88cd017&#46;1793163593&#46;3fd6f403\n<P>https&#58;&#47;&#47;errors&#46;edgesuite&#46;net&#47;18&#46;88cd017&#46;1793163593&#46;3fd6f403</P>\n</BODY>\n</HTML>\n",
+ "BASE": "{\"trainNo\":\"19031\",\"boardingStation\":\"SBIB\",\"remoteStation\":\"SBIB\",\"trainSourceStation\":\"SBIB\",\"jDate\":\"2026-10-28\"}",
+ "VACANT_1_STATUS": 403,
+ "VACANT_1_BODY": "<HTML><HEAD>\n<TITLE>Access Denied</TITLE>\n</HEAD><BODY>\n<H1>Access Denied</H1>\n \nYou don't have permission to access \"http&#58;&#47;&#47;www&#46;irctc&#46;co&#46;in&#47;online&#45;charts&#47;api&#47;vacantBerth\" on this server.<P>\nReference&#32;&#35;18&#46;98cd017&#46;1793163594&#46;2db381d7\n<P>https&#58;&#47;&#47;errors&#46;edgesuite&#46;net&#47;18&#46;98cd017&#46;1793163594&#46;2db381d7</P>\n</BODY>\n</HTML>\n",
+ "VACANT_2_STATUS": 403,
+ "VACANT_2_BODY": "<HTML><HEAD>\n<TITLE>Access Denied</TITLE>\n</HEAD><BODY>\n<H1>Access Denied</H1>\n \nYou don't have permission to access \"http&#58;&#47;&#47;www&#46;irctc&#46;co&#46;in&#47;online&#45;charts&#47;api&#47;vacantBerth\" on this server.<P>\nReference&#32;&#35;18&#46;108cd017&#46;1793163595&#46;66f83866\n<P>https&#58;&#47;&#47;errors&#46;edgesuite&#46;net&#47;18&#46;108cd017&#46;1793163595&#46;66f83866</P>\n</BODY>\n</HTML>\n",
+ "COACH_S5_STATUS": 403,
+ "COACH_S5_BODY": "<HTML><HEAD>\n<TITLE>Access Denied</TITLE>\n</HEAD><BODY>\n<H1>Access Denied</H1>\n \nYou don't have permission to access \"http&#58;&#47;&#47;www&#46;irctc&#46;co&#46;in&#47;online&#45;charts&#47;api&#47;coachComposition\" on this server.<P>\nReference&#32;&#35;18&#46;98cd017&#46;1793163595&#46;2db3c6a5\n<P>https&#58;&#47;&#47;errors&#46;edgesuite&#46;net&#47;18&#46;98cd017&#46;1793163595&#46;2db3c6a5</P>\n</BODY>\n</HTML>\n"
+}
