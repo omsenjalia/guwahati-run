@@ -1,4 +1,8 @@
 // Temporary: reads IRCTC's public reservation-chart JSON API for 19031 / 28 Oct 2026.
+import { writeFileSync } from "node:fs";
+
+const out = {};
+const log = (k, v) => { out[k] = v; console.log(k, typeof v === "string" ? v.slice(0, 400) : v); };
 const BASE = "https://www.irctc.co.in";
 const H = {
   "Content-Type": "application/json",
@@ -32,8 +36,8 @@ const comp = await post("/online-charts/api/trainComposition", {
   jDate: JOURNEY,
   boardingStation: BOARD,
 });
-console.log("COMP_STATUS", comp.status);
-console.log("COMP_BODY", comp.text.slice(0, 8000));
+log("COMP_STATUS", comp.status);
+log("COMP_BODY", comp.text.slice(0, 8000));
 const c = parse(comp.text);
 
 const base = {
@@ -43,14 +47,17 @@ const base = {
   trainSourceStation: c?.from ?? BOARD,
   jDate: c?.trainStartDate ?? JOURNEY,
 };
-console.log("BASE", JSON.stringify(base));
+log("BASE", JSON.stringify(base));
 
 for (const chartType of [1, 2]) {
   const v = await post("/online-charts/api/vacantBerth", { ...base, cls: "SL", chartType });
-  console.log(`VACANT chart=${chartType} status=${v.status}`);
-  console.log("VACANT_BODY", v.text.slice(0, 30000));
+  log(`VACANT_${chartType}_STATUS`, v.status);
+  log(`VACANT_${chartType}_BODY`, v.text.slice(0, 30000));
 }
 
 const cc = await post("/online-charts/api/coachComposition", { ...base, coach: "S5", cls: "SL" });
-console.log("COACH_S5_STATUS", cc.status);
-console.log("COACH_S5_BODY", cc.text.slice(0, 60000));
+log("COACH_S5_STATUS", cc.status);
+log("COACH_S5_BODY", cc.text.slice(0, 60000));
+
+writeFileSync("chart-probe-output.json", JSON.stringify(out, null, 1));
+

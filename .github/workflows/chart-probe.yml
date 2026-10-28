@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   probe:
@@ -23,3 +23,11 @@ jobs:
           node-version: "22"
       - name: Query IRCTC online-charts
         run: node .github/scripts/chart-probe.mjs
+      - name: Commit the result back to the branch
+        run: |
+          git config user.name "chart-probe"
+          git config user.email "chart-probe@users.noreply.github.com"
+          git add chart-probe-output.json
+          git commit -m "chore: chart probe output [skip ci]" || echo "nothing to commit"
+          git push
+
