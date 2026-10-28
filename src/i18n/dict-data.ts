@@ -185,7 +185,7 @@ Expected grant per student|प्रति छात्र अपेक्षि
 Also for the claim|दावे के लिए भी|દાવા માટે પણ
 Built from our tickets and the bills in Money|हमारे टिकट और पैसा में दर्ज बिलों से बना|અમારી ટિકિટ અને પૈસા વિભાગના બિલ પરથી બનેલું
 Ticks itself when you upload in Money. Every file here goes into the final report.|पैसा में अपलोड करते ही टिक लग जाता है। यहाँ की हर फ़ाइल फ़ाइनल रिपोर्ट में जाती है।|પૈસા વિભાગમાં અપલોડ કરતાં જ ટિક થઈ જાય છે. અહીંની દરેક ફાઇલ ફાઇનલ રિપોર્ટમાં જાય છે.
-Not covered: local travel under 25 km from BVM, and food or stay without prior approval.|कवर नहीं: BVM से 25 किमी के अंदर की लोकल यात्रा, और बिना पहले अनुमति के खाना या ठहरना।|કવર નથી: BVMથી 25 કિમી અંદરની સ્થાનિક મુસાફરી, અને પહેલી મંજૂરી વગર જમવું કે રહેવું.
+Meals on the journey count with the fares. Not covered: local travel under 25 km from BVM, and stay.|सफ़र के दौरान के खाने का खर्च किराए के साथ गिना जाता है। कवर नहीं: BVM से 25 किमी के अंदर की लोकल यात्रा, और ठहरना।|મુસાફરી દરમિયાનના જમવાનો ખર્ચ ભાડા સાથે ગણાય છે. કવર નથી: BVMથી 25 કિમી અંદરની સ્થાનિક મુસાફરી, અને રહેવું.
 Cover, trip summary, every expense with receipt numbers, requested vs spent, and every receipt attached. A4, prints well in black and white.|कवर, ट्रिप सारांश, हर खर्च रसीद नंबर के साथ, माँगी रकम बनाम खर्च, और हर रसीद जुड़ी। A4, ब्लैक एंड व्हाइट में अच्छा प्रिंट।|કવર, ટ્રિપ સારાંશ, દરેક ખર્ચ રસીદ નંબર સાથે, માંગેલી રકમ vs ખર્ચ, અને દરેક રસીદ જોડેલી. A4, બ્લેક એન્ડ વ્હાઇટમાં સરસ પ્રિન્ટ.
 Final report for the college|कॉलेज के लिए फ़ाइनल रिपोर्ट|કૉલેજ માટે ફાઇનલ રિપોર્ટ
 Trip summary (page 2)|ट्रिप सारांश (पेज 2)|ટ્રિપ સારાંશ (પેજ 2)

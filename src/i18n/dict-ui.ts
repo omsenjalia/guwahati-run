@@ -186,6 +186,7 @@ Invitation letter|निमंत्रण पत्र|આમંત્રણ �
 Registration fee receipt|रजिस्ट्रेशन फ़ीस रसीद|રજિસ્ટ્રેશન ફી રસીદ
 Proof of participation|भागीदारी का सबूत|ભાગીદારીનો પુરાવો
 Cab and metro bills|कैब और मेट्रो के बिल|કેબ અને મેટ્રોના બિલ
+Food bills|खाने के बिल|જમવાના બિલ
 Hackathon registration fee|हैकाथॉन रजिस्ट्रेशन फ़ीस|હેકાથોન રજિસ્ટ્રેશન ફી
 A receipt needs an amount.|रसीद में रकम ज़रूरी है।|રસીદમાં રકમ જરૂરી છે.
 Delete this entry?|यह एंट्री हटाएँ?|આ એન્ટ્રી કાઢી નાખવી?

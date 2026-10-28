@@ -50,9 +50,10 @@ export function fareCounts(legId: string, docs: DocRow[] | null) {
 /**
  * The figure the report shows for a row. Normally what we paid, except where
  * the policy pays less than we did: a 3A ticket is claimed at the sleeper fare,
- * so the report shows that lower number instead of the full 3A fare. Food, stay
- * and the cancellation charge are not covered by the policy, but they were
- * still spent, so they stay in the table at what they cost.
+ * so the report shows that lower number instead of the full 3A fare. Stay and
+ * the cancellation charge are not covered by the policy, but they were still
+ * spent, so they stay in the table at what they cost. Meals on the trip are
+ * covered, so a food row is simply its bill.
  */
 export const reportAmount = (r: ReportRow) => (r.eligible > 0 && r.eligible < r.amount - 0.5 ? r.eligible : r.amount);
 
