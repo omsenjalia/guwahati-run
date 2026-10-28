@@ -70,8 +70,20 @@ Attendees get every alert. Parents get only trip alerts (chart prepared, connect
 | `CRON_SECRET` | Proves the 5-minute calls come from Supabase |
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Web push (old website alerts). App alerts need nothing here |
 | `GITHUB_RECEIPTS_TOKEN`, `GITHUB_RECEIPTS_REPO` | Saves bills to `documents/` |
+| `GROQ_API_KEY` | The Chat tab's AI (Groq). Server only, never in the app. Optional: without it, Chat still answers common questions from the collected trip data |
+| `GROQ_MODEL` | Optional. Defaults to `openai/gpt-oss-120b` (same as WeatherGPT); `llama-3.3-70b-versatile` is a faster alternative |
 
 The app itself needs no secrets: it talks to `https://guwahati-run.vercel.app` (change in `src/core/config.ts` or with `EXPO_PUBLIC_API_URL`).
+
+## Chat assistant (Groq)
+
+The Chat tab works with no setup, answering from the data the app already collects (times, delays, ticket status, weather, IRCTC food prices, money, locations). To switch on the full AI assistant, like WeatherGPT's:
+
+1. Get a free key at **console.Groq.com**.
+2. Vercel → the `guwahati-run` project → **Settings** → **Environment Variables** → add `GROQ_API_KEY` (and optionally `GROQ_MODEL`) → **Save** → redeploy.
+3. Open the app's Chat tab: the "AI is off" note disappears once the server sees the key (the tab checks `GET /api/chat`).
+
+Notes: the key lives only on the server; the app calls `/api/chat` with its normal sign-in token. Parents are served a PNR-free view, nobody's raw GPS coordinates are sent to Groq, and the assistant is read-only (it can check a PNR or train live, never book or cancel). If Groq is down or over quota, chat quietly falls back to the collected-data answers.
 
 ## If something looks wrong
 
