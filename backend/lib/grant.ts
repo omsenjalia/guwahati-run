@@ -5,7 +5,8 @@ import type { ReportRow } from "@/lib/report-data";
  * Grant estimate under the BVM SSIP policy, from what we actually have:
  * the tickets and the receipts in Money (the same rows as the report).
  * The grant is per student, so amounts here are per student (total / 4).
- * 3A fares count at the sleeper rate; food and stay aren't covered.
+ * 3A fares count at the sleeper rate, and meals on the trip count with them;
+ * stay isn't covered.
  */
 
 const STUDENTS = TEAM.length;
