@@ -19,7 +19,7 @@ export function grantEstimate(rows: ReportRow[]) {
     label: r.label,
     paid: r.amount / STUDENTS,
     claim: r.eligible / STUDENTS,
-    note: r.eligible === 0 ? "Not covered by the policy" : r.eligible < r.amount - 0.5 ? "Claimed at the sleeper fare" : undefined,
+    note: Number(r.eligible ?? 0) === 0 ? "Not covered by the policy" : Number(r.eligible ?? 0) < Number(r.amount ?? 0) - 0.5 ? "Claimed at the sleeper fare" : undefined,
     hasBill: r.docIds.length > 0,
   }));
   const spent = lines.reduce((s, l) => s + l.paid, 0);

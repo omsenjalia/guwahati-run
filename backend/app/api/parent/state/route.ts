@@ -63,7 +63,10 @@ export async function GET(request: Request) {
       state: Object.fromEntries([...(states.data ?? []), ...(watches.data ?? [])].map((r) => [r.key, r.value])),
       locations: effectiveLocations((locs.data ?? []) as LocationRow[], now),
       checkins: latest,
-      expenses: expenses.data ?? [],
+      expenses: (expenses.data ?? []).map((e: Record<string, unknown>) => ({
+        ...e,
+        amount: Number(e.amount ?? 0),
+      })) as typeof expenses.data,
       tripHash: (await tripData()).hash,
       at: now,
     },
