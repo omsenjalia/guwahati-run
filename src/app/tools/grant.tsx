@@ -99,7 +99,7 @@ export default function Grant() {
             </T>
           </View>
           <T v="caption" color="faint">
-            Not covered: local travel under 25 km from BVM, and food or stay without prior approval.
+            Meals on the journey count with the fares. Not covered: local travel under 25 km from BVM, and stay.
           </T>
         </Card>
       </Section>

@@ -17,12 +17,17 @@ export type Expense = {
   created_at: string;
 };
 
-/** grant: counts towards the college reimbursement. */
+/**
+ * grant: counts towards the college reimbursement. Meals on the trip count as
+ * part of the travel: we eat on the trains and away from home, and those bills
+ * go into the claim with the fares. Stay doesn't, so a stay row still appears
+ * in the report at what it cost, just not in the grant.
+ */
 export const CATEGORIES: { id: ExpenseCategory; label: string; grant: boolean }[] = [
   { id: "train", label: "Train", grant: true },
   { id: "metro", label: "Metro", grant: true },
   { id: "cab", label: "Cab or auto", grant: true },
-  { id: "food", label: "Food", grant: false },
+  { id: "food", label: "Food", grant: true },
   { id: "accommodation", label: "Accommodation", grant: false },
   { id: "registration", label: "Registration", grant: true },
   { id: "other", label: "Other", grant: false },
