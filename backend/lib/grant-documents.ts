@@ -18,6 +18,8 @@ export function claimDocuments(docs: DocRow[], expenses: Expense[]): ClaimDoc[] 
   const certs = docs.filter((d) => d.kind === "certificate").length;
   const local = expenses.filter((e) => e.category === "cab" || e.category === "metro");
   const localBills = local.filter((e) => docs.some((d) => d.expense_id === e.id)).length;
+  const food = expenses.filter((e) => e.category === "food");
+  const foodBills = food.filter((e) => docs.some((d) => d.expense_id === e.id)).length;
 
   const list: ClaimDoc[] = [
     { id: "invite", label: "Event invitation letter", have: named(/invitation/i).length > 0, detail: "Upload as a Document named \"Invitation letter\"" },
@@ -28,6 +30,10 @@ export function claimDocuments(docs: DocRow[], expenses: Expense[]): ClaimDoc[] 
   // Cab and metro bills only count once there are cab or metro expenses.
   if (local.length) {
     list.push({ id: "local", label: "Cab and metro bills", have: localBills === local.length, detail: `${localBills} of ${local.length} with a bill` });
+  }
+  // Meals on the trip go into the claim, so their bills belong on this list too.
+  if (food.length) {
+    list.push({ id: "food", label: "Food bills", have: foodBills === food.length, detail: `${foodBills} of ${food.length} with a bill` });
   }
   return list;
 }
