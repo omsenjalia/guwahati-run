@@ -215,7 +215,7 @@ function requestedVsSpent(w: Writer, t: ReturnType<typeof reportTotals>) {
   );
   w.text(
     `Eligible follows the BVM SSIP 2.0 reimbursement policy: train fares at the most economical class (3A legs counted at the sleeper fare), ` +
-      `local travel to and from the venue, and the registration fee. Food, accommodation and the Yoga Express cancellation charge are not included.`,
+      `local travel to and from the venue, meals during the journey, and the registration fee. Accommodation and the Yoga Express cancellation charge are not included.`,
     { size: 10, color: GREY, gap: 8 },
   );
   const gap = t.paid - t.requested;
