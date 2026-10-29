@@ -94,7 +94,8 @@ export function reportRows(expenses: Expense[], docs: DocRow[] | null): ReportRo
     }
   }
 
-  for (const e of expenses) {
+  const nums = expenses.map((e) => ({ ...e, amount: Number(e.amount ?? 0) }));
+  for (const e of nums) {
     if (e.created_by === "setup" && e.category === "train") continue; // old lump sums; fares come from the tickets
     const bills = files.filter((d) => d.kind === "receipt" && d.expense_id === e.id);
     const grant = CATEGORIES.find((c) => c.id === e.category)?.grant ?? false;
@@ -118,14 +119,14 @@ export function reportRows(expenses: Expense[], docs: DocRow[] | null): ReportRo
 export function reportTotals(rows: ReportRow[]) {
   // Totals use the report figure, so the table and its subtotals add up.
   const byCategory = new Map<string, number>();
-  for (const r of rows) byCategory.set(r.category, (byCategory.get(r.category) ?? 0) + reportAmount(r));
-  const total = rows.reduce((t, r) => t + reportAmount(r), 0);
+  for (const r of rows) byCategory.set(r.category, (byCategory.get(r.category) ?? 0) + Number(reportAmount(r) ?? 0));
+  const total = rows.reduce((t, r) => t + Number(reportAmount(r) ?? 0), 0);
   /** What we actually spent, before the sleeper-fare rule. */
-  const paid = rows.reduce((t, r) => t + r.amount, 0);
+  const paid = rows.reduce((t, r) => t + Number(r.amount ?? 0), 0);
   // Per student only for the funding page, which compares what we really spent
   // with what the policy pays: "spend" is the money that left our accounts.
   const perStudent = paid / STUDENTS;
-  const eligiblePerStudent = rows.reduce((t, r) => t + r.eligible, 0) / STUDENTS;
+  const eligiblePerStudent = rows.reduce((t, r) => t + Number(r.eligible ?? 0), 0) / STUDENTS;
   const requested = REPORT.requestedPerStudent * STUDENTS;
   return { byCategory: [...byCategory.entries()], total, paid, perStudent, eligiblePerStudent, requested };
 }
